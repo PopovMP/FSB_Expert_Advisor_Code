@@ -135,7 +135,7 @@ private:
    bool              ModifyPositionByTicket(int orderTicket,double stopLossPrice,double takeProfitPrice);
    bool              OrderSelectByTicket(int orderTicket);
    bool              SendOrder(int type,double lots,double price,double stoploss,double takeprofit);
-   double            GetMarketPrice(int type,double price);
+   double            GetMarketPrice(int type);
    double            GetTakeProfitPrice(int type,double takeprofit);
    double            GetStopLossPrice(int type,double lots,double stoploss);
    double            CorrectTakeProfitPrice(int type,double takeProfitPrice);
@@ -1119,7 +1119,7 @@ bool ActionTrade4::SendOrder(int type,double lots,double price,double stoploss,d
       if(IsTradeContextFree())
         {
          double orderLots       = NormalizeEntrySize(lots);
-         double orderPrice      = GetMarketPrice(type, price);
+         double orderPrice      = GetMarketPrice(type);
          double stopLossPrice   = GetStopLossPrice(type, orderLots, stoploss);
          double takeProfitPrice = GetTakeProfitPrice(type, takeprofit);
          color  colorDeal       = type==OP_BUY ? Lime  : Red;
@@ -1325,16 +1325,14 @@ bool ActionTrade4::OrderSelectByTicket(int orderTicket)
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-double ActionTrade4::GetMarketPrice(int type,double price)
+double ActionTrade4::GetMarketPrice(int type)
   {
-   double orderPrice=price;
-
-   if(type==OP_BUY)
-      orderPrice=MarketInfo(_Symbol,MODE_ASK);
-   else // if (type == OP_SELL)
-   orderPrice=MarketInfo(_Symbol,MODE_BID);
+   double orderPrice = (type==OP_BUY)
+      ? MarketInfo(_Symbol,MODE_ASK)
+      : MarketInfo(_Symbol,MODE_BID);
 
    orderPrice = NormalizeDouble(orderPrice,_Digits);
+
    return (orderPrice);
   }
 //+------------------------------------------------------------------+
