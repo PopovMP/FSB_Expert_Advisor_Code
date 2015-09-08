@@ -1331,9 +1331,7 @@ double ActionTrade4::GetMarketPrice(int type)
       ? MarketInfo(_Symbol,MODE_ASK)
       : MarketInfo(_Symbol,MODE_BID);
 
-   orderPrice = NormalizeDouble(orderPrice,_Digits);
-
-   return (orderPrice);
+   return (NormalizeDouble(orderPrice,_Digits));
   }
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -1350,8 +1348,7 @@ double ActionTrade4::GetTakeProfitPrice(int type,double takeprofit)
       ? MarketInfo(_Symbol,MODE_BID)+takeprofit*_Point
       : MarketInfo(_Symbol,MODE_ASK)-takeprofit*_Point;
 
-   takeProfitPrice=NormalizeDouble(takeProfitPrice,_Digits);
-   return (takeProfitPrice);
+   return (NormalizeDouble(takeProfitPrice,_Digits));
   }
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -2307,8 +2304,9 @@ double ActionTrade4::AnalyzeEntrySize(OrderDirection ordDir,PosDirection &newPos
       size=TradingSize(m_Strategy.EntryLots);
       if(m_Strategy.UseMartingale && m_DataMarket.ConsecutiveLosses>0)
         {
-         size = size*MathPow(m_Strategy.MartingaleMultiplier, m_DataMarket.ConsecutiveLosses);
-         size = NormalizeEntrySize(size);
+         double correctedAmount = size*MathPow(m_Strategy.MartingaleMultiplier, m_DataMarket.ConsecutiveLosses);
+         double normalizedAmount = NormalizeEntrySize(correctedAmount);
+         size = MathMax(normalizedAmount, MarketInfo(_Symbol, MODE_MINLOT));
         }
       size=MathMin(size,m_Strategy.MaxOpenLots);
 

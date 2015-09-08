@@ -1638,8 +1638,9 @@ double ActionTrade5::AnalyzeEntrySize(OrderDirection ordDir,PosDirection &newPos
       size=TradingSize(m_Strategy.EntryLots);
       if(m_Strategy.UseMartingale && m_DataMarket.ConsecutiveLosses>0)
         {
-         size = size*MathPow(m_Strategy.MartingaleMultiplier, m_DataMarket.ConsecutiveLosses);
-         size = NormalizeEntrySize(size);
+         double correctedAmount = size*MathPow(m_Strategy.MartingaleMultiplier, m_DataMarket.ConsecutiveLosses);
+         double normalizedAmount = NormalizeEntrySize(correctedAmount);
+         size = MathMax(normalizedAmount, SymbolInfoDouble(_Symbol,SYMBOL_VOLUME_MIN));
         }
       size=MathMin(size,m_Strategy.MaxOpenLots);
       newPosDir=ordDir==OrderDirection_Buy ? PosDirection_Long : PosDirection_Short;
