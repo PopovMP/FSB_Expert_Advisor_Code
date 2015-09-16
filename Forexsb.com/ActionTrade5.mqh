@@ -317,20 +317,21 @@ int ActionTrade5::OnInit()
    int paramsX=0;
    int valuesX=140;
    int locationY=40;
+   color foreColor=GetChartForeColor(0);
    int count= ArraySize(m_DynamicInfoParams);
    for(int i=0;i<count;i++)
      {
       string namep = "Lbl_prm_"+IntegerToString(i);
       string namev = "Lbl_val_"+IntegerToString(i);
       string param = m_DynamicInfoParams[i] == "" ? "." : m_DynamicInfoParams[i];
-      LabelCreate(0,namep,0,paramsX,locationY,CORNER_LEFT_UPPER,param);
-      LabelCreate(0,namev,0,valuesX,locationY,CORNER_LEFT_UPPER,".");
+      LabelCreate(0,namep,0,paramsX,locationY,CORNER_LEFT_UPPER,param,"Ariel",8,foreColor);
+      LabelCreate(0,namev,0,valuesX,locationY,CORNER_LEFT_UPPER,".","Ariel",8,foreColor);
       locationY+=12;
      }
 
-   LabelCreate(0,"Lbl_pos_0",0,350,0,CORNER_LEFT_UPPER,".","Ariel",10);
-   LabelCreate(0,"Lbl_pos_1",0,350,15,CORNER_LEFT_UPPER,".","Ariel",10);
-   LabelCreate(0,"Lbl_pos_2",0,350,29,CORNER_LEFT_UPPER,".","Ariel",10);
+   LabelCreate(0,"Lbl_pos_0",0,350,0,CORNER_LEFT_UPPER,".","Ariel",10,foreColor);
+   LabelCreate(0,"Lbl_pos_1",0,350,15,CORNER_LEFT_UPPER,".","Ariel",10,foreColor);
+   LabelCreate(0,"Lbl_pos_2",0,350,29,CORNER_LEFT_UPPER,".","Ariel",10,foreColor);
 
    Comment("");
 
@@ -812,6 +813,7 @@ bool ActionTrade5::ManageOrderSend(int type,double lots,double stoploss,double t
          request.deviation    = 10;
          request.sl           = stopLossPrice;
          request.tp           = takeProfitPrice;
+         request.comment      = Order_Comment;
 
          bool isOrderCheck=OrderCheck(request,check);
          string retcode=ResultRetcodeDescription(check.retcode);
@@ -912,7 +914,7 @@ bool ActionTrade5::ModifyPosition(double stoploss,double takeprofit)
          m_LastError=GetLastError();
          if(Write_Log_File)
             m_Logger.WriteLogLine("ModifyPosition"+
-                         ": "            +_Symbol+
+                         ": "+_Symbol+
                          ", StopLoss="   +DoubleToString(stopLossPrice,_Digits)+
                          ", TakeProfit=" +DoubleToString(takeProfitPrice,_Digits)+
                          ", RetCode="    +retcode+

@@ -102,6 +102,15 @@ bool LabelDelete(const long chart_ID=0,const string name="Label")
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
+color GetChartForeColor(const long chartId=0)
+  {
+   long foreColor=clrWhite;
+   ChartGetInteger(chartId,CHART_COLOR_FOREGROUND,0,foreColor);
+   return ((color)foreColor);
+  }
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
 string LoadStringFromFile(string filename)
   {
    string text;

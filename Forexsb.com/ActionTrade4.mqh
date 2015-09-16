@@ -334,19 +334,20 @@ int ActionTrade4::OnInit()
    int paramsX=0;
    int valuesX=140;
    int locationY=40;
+   color foreColor=GetChartForeColor(0);
    int count= ArraySize(m_DynamicInfoParams);
    for(int i=0;i<count;i++)
      {
       string namep = "Lbl_prm_"+IntegerToString(i);
       string namev = "Lbl_val_"+IntegerToString(i);
-      LabelCreate(0,namep,0,paramsX,locationY,CORNER_LEFT_UPPER,m_DynamicInfoParams[i]);
-      LabelCreate(0,namev,0,valuesX,locationY,CORNER_LEFT_UPPER,"");
+      LabelCreate(0,namep,0,paramsX,locationY,CORNER_LEFT_UPPER,m_DynamicInfoParams[i],"Ariel",8,foreColor);
+      LabelCreate(0,namev,0,valuesX,locationY,CORNER_LEFT_UPPER,".","Ariel",8,foreColor);
       locationY+=12;
      }
 
-   LabelCreate(0,"Lbl_pos_0",0,350, 0,CORNER_LEFT_UPPER,"","Ariel",10);
-   LabelCreate(0,"Lbl_pos_1",0,350,15,CORNER_LEFT_UPPER,"","Ariel",10);
-   LabelCreate(0,"Lbl_pos_2",0,350,29,CORNER_LEFT_UPPER,"","Ariel",10);
+   LabelCreate(0,"Lbl_pos_0",0,350, 0,CORNER_LEFT_UPPER,".","Ariel",10,foreColor);
+   LabelCreate(0,"Lbl_pos_1",0,350,15,CORNER_LEFT_UPPER,".","Ariel",10,foreColor);
+   LabelCreate(0,"Lbl_pos_2",0,350,29,CORNER_LEFT_UPPER,".","Ariel",10,foreColor);
 
    Comment("");
 
@@ -1134,7 +1135,8 @@ bool ActionTrade4::ReverseCurrentPosition(int type,double lots,double price,
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-bool ActionTrade4::SendOrder(int type,double lots,double price,double stoploss,double takeprofit)
+bool ActionTrade4::SendOrder(int type,double lots,double price,
+                             double stoploss,double takeprofit)
   {
    bool orderResponse=false;
    int response=-1;
@@ -1149,9 +1151,12 @@ bool ActionTrade4::SendOrder(int type,double lots,double price,double stoploss,d
          double takeProfitPrice = GetTakeProfitPrice(type, takeprofit);
          color  colorDeal       = type==OP_BUY ? Lime  : Red;
          string direction       = type==OP_BUY ? "Buy" : "Sell";
-         string comment         ="Magic="+IntegerToString(Expert_Magic);
+         string comment         = Order_Comment==""
+                                    ? "Magic="+IntegerToString(Expert_Magic)
+                                    : Order_Comment;
 
-         response=OrderSend(_Symbol,type,orderLots,orderPrice,100,stopLossPrice,takeProfitPrice,comment,Expert_Magic,0,colorDeal);
+         response=OrderSend(_Symbol,type,orderLots,orderPrice,100,stopLossPrice,
+                            takeProfitPrice,comment,Expert_Magic,0,colorDeal);
 
          m_LastError=GetLastError();
 

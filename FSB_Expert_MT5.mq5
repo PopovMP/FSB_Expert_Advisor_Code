@@ -51,17 +51,20 @@ extern int Bar_Close_Advance=15; // Bar closing advance [sec]
 // Expert writes a log file when Write_Log_File = true.
 extern bool Write_Log_File=false; // Write a log file
 
+// Custom comment. It can be used for setting a binnary option epxiration perod
+extern string Order_Comment=""; // Custom order comment
+
 // ----------------------------    Options   ---------------------------- //
 
 // Data bars for calculating the indicator values with the necessary precission.
-int Max_Data_Bars=0; 
+int Max_Data_Bars=0;
 
 // Have to be set to true for STP brokers that cannot set SL and TP together with the position (with OrderSend()).
 // When Separate_SL_TP = true, the expert first opens the position and after that sets StopLoss and TakeProfit.
 bool Separate_SL_TP=false; // Separate SL and TP orders
 
 // The expert loads this XML file form MetaTrader "Files" folder if no XML string is provided.
-string Strategy_File_Name="Strategy.xml"; // FSB Strategy Name 
+string Strategy_File_Name="Strategy.xml"; // FSB Strategy Name
 
 // The strategy as an XML string. If XML is provide, the expert loads it instead of a file.
 string Strategy_XML="##STRATEGY##"; // XML String
@@ -70,7 +73,7 @@ string Strategy_XML="##STRATEGY##"; // XML String
 // 0 <= TrailingStop_Moving_Step <= 2000
 // If TrailingStop_Moving_Step = 0, the Trailing Stop trails at every new extreme price in the position's direction.
 // If TrailingStop_Moving_Step > 0, the Trailing Stop moves at steps equal to the number of pips chosen.
-// This prevents sending multiple order modifications. 
+// This prevents sending multiple order modifications.
 int TrailingStop_Moving_Step=10;
 
 // FIFO (First In First Out) forces the expert to close positions starting from
@@ -111,7 +114,7 @@ ActionTrade5* actionsTrade;
 int OnInit()
   {
    actionsTrade = new ActionTrade5();
-   
+
    actionsTrade.Entry_Amount    = (Entry_Amount   >77700)?0.1:Entry_Amount;
    actionsTrade.Maximum_Amount  = (Maximum_Amount >77700)?0.1:Maximum_Amount;
    actionsTrade.Adding_Amount   = (Adding_Amount  >77700)?0.1:Adding_Amount;
@@ -167,7 +170,7 @@ void OnTrade()
 void OnDeinit(const int reason)
   {
    actionsTrade.OnDeinit(reason);
-   
+
    if(CheckPointer(actionsTrade)==POINTER_DYNAMIC)
       delete actionsTrade;
   }
