@@ -912,11 +912,11 @@ bool ActionTrade5::ModifyPosition(double stoploss,double takeprofit)
          m_LastError=GetLastError();
          if(Write_Log_File)
             m_Logger.WriteLogLine("ModifyPosition"+
-                         ": "+_Symbol+
-                         ", StopLoss="+DoubleToString(stopLossPrice,_Digits)+
-                         ", TakeProfit="+DoubleToString(takeProfitPrice,_Digits)+
-                         ", RetCode="+retcode+
-                         ", LastError="+IntegerToString(m_LastError));
+                         ": "            +_Symbol+
+                         ", StopLoss="   +DoubleToString(stopLossPrice,_Digits)+
+                         ", TakeProfit=" +DoubleToString(takeProfitPrice,_Digits)+
+                         ", RetCode="    +retcode+
+                         ", LastError="  +IntegerToString(m_LastError));
 
          if(isExecuted)
             return (true);

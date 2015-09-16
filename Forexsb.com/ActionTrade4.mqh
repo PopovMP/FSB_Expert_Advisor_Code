@@ -796,7 +796,7 @@ int ActionTrade4::SetAggregatePosition()
      }
 
    if(m_PositionOpenPrice>0)
-      m_PositionOpenPrice=NormalizeEntryPrice(m_PositionOpenPrice);
+      m_PositionOpenPrice=NormalizeDouble(m_PositionOpenPrice,_Digits);
 
    if(m_PositionLots==0)
       m_PositionTime=D'2050.01.01 00:00';
@@ -858,7 +858,8 @@ void ActionTrade4::AggregatePositionToNormalString(string &posinfo[])
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-bool ActionTrade4::ManageOrderSend(int type,double lots,double price,double stoploss,double takeprofit)
+bool ActionTrade4::ManageOrderSend(int type,double lots,double price,
+                                   double stoploss,double takeprofit)
   {
    bool orderResponse=false;
    int positions=SetAggregatePosition();
@@ -872,11 +873,13 @@ bool ActionTrade4::ManageOrderSend(int type,double lots,double price,double stop
      }
    else if(positions>0)
      {   // There is an open position.
-      if((m_PositionType==OP_BUY && type==OP_BUY) || (m_PositionType==OP_SELL && type==OP_SELL))
+      if((m_PositionType==OP_BUY && type==OP_BUY) ||
+         (m_PositionType==OP_SELL && type==OP_SELL))
         {
          orderResponse=AddToCurrentPosition(type,lots,price,stoploss,takeprofit);
         }
-      else if((m_PositionType==OP_BUY && type==OP_SELL) || (m_PositionType==OP_SELL && type==OP_BUY))
+      else if((m_PositionType==OP_BUY && type==OP_SELL) ||
+              (m_PositionType==OP_SELL && type==OP_BUY))
         {
          if(MathAbs(m_PositionLots-lots)<Epsilon)
             orderResponse=CloseCurrentPosition();
@@ -892,7 +895,8 @@ bool ActionTrade4::ManageOrderSend(int type,double lots,double price,double stop
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-bool ActionTrade4::OpenNewPosition(int type,double lots,double price,double stoploss,double takeprofit)
+bool ActionTrade4::OpenNewPosition(int type,double lots,double price,
+                                   double stoploss,double takeprofit)
   {
    bool orderResponse=false;
 
@@ -908,7 +912,9 @@ bool ActionTrade4::OpenNewPosition(int type,double lots,double price,double stop
      {
       if(Separate_SL_TP)
         {
-         if(Write_Log_File) m_Logger.WriteLogLine("OpenNewPosition => SendOrder");
+         if(Write_Log_File)
+            m_Logger.WriteLogLine("OpenNewPosition => SendOrder");
+
          orderResponse=SendOrder(type,orderLots,price,0,0);
 
          if(orderResponse)
@@ -955,7 +961,8 @@ bool ActionTrade4::OpenNewPosition(int type,double lots,double price,double stop
      }
 
    SetAggregatePosition();
-   if(Write_Log_File) m_Logger.WriteLogLine(AggregatePositionToString());
+   if(Write_Log_File)
+      m_Logger.WriteLogLine(AggregatePositionToString());
 
    return (orderResponse);
   }
@@ -1016,7 +1023,8 @@ bool ActionTrade4::CloseCurrentPosition()
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-bool ActionTrade4::AddToCurrentPosition(int type,double lots,double price,double stoploss,double takeprofit)
+bool ActionTrade4::AddToCurrentPosition(int type,double lots,double price,
+                                        double stoploss,double takeprofit)
   {
 // Checks if we have enough money.
    if(AccountFreeMarginCheck(_Symbol,type,lots)<=0)
@@ -1105,7 +1113,8 @@ bool ActionTrade4::ReduceCurrentPosition(double lots,double price,double stoplos
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-bool ActionTrade4::ReverseCurrentPosition(int type,double lots,double price,double stoploss,double takeprofit)
+bool ActionTrade4::ReverseCurrentPosition(int type,double lots,double price,
+                                          double stoploss,double takeprofit)
   {
    bool orderResponse=false;
    lots-=m_PositionLots;
@@ -1194,7 +1203,7 @@ bool ActionTrade4::ClosePositionByTicket(int orderTicket, double orderLots)
          double orderPrice=(orderType==OP_BUY)
             ? MarketInfo(_Symbol,MODE_BID)
             : MarketInfo(_Symbol,MODE_ASK);
-         orderPrice=NormalizeEntryPrice(orderPrice);
+         orderPrice=NormalizeDouble(orderPrice,Digits);
 
          orderResponse=OrderClose(orderTicket,orderLots,orderPrice,100,Gold);
 
@@ -1298,7 +1307,8 @@ bool ActionTrade4::ModifyPositionByTicket(int orderTicket,double stopLossPrice,d
 
       if(rc)
         {   // Modification was successful.
-         if(Write_Log_File) m_Logger.WriteLogLine(logline);
+         if(Write_Log_File)
+            m_Logger.WriteLogLine(logline);
          return (true);
         }
       else if(m_LastError==1)
@@ -1560,7 +1570,8 @@ void ActionTrade4::SetBreakEvenStop()
             SetStopLossAndTakeProfit(breakprice,m_PositionTakeProfit);
 
             Print("SetBreakEvenStop(",m_BreakEven,") set StopLoss to ",
-               DoubleToString(breakprice,_Digits),", Bid=",bid);
+               DoubleToString(breakprice,_Digits),
+               ", Bid=",DoubleToString(bid,_Digits));
            }
         }
      }
@@ -1572,12 +1583,14 @@ void ActionTrade4::SetBreakEvenStop()
           if(m_PositionStopLoss==0||m_PositionStopLoss>breakprice)
            {
             if(Write_Log_File)
-               m_Logger.WriteLogRequest("SetBreakEvenStop","BreakPrice="+DoubleToString(breakprice,_Digits));
+               m_Logger.WriteLogRequest("SetBreakEvenStop",
+                  "BreakPrice="+DoubleToString(breakprice,_Digits));
 
             SetStopLossAndTakeProfit(breakprice,m_PositionTakeProfit);
 
             Print("SetBreakEvenStop(",m_BreakEven,") set StopLoss to ",
-               DoubleToString(breakprice,_Digits),", Ask=",ask);
+               DoubleToString(breakprice,_Digits),
+                  ", Ask=",DoubleToString(ask,_Digits));
            }
         }
      }
@@ -1761,14 +1774,13 @@ void ActionTrade4::DetectSLTPActivation()
    m_ActivatedTakeProfit = 0;
    m_ClosedSLTPLots      = 0;
 
-// Update position values.
    SetAggregatePosition();
-// Compare updated values with previous tick values.
+
    if(oldType!=OP_FLAT && m_PositionType==OP_FLAT)
      {   // Position was closed this tick. It must be due to SL or TP.
-      double closePrice=MarketInfo(_Symbol,MODE_BID);
-      if(oldType==OP_SELL)
-         closePrice=MarketInfo(_Symbol,MODE_ASK);
+      double closePrice=(oldType==OP_BUY)
+         ? MarketInfo(_Symbol,MODE_BID)
+         : MarketInfo(_Symbol,MODE_ASK);
 
       string stopMessage="Position was closed";
       m_ActivatedStopLoss   = closePrice; // At Stop Loss
@@ -1796,7 +1808,8 @@ void ActionTrade4::DetectSLTPActivation()
                      ", Profit="            +DoubleToString(oldProfit,2)+
                      ", ConsecutiveLosses=" +IntegerToString(m_ConsecutiveLosses);
 
-      if(Write_Log_File) m_Logger.WriteNewLogLine(message);
+      if(Write_Log_File)
+         m_Logger.WriteNewLogLine(message);
       Print(message);
      }
   }
