@@ -555,6 +555,7 @@ int ActionTrade5::FindBarsCountNeeded()
 
    // Initial state
    int initialBars=MathMax(m_Strategy.MinBarsRequired,minBars);
+   initialBars=MathMax(m_Strategy.FirstBar,initialBars);
    for(int i=0; i<ArraySize(m_DataSet); i++)
       UpdateDataSet(m_DataSet[i],initialBars);
    UpdateDataMarket(m_DataMarket);
