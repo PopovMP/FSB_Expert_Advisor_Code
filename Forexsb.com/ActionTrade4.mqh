@@ -643,9 +643,6 @@ void ActionTrade4::UpdateDataMarket(DataMarket *dataMarket)
    dataMarket.AccountEquity       = AccountEquity();
    dataMarket.AccountFreeMargin   = AccountFreeMargin();
    dataMarket.ConsecutiveLosses   = m_ConsecutiveLosses;
-   dataMarket.ActivatedStopLoss   = m_ActivatedStopLoss;
-   dataMarket.ActivatedTakeProfit = m_ActivatedTakeProfit;
-   dataMarket.Closed_SL_TP_Lots   = m_ClosedSLTPLots;
    dataMarket.OldAsk              = dataMarket.Ask;
    dataMarket.OldBid              = dataMarket.Bid;
    dataMarket.OldClose            = dataMarket.Close;
@@ -1775,41 +1772,26 @@ void ActionTrade4::DetectSLTPActivation()
    int    oldType       = m_PositionType;
    double oldLots       = m_PositionLots;
 
-   m_ActivatedStopLoss   = 0;
-   m_ActivatedTakeProfit = 0;
-   m_ClosedSLTPLots      = 0;
-
    SetAggregatePosition();
 
    if(oldType!=OP_FLAT && m_PositionType==OP_FLAT)
      {   // Position was closed this tick. It must be due to SL or TP.
-      double closePrice=(oldType==OP_BUY)
-         ? MarketInfo(_Symbol,MODE_BID)
-         : MarketInfo(_Symbol,MODE_ASK);
-
+      double closePrice=(oldType==OP_BUY) ? m_DataMarket.Bid : m_DataMarket.Ask;
       string stopMessage="Position was closed";
-      m_ActivatedStopLoss   = closePrice; // At Stop Loss
-      m_ActivatedTakeProfit = closePrice; // or at Take Profit ?
+      double activatedStopLoss   = closePrice; // At Stop Loss
+      double activatedTakeProfit = closePrice; // or at Take Profit ?
 
       if(MathAbs(oldStopLoss-closePrice)<2*m_PipsValue)
-        {   // Activated Stop Loss
-         m_ActivatedTakeProfit=0;
-         stopMessage="Activated StopLoss="+DoubleToString(m_ActivatedStopLoss,_Digits);
-        }
+         stopMessage="Activated StopLoss="+DoubleToString(activatedStopLoss,_Digits);
       else if(MathAbs(oldTakeProfit-closePrice)<2*m_PipsValue)
-        {   // Activated Take Profit
-         m_ActivatedStopLoss=0;
-         stopMessage="Activated TakeProfit="+DoubleToString(m_ActivatedTakeProfit,_Digits);
-        }
-
-      m_ClosedSLTPLots=oldLots;
+         stopMessage="Activated TakeProfit="+DoubleToString(activatedTakeProfit,_Digits);
 
       // For Martingale (if used)
       m_ConsecutiveLosses=(oldProfit<0) ? m_ConsecutiveLosses+1 : 0;
 
       string message=stopMessage+
                      ", ClosePrice="        +DoubleToString(closePrice,_Digits)+
-                     ", ClosedLots= "       +DoubleToString(m_ClosedSLTPLots,2)+
+                     ", ClosedLots= "       +DoubleToString(oldLots,2)+
                      ", Profit="            +DoubleToString(oldProfit,2)+
                      ", ConsecutiveLosses=" +IntegerToString(m_ConsecutiveLosses);
 

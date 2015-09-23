@@ -1301,7 +1301,40 @@ void ActionTrade5::SetTrailingStopTickMode()
 //+------------------------------------------------------------------+
 void ActionTrade5::DetectSLTPActivation()
   {
-// TODO
+// Save position values from previous tick.
+   double oldStopLoss   = m_PositionStopLoss;
+   double oldTakeProfit = m_PositionTakeProfit;
+   double oldProfit     = m_PositionProfit;
+   int    oldType       = m_PositionType;
+   double oldLots       = m_PositionLots;
+
+   SetAggregatePosition();
+
+   if(oldType!=OP_FLAT && m_PositionType==OP_FLAT)
+     {   // Position was closed this tick. It must be due to SL or TP.
+      double closePrice=(oldType==OP_BUY) ? m_DataMarket.Bid : m_DataMarket.Ask;
+      string stopMessage="Position was closed";
+      double activatedStopLoss   = closePrice; // At Stop Loss
+      double activatedTakeProfit = closePrice; // or at Take Profit ?
+
+      if(MathAbs(oldStopLoss-closePrice)<2*m_PipsValue)
+         stopMessage="Activated StopLoss="+DoubleToString(activatedStopLoss,_Digits);
+      else if(MathAbs(oldTakeProfit-closePrice)<2*m_PipsValue)
+         stopMessage="Activated TakeProfit="+DoubleToString(activatedTakeProfit,_Digits);
+
+      // For Martingale (if used)
+      m_ConsecutiveLosses=(oldProfit<0) ? m_ConsecutiveLosses+1 : 0;
+
+      string message=stopMessage+
+                     ", ClosePrice="        +DoubleToString(closePrice,_Digits)+
+                     ", ClosedLots= "       +DoubleToString(oldLots,2)+
+                     ", Profit="            +DoubleToString(oldProfit,2)+
+                     ", ConsecutiveLosses=" +IntegerToString(m_ConsecutiveLosses);
+
+      if(Write_Log_File)
+         m_Logger.WriteNewLogLine(message);
+      Print(message);
+     }
   }
 //+------------------------------------------------------------------+
 //|                                                                  |

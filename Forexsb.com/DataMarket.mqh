@@ -61,9 +61,6 @@ public:
    PosDirection      PositionDirection;
 
    int               ConsecutiveLosses;
-   double            ActivatedStopLoss;
-   double            ActivatedTakeProfit;
-   double            Closed_SL_TP_Lots;
    int               WrongStopLoss;
    int               WrongTakeProf;
    int               WrongStopsRetry;
