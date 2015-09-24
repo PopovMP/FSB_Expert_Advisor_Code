@@ -737,18 +737,18 @@ int ActionTrade5::SetAggregatePosition()
 string ActionTrade5::AggregatePositionToString()
   {
    if(m_PositionType==OP_FLAT)
-      return "Position: Flat";
+      return ("Position: Flat");
 
-   string text="Position: "+
-               "Ticket="+IntegerToString(m_PositionTicket)+
-               ", Time="+TimeToString(m_PositionTime,TIME_SECONDS)+
-               ", Type="+(m_PositionType==OP_BUY ? "Long" : "Short")+
-               ", Lots="+DoubleToString(m_PositionLots,2)+
-               ", Price="+DoubleToString(m_PositionOpenPrice,_Digits)+
-               ", StopLoss="+DoubleToString(m_PositionStopLoss,_Digits)+
-               ", TakeProfit="+DoubleToString(m_PositionTakeProfit,_Digits)+
-               ", Commission="+DoubleToString(m_PositionCommission,2)+
-               ", Profit="+DoubleToString(m_PositionProfit,2);
+   string text="Position: "    +
+               "Ticket="       + IntegerToString(m_PositionTicket)+
+               ", Time="       + TimeToString(m_PositionTime,TIME_SECONDS)+
+               ", Type="       + (m_PositionType==OP_BUY ? "Long" : "Short")+
+               ", Lots="       + DoubleToString(m_PositionLots,2)+
+               ", Price="      + DoubleToString(m_PositionOpenPrice,_Digits)+
+               ", StopLoss="   + DoubleToString(m_PositionStopLoss,_Digits)+
+               ", TakeProfit=" + DoubleToString(m_PositionTakeProfit,_Digits)+
+               ", Commission=" + DoubleToString(m_PositionCommission,2)+
+               ", Profit="     + DoubleToString(m_PositionProfit,2);
 
    if(m_PositionComment!="")
       text=text+", \""+m_PositionComment+"\"";
@@ -896,7 +896,7 @@ bool ActionTrade5::ModifyPosition(double stoploss,double takeprofit)
          string retcode=ResultRetcodeDescription(check.retcode);
 
          if(!isOrderCheck)
-            Print("Error: ","ModifyPosition","(): OrderCheck(): ",retcode);
+            Print("Error: ","ModifyPosition: ","OrderCheck: ",retcode);
 
          bool isOrderSend=false;
          if(isOrderCheck)
@@ -905,7 +905,7 @@ bool ActionTrade5::ModifyPosition(double stoploss,double takeprofit)
             retcode=ResultRetcodeDescription(result.retcode);
 
             if(!isOrderSend)
-               Print("Error: ","ModifyPosition","(): OrderSend(): ",retcode);
+               Print("Error: ","ModifyPosition: ","OrderSend: ",retcode);
            }
 
          bool isExecuted=isOrderCheck && isOrderSend && result.retcode==TRADE_RETCODE_DONE;
@@ -914,8 +914,7 @@ bool ActionTrade5::ModifyPosition(double stoploss,double takeprofit)
 
          m_LastError=GetLastError();
          if(Write_Log_File)
-            m_Logger.WriteLogLine("ModifyPosition"+
-                         ": "+_Symbol+
+            m_Logger.WriteLogLine("ModifyPosition: " + _Symbol+
                          ", StopLoss="   +DoubleToString(stopLossPrice,_Digits)+
                          ", TakeProfit=" +DoubleToString(takeProfitPrice,_Digits)+
                          ", RetCode="    +retcode+
@@ -1364,11 +1363,168 @@ bool ActionTrade5::IsTradeContextFree()
      }
 
    return (true);
+ }
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+TickType ActionTrade5::GetTickType(DataSet *dataSet,bool isNewBar)
+  {
+   DataPeriod period      = dataSet.Period;
+   int        bars        = dataSet.Bars;
+   datetime   serverTime  = dataSet.ServerTime;
+   datetime   barOpenTime = dataSet.Time[bars-1];
+
+   TickType type=TickType_Regular;
+
+   if(isNewBar)
+     {
+      m_BarOpenTimeForLastCloseTick=-1;
+      type=TickType_Open;
+     }
+
+   bool isClose=((barOpenTime+period*60)-serverTime)<Bar_Close_Advance;
+   if(isClose)
+     {
+      if(m_BarOpenTimeForLastCloseTick==barOpenTime)
+        {
+         type=TickType_AfterClose;
+        }
+      else
+        {
+         m_BarOpenTimeForLastCloseTick=barOpenTime;
+         type=isNewBar ? TickType_OpenClose : TickType_Close;
+        }
+     }
+
+   return (type);
   }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-PosDirection ActionTrade5::GetNewPositionDirection(OrderDirection ordDir,double ordLots,PosDirection posDir,double posLots)
+void ActionTrade5::CalculateTrade(TickType ticktype)
+  {
+// Exit
+   bool closeOk=false;
+
+   if(m_CloseStrPriceType!=StrategyPriceType_CloseAndReverse &&
+      m_DataMarket.PositionTicket!=0)
+     {
+      if(ticktype==TickType_Open && m_CloseStrPriceType==StrategyPriceType_Close &&
+         m_OpenStrPriceType!=StrategyPriceType_Close)
+        {  // We have missed close at the previous Bar Close
+         TradeDirection direction=AnalyzeExitDirection();
+         if(direction==TradeDirection_Both ||
+            (direction == TradeDirection_Long  &&
+               m_DataMarket.PositionDirection == PosDirection_Short) ||
+            (direction == TradeDirection_Short &&
+               m_DataMarket.PositionDirection == PosDirection_Long))
+            {  // we have a missed close Order
+               if(DoExitTrade())
+                  UpdateDataMarket(m_DataMarket);
+            }
+        }
+      else if(((m_CloseStrPriceType==StrategyPriceType_Open)  &&
+               (ticktype==TickType_Open  || ticktype==TickType_OpenClose)) ||
+              ((m_CloseStrPriceType==StrategyPriceType_Close) &&
+               (ticktype==TickType_Close || ticktype==TickType_OpenClose)))
+        {  // Exit at Bar Open or Bar Close.
+         TradeDirection direction=AnalyzeExitDirection();
+         if(direction==TradeDirection_Both ||
+            (direction == TradeDirection_Long  &&
+               m_DataMarket.PositionDirection == PosDirection_Short) ||
+            (direction == TradeDirection_Short &&
+               m_DataMarket.PositionDirection == PosDirection_Long))
+            { // Close the current position.
+               closeOk=DoExitTrade();
+               if(closeOk)
+                  UpdateDataMarket(m_DataMarket);
+            }
+        }
+      else if(m_CloseStrPriceType==StrategyPriceType_Close &&
+               m_OpenStrPriceType!=StrategyPriceType_Close &&
+               ticktype==TickType_AfterClose)
+        {  // Exit at after close tick.
+         TradeDirection direction=AnalyzeExitDirection();
+         if(direction==TradeDirection_Both ||
+            (direction == TradeDirection_Long  &&
+               m_DataMarket.PositionDirection == PosDirection_Short) ||
+            (direction == TradeDirection_Short &&
+               m_DataMarket.PositionDirection == PosDirection_Long))
+            closeOk=DoExitTrade(); // Close the current position.
+        }
+      else if(m_CloseStrPriceType==StrategyPriceType_Indicator)
+        { // Exit at an indicator value.
+         TradeDirection priceReached=AnalyzeExitPrice();
+         if(priceReached==TradeDirection_Long)
+           {
+            TradeDirection direction=AnalyzeExitDirection();
+            if(direction==TradeDirection_Long || direction==TradeDirection_Both)
+               if(m_DataMarket.PositionDirection==PosDirection_Short)
+                  closeOk=DoExitTrade(); // Close a short position.
+           }
+         else if(priceReached==TradeDirection_Short)
+           {
+            TradeDirection direction=AnalyzeExitDirection();
+            if(direction==TradeDirection_Short || direction==TradeDirection_Both)
+               if(m_DataMarket.PositionDirection==PosDirection_Long)
+                  closeOk=DoExitTrade(); // Close a long position.
+           }
+         else if(priceReached==TradeDirection_Both)
+           {
+            TradeDirection direction=AnalyzeExitDirection();
+            if(direction==TradeDirection_Long || direction==TradeDirection_Short ||
+               direction==TradeDirection_Both)
+               closeOk=DoExitTrade(); // Close the current position.
+           }
+        }
+     }
+
+// Checks if we closed a position successfully.
+   if(closeOk && !(m_OpenStrPriceType==StrategyPriceType_Close &&
+      ticktype==TickType_Close))
+      return;
+
+// This is to prevent new entry after Bar Closing has been executed.
+   if(m_CloseStrPriceType==StrategyPriceType_Close && ticktype==TickType_AfterClose)
+      return;
+
+   if(((m_OpenStrPriceType==StrategyPriceType_Open)  &&
+         (ticktype==TickType_Open  || ticktype==TickType_OpenClose)) ||
+      ((m_OpenStrPriceType==StrategyPriceType_Close) &&
+         (ticktype==TickType_Close || ticktype==TickType_OpenClose)))
+     { // Entry at Bar Open or Bar Close.
+      TradeDirection direction=AnalyzeEntryDirection();
+      if(direction==TradeDirection_Long || direction==TradeDirection_Short)
+         DoEntryTrade(direction);
+     }
+   else if(m_OpenStrPriceType==StrategyPriceType_Indicator)
+     { // Entry at an indicator value.
+      TradeDirection priceReached=AnalyzeEntryPrice();
+      if(priceReached==TradeDirection_Long)
+        {
+         TradeDirection direction=AnalyzeEntryDirection();
+         if(direction==TradeDirection_Long || direction==TradeDirection_Both)
+            DoEntryTrade(TradeDirection_Long);
+        }
+      else if(priceReached==TradeDirection_Short)
+        {
+         TradeDirection direction=AnalyzeEntryDirection();
+         if(direction==TradeDirection_Short || direction==TradeDirection_Both)
+            DoEntryTrade(TradeDirection_Short);
+        }
+      else if(priceReached==TradeDirection_Both)
+        {
+         TradeDirection direction=AnalyzeEntryDirection();
+         if(direction==TradeDirection_Long || direction==TradeDirection_Short)
+            DoEntryTrade(direction);
+        }
+     }
+  }
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+PosDirection ActionTrade5::GetNewPositionDirection(OrderDirection ordDir,
+   double ordLots,PosDirection posDir,double posLots)
   {
    if(ordDir!=OrderDirection_Buy && ordDir!=OrderDirection_Sell)
       return (PosDirection_None);
@@ -1380,19 +1536,26 @@ PosDirection ActionTrade5::GetNewPositionDirection(OrderDirection ordDir,double 
      {
       case PosDirection_Long:
          if(ordDir==OrderDirection_Buy)
-         return (PosDirection_Long);
+            return (PosDirection_Long);
          if(currentLots>ordLots+Epsilon)
             return (PosDirection_Long);
-         return currentLots < ordLots - Epsilon ? PosDirection_Short : PosDirection_None;
+         return (currentLots < ordLots - Epsilon
+                  ? PosDirection_Short
+                  : PosDirection_None);
       case PosDirection_Short:
          if(ordDir==OrderDirection_Sell)
-         return (PosDirection_Short);
+            return (PosDirection_Short);
          if(currentLots>ordLots+Epsilon)
             return (PosDirection_Short);
-         return currentLots < ordLots - Epsilon ? PosDirection_Long : PosDirection_None;
+         return (currentLots < ordLots - Epsilon
+            ? PosDirection_Long
+            : PosDirection_None);
      }
 
-   return (ordDir == OrderDirection_Buy ? PosDirection_Long : PosDirection_Short);
+
+   return (ordDir==OrderDirection_Buy
+                  ? PosDirection_Long
+                  : PosDirection_Short);
   }
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -1400,8 +1563,8 @@ PosDirection ActionTrade5::GetNewPositionDirection(OrderDirection ordDir,double 
 void ActionTrade5::InitTrade()
   {
    m_OpenTimeExec=m_Strategy.Slot[0].IndicatorPointer.ExecTime;
-   m_OpenStrPriceType= StrategyPriceType_Unknown;
-   if(m_OpenTimeExec == ExecutionTime_AtBarOpening)
+   m_OpenStrPriceType=StrategyPriceType_Unknown;
+   if(m_OpenTimeExec==ExecutionTime_AtBarOpening)
       m_OpenStrPriceType=StrategyPriceType_Open;
    else if(m_OpenTimeExec==ExecutionTime_AtBarClosing)
       m_OpenStrPriceType=StrategyPriceType_Close;
@@ -1409,8 +1572,8 @@ void ActionTrade5::InitTrade()
       m_OpenStrPriceType=StrategyPriceType_Indicator;
 
    m_CloseTimeExec=m_Strategy.Slot[m_Strategy.CloseSlotNumber()].IndicatorPointer.ExecTime;
-   m_CloseStrPriceType= StrategyPriceType_Unknown;
-   if(m_CloseTimeExec == ExecutionTime_AtBarOpening)
+   m_CloseStrPriceType=StrategyPriceType_Unknown;
+   if(m_CloseTimeExec==ExecutionTime_AtBarOpening)
       m_CloseStrPriceType=StrategyPriceType_Open;
    else if(m_CloseTimeExec==ExecutionTime_AtBarClosing)
       m_CloseStrPriceType=StrategyPriceType_Close;
@@ -1448,14 +1611,16 @@ void ActionTrade5::InitTrade()
         }
 
       if(m_ClosingLogicGroups.Count()==0)
-         m_ClosingLogicGroups.Add("all"); // If all the slots are in "all" group, adds "all" to the list.
+         m_ClosingLogicGroups.Add("all");
      }
 
-// Search if N Bars Exit is present as CloseFilter, could be any slot after first closing slot.
+   // Search if N Bars Exit is present as CloseFilter,
+   // could be any slot after first closing slot.
    m_NBarExit=0;
    for(int slot=m_Strategy.CloseSlotNumber(); slot<m_Strategy.Slots(); slot++)
      {
-      if(m_Strategy.Slot[slot].IndicatorName!="N Bars Exit") continue;
+      if(m_Strategy.Slot[slot].IndicatorName!="N Bars Exit")
+         continue;
       m_NBarExit=(int) m_Strategy.Slot[slot].IndicatorPointer.NumParam[0].Value;
       break;
      }
@@ -1624,11 +1789,13 @@ TradeDirection ActionTrade5::AnalyzeEntryDirection()
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void ActionTrade5::AnalyzeEntryLogicConditions(int bar,string group,double buyPrice,double sellPrice,bool &canOpenLong,bool &canOpenShort)
+void ActionTrade5::AnalyzeEntryLogicConditions(int bar,string group,double buyPrice,
+   double sellPrice,bool &canOpenLong,bool &canOpenShort)
   {
    for(int slotIndex=0; slotIndex<=m_Strategy.CloseSlotNumber(); slotIndex++)
      {
-      if(m_UseLogicalGroups && m_Strategy.Slot[slotIndex].LogicalGroup!=group && m_Strategy.Slot[slotIndex].LogicalGroup!="All")
+      if(m_UseLogicalGroups && m_Strategy.Slot[slotIndex].LogicalGroup!=group &&
+         m_Strategy.Slot[slotIndex].LogicalGroup!="All")
          continue;
 
       for(int i=0; i<m_Strategy.Slot[slotIndex].IndicatorPointer.Components(); i++)
@@ -1688,7 +1855,8 @@ double ActionTrade5::AnalyzeEntrySize(OrderDirection ordDir,PosDirection &newPos
         {
          size=0;
          newPosDir=posDir;
-         if(m_DataMarket.PositionLots+TradingSize(m_Strategy.AddingLots)<m_Strategy.MaxOpenLots+Epsilon)
+         if(m_DataMarket.PositionLots+TradingSize(m_Strategy.AddingLots) <
+            m_Strategy.MaxOpenLots+Epsilon)
            {
             switch(m_Strategy.SameSignalAction)
               {
@@ -1706,7 +1874,8 @@ double ActionTrade5::AnalyzeEntrySize(OrderDirection ordDir,PosDirection &newPos
               }
            }
         }
-      else if((ordDir==OrderDirection_Buy && posDir==PosDirection_Short) || (ordDir==OrderDirection_Sell && posDir==PosDirection_Long))
+      else if((ordDir==OrderDirection_Buy  && posDir==PosDirection_Short) ||
+              (ordDir==OrderDirection_Sell && posDir==PosDirection_Long))
         {
          // In case of an Opposite Dir Signal
          switch(m_Strategy.OppSignalAction)
@@ -2029,24 +2198,6 @@ void ActionTrade5::DoEntryTrade(TradeDirection tradeDir)
    double takeprofit = GetTakeProfitPoints();
    double point      = m_DataSet[0].Point;
 
-   if(stoploss>0)
-     {
-      double stopLossPrice=0;
-      if(newPosDir==PosDirection_Long)
-         stopLossPrice=m_DataMarket.Bid-stoploss*point;
-      else if(newPosDir== PosDirection_Short)
-         stopLossPrice = m_DataMarket.Ask+stoploss*point;
-     }
-
-   if(takeprofit>0)
-     {
-      double takeProfitPrice=0;
-      if(newPosDir==PosDirection_Long)
-         takeProfitPrice=m_DataMarket.Bid+takeprofit*point;
-      else if(newPosDir==PosDirection_Short)
-         takeProfitPrice=m_DataMarket.Ask-takeprofit*point;
-     }
-
    int trlStop=0;
    TrailingStopMode trlMode=TrailingStopMode_Bar;
    int closeSlot=m_Strategy.CloseSlotNumber();
@@ -2101,147 +2252,6 @@ bool ActionTrade5::DoExitTrade()
    m_DataMarket.WrongStopsRetry = 0;
 
    return (orderResponse);
-  }
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
-TickType ActionTrade5::GetTickType(DataSet *dataSet,bool isNewBar)
-  {
-   DataPeriod period      = dataSet.Period;
-   int        bars        = dataSet.Bars;
-   datetime   serverTime  = dataSet.ServerTime;
-   datetime   barOpenTime = dataSet.Time[bars-1];
-
-   TickType type=TickType_Regular;
-
-   if(isNewBar)
-     {
-      m_BarOpenTimeForLastCloseTick=-1;
-      type=TickType_Open;
-     }
-
-   bool isClose=((barOpenTime+period*60)-serverTime)<Bar_Close_Advance;
-   if(isClose)
-     {
-      if(m_BarOpenTimeForLastCloseTick==barOpenTime)
-        {
-         type=TickType_AfterClose;
-        }
-      else
-        {
-         m_BarOpenTimeForLastCloseTick=barOpenTime;
-         type=isNewBar ? TickType_OpenClose : TickType_Close;
-        }
-     }
-
-   return (type);
-  }
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
-void ActionTrade5::CalculateTrade(TickType ticktype)
-  {
-// Exit
-   bool closeOk=false;
-
-   if(m_CloseStrPriceType!=StrategyPriceType_CloseAndReverse && m_DataMarket.PositionTicket!=0)
-     {
-      if(ticktype==TickType_Open && m_CloseStrPriceType==StrategyPriceType_Close && m_OpenStrPriceType!=StrategyPriceType_Close)
-        {  // We have missed close at the previous Bar Close
-         TradeDirection direction=AnalyzeExitDirection();
-         if(direction==TradeDirection_Both ||
-            (direction == TradeDirection_Long  && m_DataMarket.PositionDirection == PosDirection_Short) ||
-            (direction == TradeDirection_Short && m_DataMarket.PositionDirection == PosDirection_Long))
-            {  // we have a missed close Order
-               if(DoExitTrade())
-                  UpdateDataMarket(m_DataMarket);
-            }
-        }
-      else if(((m_CloseStrPriceType==StrategyPriceType_Open)  && (ticktype==TickType_Open  || ticktype==TickType_OpenClose)) ||
-              ((m_CloseStrPriceType==StrategyPriceType_Close) && (ticktype==TickType_Close || ticktype==TickType_OpenClose)))
-        {  // Exit at Bar Open or Bar Close.
-         TradeDirection direction=AnalyzeExitDirection();
-         if(direction==TradeDirection_Both ||
-            (direction == TradeDirection_Long  && m_DataMarket.PositionDirection == PosDirection_Short) ||
-            (direction == TradeDirection_Short && m_DataMarket.PositionDirection == PosDirection_Long))
-            { // Close the current position.
-               closeOk=DoExitTrade();
-               if(closeOk)
-                  UpdateDataMarket(m_DataMarket);
-            }
-        }
-      else if((m_CloseStrPriceType==StrategyPriceType_Close && m_OpenStrPriceType!=StrategyPriceType_Close) && ticktype==TickType_AfterClose)
-        {  // Exit at after close tick.
-         TradeDirection direction=AnalyzeExitDirection();
-         if(direction==TradeDirection_Both ||
-            (direction == TradeDirection_Long  && m_DataMarket.PositionDirection == PosDirection_Short) ||
-            (direction == TradeDirection_Short && m_DataMarket.PositionDirection == PosDirection_Long))
-            closeOk=DoExitTrade(); // Close the current position.
-        }
-      else if(m_CloseStrPriceType==StrategyPriceType_Indicator)
-        { // Exit at an indicator value.
-         TradeDirection priceReached=AnalyzeExitPrice();
-         if(priceReached==TradeDirection_Long)
-           {
-            TradeDirection direction=AnalyzeExitDirection();
-            if(direction==TradeDirection_Long || direction==TradeDirection_Both)
-               if(m_DataMarket.PositionDirection==PosDirection_Short)
-                  closeOk=DoExitTrade(); // Close a short position.
-           }
-         else if(priceReached==TradeDirection_Short)
-           {
-            TradeDirection direction=AnalyzeExitDirection();
-            if(direction==TradeDirection_Short || direction==TradeDirection_Both)
-               if(m_DataMarket.PositionDirection==PosDirection_Long)
-                  closeOk=DoExitTrade(); // Close a long position.
-           }
-         else if(priceReached==TradeDirection_Both)
-           {
-            TradeDirection direction=AnalyzeExitDirection();
-            if(direction==TradeDirection_Long || direction==TradeDirection_Short ||
-               direction==TradeDirection_Both)
-               closeOk=DoExitTrade(); // Close the current position.
-           }
-        }
-     }
-
-// Checks if we closed a position successfully.
-   if(closeOk && !(m_OpenStrPriceType==StrategyPriceType_Close && ticktype==TickType_Close))
-      return;
-
-// This is to prevent new entry after Bar Closing has been executed.
-   if(m_CloseStrPriceType==StrategyPriceType_Close && ticktype==TickType_AfterClose)
-      return;
-
-   if(((m_OpenStrPriceType==StrategyPriceType_Open)  && (ticktype==TickType_Open  || ticktype==TickType_OpenClose)) ||
-      ((m_OpenStrPriceType==StrategyPriceType_Close) && (ticktype==TickType_Close || ticktype==TickType_OpenClose)))
-     { // Entry at Bar Open or Bar Close.
-      TradeDirection direction=AnalyzeEntryDirection();
-      if(direction==TradeDirection_Long || direction==TradeDirection_Short)
-         DoEntryTrade(direction);
-     }
-   else if(m_OpenStrPriceType==StrategyPriceType_Indicator)
-     { // Entry at an indicator value.
-      TradeDirection priceReached=AnalyzeEntryPrice();
-      if(priceReached==TradeDirection_Long)
-        {
-         TradeDirection direction=AnalyzeEntryDirection();
-         if(direction==TradeDirection_Long || direction==TradeDirection_Both)
-            DoEntryTrade(TradeDirection_Long);
-        }
-      else if(priceReached==TradeDirection_Short)
-        {
-         TradeDirection direction=AnalyzeEntryDirection();
-         if(direction==TradeDirection_Short || direction==TradeDirection_Both)
-            DoEntryTrade(TradeDirection_Short);
-        }
-      else if(priceReached==TradeDirection_Both)
-        {
-         TradeDirection direction=AnalyzeEntryDirection();
-         if(direction==TradeDirection_Long || direction==TradeDirection_Short)
-            DoEntryTrade(direction);
-        }
-     }
   }
 //+------------------------------------------------------------------+
 //|                                                                  |
