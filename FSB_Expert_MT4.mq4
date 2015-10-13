@@ -86,7 +86,8 @@ int TrailingStop_Moving_Step=10;
 // This doesn't change the normal work of Forex Strategy Builder.
 bool FIFO_order=true;
 
-// When the log file reaches ### lines, the expert starts a new file.
+// When the log file reaches the preset number of lines,
+// the expert starts a new log file.
 int Max_Log_Lines_in_File=2000;
 
 // Used to detect a chart change
@@ -122,10 +123,10 @@ int OnInit()
    actionsTrade.MaximumAmount  = (Maximum_Amount >77700) ? 0.1 : Maximum_Amount;
    actionsTrade.AddingAmount   = (Adding_Amount  >77700) ? 0.1 : Adding_Amount;
    actionsTrade.ReducingAmount = (Reducing_Amount>77700) ? 0.1 : Reducing_Amount;
+   actionsTrade.OrderComment           = Order_Comment;
    actionsTrade.StrategyFileName       = Strategy_File_Name;
    actionsTrade.StrategyXML            = Strategy_XML;
    actionsTrade.MinDataBars            = Min_Data_Bars;
-   actionsTrade.OrderComment           = Order_Comment;
    actionsTrade.ProtectionMinAccount   = Protection_Min_Account;
    actionsTrade.ProtectionMaxStopLoss  = Protection_Max_StopLoss;
    actionsTrade.ExpertMagic            = Expert_Magic;

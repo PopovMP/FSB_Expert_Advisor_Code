@@ -112,7 +112,7 @@ private:
    // Methods
    bool              CheckEnvironment(int minimumBars);
    bool              CheckChartBarsCount(int minimumBars);
-   int               FindBarsCountNeeded(void);
+   int               FindBarsCountNeeded(int minDataBars);
    int               SetAggregatePosition(void);
    string            AggregatePositionToString(void);
    void              AggregatePositionToNormalString(string &posinfo[]);
@@ -321,7 +321,7 @@ int ActionTrade4::OnInit()
    SetAggregatePosition();
 
 // Checks the necessary bars.
-   MinDataBars=FindBarsCountNeeded();
+   MinDataBars=FindBarsCountNeeded(MinDataBars);
 
 // Initial strategy calculation
    for(int i=0; i<ArraySize(m_DataSet); i++)
@@ -503,23 +503,23 @@ bool ActionTrade4::CheckEnvironment(int minimumBars)
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-int ActionTrade4::FindBarsCountNeeded()
+int ActionTrade4::FindBarsCountNeeded(int minDataBars)
   {
-   int barStep=50;
-   int minBars=50;
-   int maxBars=3000;
+   int barStep = 50;
+   int minBars = MathMax(minDataBars, 50);
+   int maxBars = MathMax(minBars, 3000);
 
    // Initial state
-   int initialBars=MathMax(m_Strategy.MinBarsRequired,minBars);
-   initialBars=MathMax(m_Strategy.FirstBar,initialBars);
+   int initialBars = MathMax(m_Strategy.MinBarsRequired, minBars);
+   initialBars = MathMax(m_Strategy.FirstBar, initialBars);
    for(int i=0; i<ArraySize(m_DataSet); i++)
-      UpdateDataSet(m_DataSet[i],initialBars);
+      UpdateDataSet(m_DataSet[i], initialBars);
    UpdateDataMarket(m_DataMarket);
-   double initialBid=m_DataMarket.Bid;
+   double initialBid = m_DataMarket.Bid;
    m_Strategy.CalculateStrategy(m_DataSet);
-   string dynamicInfo=m_Strategy.DynamicInfoText();
-   int necessaryBars=initialBars;
-   int roundedInitialBars=(int)(barStep*MathCeil(((double)initialBars)/barStep));
+   string dynamicInfo = m_Strategy.DynamicInfoText();
+   int necessaryBars = initialBars;
+   int roundedInitialBars = (int)(barStep*MathCeil(((double)initialBars)/barStep));
    int firstTestBars=roundedInitialBars>=initialBars+barStep/2
       ? roundedInitialBars
       : roundedInitialBars+barStep;

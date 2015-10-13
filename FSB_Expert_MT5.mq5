@@ -30,7 +30,7 @@
 
 // -----------------------    External variables   ----------------------- //
 
-extern double Entry_Amount    = 77701; // Entry amount for a new position #TRADEUNIT#
+extern double Entry_Amount    = 77701; // Amount for a new position #TRADEUNIT#
 extern double Maximum_Amount  = 77702; // Maximum position amount [lot]
 extern double Adding_Amount   = 77703; // Amount to add on addition #TRADEUNIT#
 extern double Reducing_Amount = 77704; // Amount to close on reduction #TRADEUNIT#
@@ -83,8 +83,9 @@ int TrailingStop_Moving_Step=10;
 // This doesn't change the normal work of Forex Strategy Builder.
 bool FIFO_order=true;
 
-// When the log file reaches number of lines, the expert starts a new file.
-int MaxLogLinesInFile=2000;
+// When the log file reaches the preset number of lines,
+// the expert starts a new log file.
+int Max_Log_Lines_in_File=2000;
 
 // Used to detect a chart change
 string __symbol = "";
@@ -130,7 +131,7 @@ int OnInit()
    actionsTrade.WriteLogFile           = Write_Log_File;
    actionsTrade.TrailingStopMovingStep = TrailingStop_Moving_Step;
    actionsTrade.FIFOorder              = FIFO_order;
-   actionsTrade.MaxLogLinesInFile      = MaxLogLinesInFile;
+   actionsTrade.MaxLogLinesInFile      = Max_Log_Lines_in_File;
    actionsTrade.BarCloseAdvance        = Bar_Close_Advance;
 
    int result=actionsTrade.OnInit();
@@ -162,9 +163,9 @@ void OnTick()
 //|                                                                  |
 //+------------------------------------------------------------------+
 void OnTrade()
-{
+  {
    actionsTrade.OnTrade();
-}
+  }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -176,4 +177,3 @@ void OnDeinit(const int reason)
       delete actionsTrade;
   }
 //+------------------------------------------------------------------+
-

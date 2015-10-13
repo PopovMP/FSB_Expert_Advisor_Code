@@ -105,9 +105,9 @@ class ActionTrade5
    string            m_DynamicInfoAccount[3];
 
    // Methods
-   bool              CheckEnvironment(int minimumBars);
-   bool              CheckChartBarsCount(int minimumBars);
-   int               FindBarsCountNeeded(void);
+   bool              CheckEnvironment(int minDataBars);
+   bool              CheckChartBarsCount(int minDataBars);
+   int               FindBarsCountNeeded(int minDataBars);
    int               SetAggregatePosition(void);
    string            AggregatePositionToString(void);
    void              AggregatePositionToNormalString(string &posinfo[]);
@@ -276,7 +276,7 @@ int ActionTrade5::OnInit()
 
    delete strategyManager;
 
-// Checks the requirements.
+   // Checks the requirements.
    bool isEnvironmentGood=CheckEnvironment(m_Strategy.MinBarsRequired);
    if(!isEnvironmentGood)
      {   // There is a non fulfilled condition, therefore we must exit.
@@ -285,7 +285,7 @@ int ActionTrade5::OnInit()
       return (INIT_FAILED);
      }
 
-// Market initialization
+   // Market initialization
    string charts[];
    m_Strategy.GetRequiredCharts(charts);
 
@@ -296,17 +296,17 @@ int ActionTrade5::OnInit()
    Comment(chartsNote);
    Print(chartsNote);
 
-// Initial data loading
+   // Initial data loading
    ArrayResize(m_DataSet,ArraySize(charts));
    for(int i=0; i<ArraySize(charts); i++)
       m_DataSet[i]=new DataSet(charts[i]);
 
    SetAggregatePosition();
 
-// Checks the necessary bars.
-   MinDataBars=FindBarsCountNeeded();
+   // Checks the necessary bars.
+   MinDataBars=FindBarsCountNeeded(MinDataBars);
 
-// Initial strategy calculation
+   // Initial strategy calculation
    for(int i=0; i<ArraySize(m_DataSet); i++)
       UpdateDataSet(m_DataSet[i],MinDataBars);
    m_Strategy.CalculateStrategy(m_DataSet);
@@ -490,10 +490,10 @@ void ActionTrade5::OnDeinit(const int reason)
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-bool ActionTrade5::CheckEnvironment(int minimumBars)
+bool ActionTrade5::CheckEnvironment(int minDataBars)
   {
 // Checks the count of bars available.
-   if(!CheckChartBarsCount(minimumBars))
+   if(!CheckChartBarsCount(minDataBars))
       return (false);
 
    if(MQLInfoInteger(MQL_TESTER))
@@ -527,14 +527,14 @@ bool ActionTrade5::CheckEnvironment(int minimumBars)
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-bool ActionTrade5::CheckChartBarsCount(int barsNecessary)
+bool ActionTrade5::CheckChartBarsCount(int minDataBars)
   {
    int bars=Bars(_Symbol,_Period);
-   bool isEnoughBars=bars>=barsNecessary;
+   bool isEnoughBars=bars>=minDataBars;
    if(isEnoughBars) return(true);
 
    string message="\n Cannot load enough bars! The expert needs minimum "+
-                     IntegerToString(barsNecessary)+" bars."+
+                     IntegerToString(minDataBars)+" bars."+
                   "\n Currently "+IntegerToString(bars)+" bars are loaded.";
 
    if(MQLInfoInteger(MQL_TESTER))
@@ -547,11 +547,11 @@ bool ActionTrade5::CheckChartBarsCount(int barsNecessary)
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-int ActionTrade5::FindBarsCountNeeded()
+int ActionTrade5::FindBarsCountNeeded(int minDataBars)
   {
-   int barStep=50;
-   int minBars=50;
-   int maxBars=3000;
+   int barStep = 50;
+   int minBars = MathMax(minDataBars, 50);
+   int maxBars = MathMax(minBars, 3000);
 
    // Initial state
    int initialBars=MathMax(m_Strategy.MinBarsRequired,minBars);
