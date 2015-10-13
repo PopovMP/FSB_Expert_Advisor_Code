@@ -173,7 +173,6 @@ public:
    int               ProtectionMaxStopLoss;
    bool              SeparateSLTP;
    bool              WriteLogFile;
-   bool              FIFOorder;
    int               TrailingStopMovingStep;
    int               MaxLogLinesInFile;
    int               BarCloseAdvance;
@@ -2158,7 +2157,6 @@ double ActionTrade5::GetTakeProfitPoints()
 //+------------------------------------------------------------------+
 void ActionTrade5::DoEntryTrade(TradeDirection tradeDir)
   {
-   double price;
    OrderDirection  ordDir;
    OperationType   opType;
    TraderOrderType type;
@@ -2170,14 +2168,12 @@ void ActionTrade5::DoEntryTrade(TradeDirection tradeDir)
      {
       case TradeDirection_Long: // Buy
          if(m_IsEnteredLong)return;
-         price  = m_DataMarket.Ask;
          ordDir = OrderDirection_Buy;
          opType = OperationType_Buy;
          type   = TraderOrderType_Buy;
          break;
       case TradeDirection_Short: // Sell
          if(m_IsEnteredShort)return;
-         price  = m_DataMarket.Bid;
          ordDir = OrderDirection_Sell;
          opType = OperationType_Sell;
          type   = TraderOrderType_Sell;

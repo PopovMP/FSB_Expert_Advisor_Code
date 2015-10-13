@@ -77,12 +77,6 @@ string Strategy_XML="##STRATEGY##"; // XML String
 // This prevents sending multiple order modifications.
 int TrailingStop_Moving_Step=10;
 
-// FIFO (First In First Out) forces the expert to close positions starting from
-// the oldest one. This rule complies with the new NFA regulations.
-// If you want to close the positions from the newest one (FILO), change the variable to "false".
-// This doesn't change the normal work of Forex Strategy Builder.
-bool FIFO_order=true;
-
 // When the log file reaches the preset number of lines,
 // the expert starts a new log file.
 int Max_Log_Lines_in_File=2000;
@@ -130,7 +124,6 @@ int OnInit()
    actionsTrade.SeparateSLTP           = Separate_SL_TP;
    actionsTrade.WriteLogFile           = Write_Log_File;
    actionsTrade.TrailingStopMovingStep = TrailingStop_Moving_Step;
-   actionsTrade.FIFOorder              = FIFO_order;
    actionsTrade.MaxLogLinesInFile      = Max_Log_Lines_in_File;
    actionsTrade.BarCloseAdvance        = Bar_Close_Advance;
 

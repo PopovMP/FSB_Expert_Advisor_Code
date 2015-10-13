@@ -69,9 +69,6 @@ private:
    double            m_PositionCommission;
    string            m_PositionComment;
    int               m_ConsecutiveLosses;
-   double            m_ActivatedStopLoss;
-   double            m_ActivatedTakeProfit;
-   double            m_ClosedSLTPLots;
 
    // Properties
    int               m_LastError;
@@ -110,8 +107,8 @@ private:
    string            m_DynamicInfoAccount[3];
 
    // Methods
-   bool              CheckEnvironment(int minimumBars);
-   bool              CheckChartBarsCount(int minimumBars);
+   bool              CheckEnvironment(int minDataBars);
+   bool              CheckChartBarsCount(int minDataBars);
    int               FindBarsCountNeeded(int minDataBars);
    int               SetAggregatePosition(void);
    string            AggregatePositionToString(void);
@@ -470,9 +467,9 @@ void ActionTrade4::OnDeinit(const int reason)
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-bool ActionTrade4::CheckEnvironment(int minimumBars)
+bool ActionTrade4::CheckEnvironment(int minDataBars)
   {
-   if(!CheckChartBarsCount(minimumBars))
+   if(!CheckChartBarsCount(minDataBars))
       return (false);
 
    if(MQLInfoInteger(MQL_TESTER))
@@ -652,13 +649,16 @@ void ActionTrade4::UpdateDataMarket(DataMarket *dataMarket)
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-bool ActionTrade4::CheckChartBarsCount(int barsNecessary)
+bool ActionTrade4::CheckChartBarsCount(int minDataBars)
   {
    if(MQLInfoInteger(MQL_TESTER))
     {
-      if(Bars(_Symbol,_Period)>=barsNecessary) return(true);
-      string message="\n Cannot load enough bars! The expert needs minimum "+IntegerToString(barsNecessary)+" bars."+
-                     "\n Please check the \"Use date\" option and set the \"From:\" and \"To:\" dates properly.";
+      if(Bars(_Symbol,_Period)>=minDataBars)
+         return(true);
+
+      string message = "\n Cannot load enough bars! The expert needs minimum " +
+                       IntegerToString(minDataBars)+" bars."+
+                       "\n Please check the \"Use date\" option and set the \"From:\" and \"To:\" dates properly.";
       Comment(message);
       Print(message);
       return (false);
@@ -671,7 +671,7 @@ bool ActionTrade4::CheckChartBarsCount(int barsNecessary)
      {
       RefreshRates();
       bars=ArrayCopyRates(rates,_Symbol,_Period);
-      if(bars<barsNecessary && GetLastError()==4066)
+      if(bars<minDataBars && GetLastError()==4066)
         {
          Comment("Loading...");
          Sleep(500);
@@ -683,7 +683,7 @@ bool ActionTrade4::CheckChartBarsCount(int barsNecessary)
          break;
      }
 
-   if(bars<barsNecessary)
+   if(bars<minDataBars)
      {
       int hwnd=WindowHandle(_Symbol,_Period);
       int maxbars=0;
@@ -699,7 +699,7 @@ bool ActionTrade4::CheckChartBarsCount(int barsNecessary)
          RefreshRates();
          bars=ArrayCopyRates(rates,_Symbol,_Period);
 
-         if(bars>barsNecessary)
+         if(bars>minDataBars)
            {
             Comment("Loaded ",bars," bars.");
             break;
@@ -716,17 +716,17 @@ bool ActionTrade4::CheckChartBarsCount(int barsNecessary)
            {
             nullattempts=0;
             maxbars=bars;
-            Comment("Loading... ",bars," bars of ",barsNecessary," necessary.");
+            Comment("Loading... ",bars," bars of ",minDataBars," necessary.");
            }
         }
      }
 
-   bool isEnoughBars=(bars>=barsNecessary);
+   bool isEnoughBars = (bars >= minDataBars);
    if(!isEnoughBars)
      {
-      string message="There isn\'t enough bars. The expert needs minimum "+
-                        IntegerToString(barsNecessary)+" bars. "+
-                        "Currently "+IntegerToString(bars)+" bars are loaded.";
+      string message = "There isn\'t enough bars. The expert needs minimum "+
+                       IntegerToString(minDataBars)+" bars. "+
+                       "Currently "+IntegerToString(bars)+" bars are loaded.";
       Comment(message);
       Print(message);
      }
@@ -1265,18 +1265,17 @@ bool ActionTrade4::ModifyPositionByTicket(int orderTicket,double stopLossPrice,d
    if(!OrderSelectByTicket(orderTicket))
       return (false);
 
-   stopLossPrice=NormalizeEntryPrice(stopLossPrice);
-   takeProfitPrice=NormalizeEntryPrice(takeProfitPrice);
-
-   double oldStopLoss=NormalizeEntryPrice(OrderStopLoss());
-   double oldTakeProfit=NormalizeEntryPrice(OrderTakeProfit());
+   stopLossPrice   = NormalizeEntryPrice(stopLossPrice);
+   takeProfitPrice = NormalizeEntryPrice(takeProfitPrice);
+   double oldStopLoss   = NormalizeEntryPrice(OrderStopLoss());
+   double oldTakeProfit = NormalizeEntryPrice(OrderTakeProfit());
 
    for(int attempt=0; attempt<TRADE_RETRY_COUNT; attempt++)
      {
       if(attempt>0)
-        {   // Prevents Invalid Stops due to price change during the cycle.
-         stopLossPrice=CorrectStopLossPrice(OrderType(),stopLossPrice);
-         takeProfitPrice=CorrectTakeProfitPrice(OrderType(),takeProfitPrice);
+        {
+         stopLossPrice   = CorrectStopLossPrice(OrderType(),stopLossPrice);
+         takeProfitPrice = CorrectTakeProfitPrice(OrderType(),takeProfitPrice);
         }
 
       if(MathAbs(stopLossPrice-oldStopLoss)<m_PipsValue &&
@@ -2663,7 +2662,6 @@ double ActionTrade4::GetTakeProfitPoints()
 //+------------------------------------------------------------------+
 void ActionTrade4::DoEntryTrade(TradeDirection tradeDir)
   {
-   double price;
    OrderDirection  ordDir;
    OperationType   opType;
    TraderOrderType type;
@@ -2675,14 +2673,12 @@ void ActionTrade4::DoEntryTrade(TradeDirection tradeDir)
      {
       case TradeDirection_Long: // Buy
          if(m_IsEnteredLong) return;
-         price  = m_DataMarket.Ask;
          ordDir = OrderDirection_Buy;
          opType = OperationType_Buy;
          type   = TraderOrderType_Buy;
          break;
       case TradeDirection_Short: // Sell
          if(m_IsEnteredShort) return;
-         price  = m_DataMarket.Bid;
          ordDir = OrderDirection_Sell;
          opType = OperationType_Sell;
          type   = TraderOrderType_Sell;
@@ -2785,7 +2781,6 @@ bool ActionTrade4::IsWrongStopsExecution()
 void ActionTrade4::ResendWrongStops()
   {
    double lots       = NormalizeEntrySize(m_DataMarket.PositionLots);
-   double price      = m_DataMarket.PositionDirection == PosDirection_Long ? m_DataMarket.Bid : m_DataMarket.Ask;
    int    ticket     = m_DataMarket.PositionTicket;
    double stoploss   = m_DataMarket.WrongStopLoss;
    double takeprofit = m_DataMarket.WrongTakeProf;
