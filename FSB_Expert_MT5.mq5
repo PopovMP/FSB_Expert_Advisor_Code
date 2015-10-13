@@ -57,7 +57,8 @@ extern string Order_Comment=""; // Custom order comment
 // ----------------------------    Options   ---------------------------- //
 
 // Data bars for calculating the indicator values with the necessary precission.
-int Max_Data_Bars=0;
+// If set to 0, the expert calculates them automatically.
+int Min_Data_Bars=0;
 
 // Have to be set to true for STP brokers that cannot set SL and TP together with the position (with OrderSend()).
 // When Separate_SL_TP = true, the expert first opens the position and after that sets StopLoss and TakeProfit.
@@ -115,22 +116,22 @@ int OnInit()
   {
    actionsTrade = new ActionTrade5();
 
-   actionsTrade.Entry_Amount    = (Entry_Amount   >77700)?0.1:Entry_Amount;
-   actionsTrade.Maximum_Amount  = (Maximum_Amount >77700)?0.1:Maximum_Amount;
-   actionsTrade.Adding_Amount   = (Adding_Amount  >77700)?0.1:Adding_Amount;
-   actionsTrade.Reducing_Amount = (Reducing_Amount>77700)?0.1:Reducing_Amount;
-
-   actionsTrade.Strategy_File_Name       = Strategy_File_Name;
-   actionsTrade.Strategy_XML             = Strategy_XML;
-   actionsTrade.Max_Data_Bars            = Max_Data_Bars;
-   actionsTrade.Protection_Min_Account   = Protection_Min_Account;
-   actionsTrade.Protection_Max_StopLoss  = Protection_Max_StopLoss;
-   actionsTrade.Separate_SL_TP           = Separate_SL_TP;
-   actionsTrade.Write_Log_File           = Write_Log_File;
-   actionsTrade.TrailingStop_Moving_Step = TrailingStop_Moving_Step;
-   actionsTrade.FIFO_order               = FIFO_order;
-   actionsTrade.MaxLogLinesInFile        = MaxLogLinesInFile;
-   actionsTrade.Bar_Close_Advance        = Bar_Close_Advance;
+   actionsTrade.EntryAmount    = (Entry_Amount   >77700) ? 0.1 : Entry_Amount;
+   actionsTrade.MaximumAmount  = (Maximum_Amount >77700) ? 0.1 : Maximum_Amount;
+   actionsTrade.AddingAmount   = (Adding_Amount  >77700) ? 0.1 : Adding_Amount;
+   actionsTrade.ReducingAmount = (Reducing_Amount>77700) ? 0.1 : Reducing_Amount;
+   actionsTrade.OrderComment           = Order_Comment;
+   actionsTrade.StrategyFileName       = Strategy_File_Name;
+   actionsTrade.StrategyXML            = Strategy_XML;
+   actionsTrade.MinDataBars            = Min_Data_Bars;
+   actionsTrade.ProtectionMinAccount   = Protection_Min_Account;
+   actionsTrade.ProtectionMaxStopLoss  = Protection_Max_StopLoss;
+   actionsTrade.SeparateSLTP           = Separate_SL_TP;
+   actionsTrade.WriteLogFile           = Write_Log_File;
+   actionsTrade.TrailingStopMovingStep = TrailingStop_Moving_Step;
+   actionsTrade.FIFOorder              = FIFO_order;
+   actionsTrade.MaxLogLinesInFile      = MaxLogLinesInFile;
+   actionsTrade.BarCloseAdvance        = Bar_Close_Advance;
 
    int result=actionsTrade.OnInit();
 

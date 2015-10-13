@@ -161,22 +161,22 @@ public:
                     ~ActionTrade5(void);
 
    // Properties
-   double            Entry_Amount;
-   double            Maximum_Amount;
-   double            Adding_Amount;
-   double            Reducing_Amount;
-
-   string            Strategy_File_Name;
-   string            Strategy_XML;
-   int               Max_Data_Bars;
-   int               Protection_Min_Account;
-   int               Protection_Max_StopLoss;
-   bool              Separate_SL_TP;
-   bool              Write_Log_File;
-   bool              FIFO_order;
-   int               TrailingStop_Moving_Step;
+   double            EntryAmount;
+   double            MaximumAmount;
+   double            AddingAmount;
+   double            ReducingAmount;
+   string            OrderComment;
+   string            StrategyFileName;
+   string            StrategyXML;
+   int               MinDataBars;
+   int               ProtectionMinAccount;
+   int               ProtectionMaxStopLoss;
+   bool              SeparateSLTP;
+   bool              WriteLogFile;
+   bool              FIFOorder;
+   int               TrailingStopMovingStep;
    int               MaxLogLinesInFile;
-   int               Bar_Close_Advance;
+   int               BarCloseAdvance;
 
    // Methods
    int               OnInit(void);
@@ -222,17 +222,17 @@ int ActionTrade5::OnInit()
    Comment(message);
    Print(message);
 
-   if(Write_Log_File)
+   if(WriteLogFile)
      {
       m_Logger.CreateLogFile(m_Logger.GetLogFileName(_Symbol,_Period,5));
       m_Logger.WriteLogLine(message);
-      m_Logger.WriteLogLine("Entry Amount: "   +DoubleToString(Entry_Amount,2)  +", "+
-                            "Maximum Amount: " +DoubleToString(Maximum_Amount,2)+", "+
-                            "Adding Amount: "  +DoubleToString(Adding_Amount,2) +", "+
-                            "Reducing Amount: "+DoubleToString(Reducing_Amount,2));
-      m_Logger.WriteLogLine("Protection Min Account: " +IntegerToString(Protection_Min_Account)+", "+
-                            "Protection Max StopLoss: "+IntegerToString(Protection_Max_StopLoss));
-      m_Logger.WriteLogLine("Bar Close Advance: "+IntegerToString(Bar_Close_Advance));
+      m_Logger.WriteLogLine("Entry Amount: "    + DoubleToString(EntryAmount, 2)   + ", " +
+                            "Maximum Amount: "  + DoubleToString(MaximumAmount, 2) + ", " +
+                            "Adding Amount: "   + DoubleToString(AddingAmount, 2)  + ", " +
+                            "Reducing Amount: " + DoubleToString(ReducingAmount, 2));
+      m_Logger.WriteLogLine("Protection Min Account: "  + IntegerToString(ProtectionMinAccount) + ", " +
+                            "Protection Max StopLoss: " + IntegerToString(ProtectionMaxStopLoss));
+      m_Logger.WriteLogLine("Bar Close Advance:  " + IntegerToString(BarCloseAdvance));
       m_Logger.FlushLogFile();
      }
 
@@ -252,15 +252,15 @@ int ActionTrade5::OnInit()
    if(m_StopLevel<3*m_PipsPoint)
       m_StopLevel=3*m_PipsPoint;
 
-   if(Protection_Max_StopLoss>0 && Protection_Max_StopLoss<m_StopLevel)
-      Protection_Max_StopLoss=m_StopLevel;
+   if(ProtectionMaxStopLoss>0 && ProtectionMaxStopLoss<m_StopLevel)
+      ProtectionMaxStopLoss=m_StopLevel;
 
-   if(TrailingStop_Moving_Step<m_PipsPoint)
-      TrailingStop_Moving_Step=m_PipsPoint;
+   if(TrailingStopMovingStep<m_PipsPoint)
+      TrailingStopMovingStep=m_PipsPoint;
 
-   string xml=(Strategy_XML=="##STRATEGY##")
-              ? LoadStringFromFile(Strategy_File_Name)
-              : Strategy_XML;
+   string xml=(StrategyXML=="##STRATEGY##")
+              ? LoadStringFromFile(StrategyFileName)
+              : StrategyXML;
 
    StrategyManager *strategyManager=new StrategyManager();
 
@@ -268,10 +268,10 @@ int ActionTrade5::OnInit()
    m_Strategy=strategyManager.ParseXmlStrategy(xml);
    m_Strategy.SetSymbol(_Symbol);
    m_Strategy.SetPeriod(dataPeriod);
-   m_Strategy.EntryLots    = Entry_Amount;
-   m_Strategy.MaxOpenLots  = Maximum_Amount;
-   m_Strategy.AddingLots   = Adding_Amount;
-   m_Strategy.ReducingLots = Reducing_Amount;
+   m_Strategy.EntryLots    = EntryAmount;
+   m_Strategy.MaxOpenLots  = MaximumAmount;
+   m_Strategy.AddingLots   = AddingAmount;
+   m_Strategy.ReducingLots = ReducingAmount;
    m_Strategy.SetIsTester(MQLInfoInteger(MQL_TESTER));
 
    delete strategyManager;
@@ -304,11 +304,11 @@ int ActionTrade5::OnInit()
    SetAggregatePosition();
 
 // Checks the necessary bars.
-   Max_Data_Bars=FindBarsCountNeeded();
+   MinDataBars=FindBarsCountNeeded();
 
 // Initial strategy calculation
    for(int i=0; i<ArraySize(m_DataSet); i++)
-      UpdateDataSet(m_DataSet[i],Max_Data_Bars);
+      UpdateDataSet(m_DataSet[i],MinDataBars);
    m_Strategy.CalculateStrategy(m_DataSet);
 
    InitTrade();
@@ -343,7 +343,7 @@ int ActionTrade5::OnInit()
 void ActionTrade5::OnTick()
   {
    for(int i=0; i<ArraySize(m_DataSet); i++)
-      UpdateDataSet(m_DataSet[i],Max_Data_Bars);
+      UpdateDataSet(m_DataSet[i],MinDataBars);
    UpdateDataMarket(m_DataMarket);
 
    datetime barTime=Time(_Symbol,_Period,0);
@@ -353,7 +353,7 @@ void ActionTrade5::OnTick()
    m_LastError=0;
 
 // Checks if minimum account was reached.
-   if(Protection_Min_Account>0 && AccountInfoDouble(ACCOUNT_EQUITY)<Protection_Min_Account)
+   if(ProtectionMinAccount>0 && AccountInfoDouble(ACCOUNT_EQUITY)<ProtectionMinAccount)
      {
       if(m_PositionLots>Epsilon)
          CloseCurrentPosition();
@@ -361,7 +361,7 @@ void ActionTrade5::OnTick()
      }
 
 // Checks and sets Max SL protection.
-   if(Protection_Max_StopLoss>0)
+   if(ProtectionMaxStopLoss>0)
       SetMaxStopLoss();
 
 // Checks if position was closed.
@@ -375,7 +375,7 @@ void ActionTrade5::OnTick()
 
    SetAggregatePosition();
 
-   if(isNewBar && Write_Log_File)
+   if(isNewBar && WriteLogFile)
       m_Logger.WriteNewLogLine(AggregatePositionToString());
 
    if(m_DataSet[0].Bars >= m_Strategy.MinBarsRequired)
@@ -407,7 +407,7 @@ void ActionTrade5::OnTick()
      }
    ChartRedraw();
 
-   if(Write_Log_File)
+   if(WriteLogFile)
      {
       if(m_Logger.IsLogLinesLimitReached(MaxLogLinesInFile))
         {
@@ -453,7 +453,7 @@ void ActionTrade5::OnTrade(void)
 //+------------------------------------------------------------------+
 void ActionTrade5::OnDeinit(const int reason)
   {
-   if(Write_Log_File)
+   if(WriteLogFile)
       m_Logger.CloseLogFile();
 
    if(CheckPointer(m_Strategy)==POINTER_DYNAMIC)
@@ -595,7 +595,7 @@ int ActionTrade5::FindBarsCountNeeded()
      }
 
    string barsMessage = "The expert uses "+IntegerToString(necessaryBars)+" bars.";
-   if(Write_Log_File)
+   if(WriteLogFile)
     {
       m_Logger.WriteLogLine(barsMessage);
       string timeLastBar=TimeToString(m_DataMarket.TickServerTime,TIME_DATE|TIME_MINUTES);
@@ -814,7 +814,7 @@ bool ActionTrade5::ManageOrderSend(int type,double lots,double stoploss,double t
          request.deviation    = 10;
          request.sl           = stopLossPrice;
          request.tp           = takeProfitPrice;
-         request.comment      = Order_Comment;
+         request.comment      = OrderComment;
 
          bool isOrderCheck=OrderCheck(request,check);
          string retcode=ResultRetcodeDescription(check.retcode);
@@ -837,7 +837,7 @@ bool ActionTrade5::ManageOrderSend(int type,double lots,double stoploss,double t
          SetAggregatePosition();
 
          m_LastError=GetLastError();
-         if(Write_Log_File)
+         if(WriteLogFile)
             m_Logger.WriteLogLine(__FUNCTION__+
                          ": "+_Symbol+
                          ", Type="       +(type==OP_BUY ? "Long" : "Short")+
@@ -913,7 +913,7 @@ bool ActionTrade5::ModifyPosition(double stoploss,double takeprofit)
          SetAggregatePosition();
 
          m_LastError=GetLastError();
-         if(Write_Log_File)
+         if(WriteLogFile)
             m_Logger.WriteLogLine("ModifyPosition: " + _Symbol+
                          ", StopLoss="   +DoubleToString(stopLossPrice,_Digits)+
                          ", TakeProfit=" +DoubleToString(takeProfitPrice,_Digits)+
@@ -1058,27 +1058,27 @@ double ActionTrade5::NormalizeEntrySize(double size)
 //+------------------------------------------------------------------+
 void ActionTrade5::SetMaxStopLoss()
   {
-   if(m_PositionType==OP_FLAT || Protection_Max_StopLoss==0)
+   if(m_PositionType==OP_FLAT || ProtectionMaxStopLoss==0)
       return;
 
    double stopLossPrice=m_PositionStopLoss;
    int spread=(int)SymbolInfoInteger(_Symbol,SYMBOL_SPREAD);
    int stopLoss=(int)MathRound(MathAbs(m_PositionOpenPrice-m_PositionStopLoss)/_Point);
 
-   if(stopLossPrice<Epsilon || stopLoss>Protection_Max_StopLoss+spread)
+   if(stopLossPrice<Epsilon || stopLoss>ProtectionMaxStopLoss+spread)
      {
       stopLossPrice=(m_PositionType==OP_BUY)
-         ? m_PositionOpenPrice-_Point*(Protection_Max_StopLoss+spread)
-         : m_PositionOpenPrice+_Point*(Protection_Max_StopLoss+spread);
+         ? m_PositionOpenPrice-_Point*(ProtectionMaxStopLoss+spread)
+         : m_PositionOpenPrice+_Point*(ProtectionMaxStopLoss+spread);
 
-      if(Write_Log_File)
+      if(WriteLogFile)
          m_Logger.WriteLogRequest("SetMaxStopLoss",
             "StopLossPrice="+DoubleToString(stopLossPrice,_Digits));
 
       bool result=ModifyPosition(stopLossPrice,m_PositionTakeProfit);
 
       if(result)
-         Print("SetMaxStopLoss(",Protection_Max_StopLoss,") set StopLoss to ",
+         Print("SetMaxStopLoss(",ProtectionMaxStopLoss,") set StopLoss to ",
             DoubleToString(stopLossPrice,_Digits));
      }
   }
@@ -1110,7 +1110,7 @@ void ActionTrade5::SetBreakEvenStop()
         {
          if(m_PositionStopLoss<breakprice)
            {
-            if(Write_Log_File)
+            if(WriteLogFile)
                m_Logger.WriteLogRequest("SetBreakEvenStop",
                   "BreakPrice="+DoubleToString(breakprice,_Digits));
 
@@ -1128,7 +1128,7 @@ void ActionTrade5::SetBreakEvenStop()
         {
          if(m_PositionStopLoss==0||m_PositionStopLoss>breakprice)
            {
-            if(Write_Log_File)
+            if(WriteLogFile)
                m_Logger.WriteLogRequest("SetBreakEvenStop",
                   "BreakPrice="+DoubleToString(breakprice,_Digits));
 
@@ -1200,7 +1200,7 @@ void ActionTrade5::SetTrailingStopBarMode()
             if(stopLossPrice>tick.bid-_Point*m_StopLevel)
                stopLossPrice=tick.bid-_Point*m_StopLevel;
 
-            if(Write_Log_File)
+            if(WriteLogFile)
                m_Logger.WriteLogRequest("SetTrailingStopBarMode",
                   "StopLoss="+DoubleToString(stopLossPrice,_Digits));
 
@@ -1211,7 +1211,7 @@ void ActionTrade5::SetTrailingStopBarMode()
            }
          else
            {
-            if(Write_Log_File)
+            if(WriteLogFile)
                m_Logger.WriteLogRequest("SetTrailingStopBarMode",
                   "StopLoss="+DoubleToString(stopLossPrice,_Digits));
 
@@ -1232,7 +1232,7 @@ void ActionTrade5::SetTrailingStopBarMode()
             if(stopLossPrice<tick.ask+_Point*m_StopLevel)
                stopLossPrice=tick.ask+_Point*m_StopLevel;
 
-            if(Write_Log_File)
+            if(WriteLogFile)
                m_Logger.WriteLogRequest("SetTrailingStopBarMode",
                   "StopLoss="+DoubleToString(stopLossPrice,_Digits));
 
@@ -1243,7 +1243,7 @@ void ActionTrade5::SetTrailingStopBarMode()
            }
          else
            {
-            if(Write_Log_File)
+            if(WriteLogFile)
                m_Logger.WriteLogRequest("SetTrailingStopBarMode",
                   "StopLoss="+DoubleToString(stopLossPrice,_Digits));
 
@@ -1266,10 +1266,10 @@ void ActionTrade5::SetTrailingStopTickMode()
    if(m_PositionType==OP_BUY)
      {   // Long position
       if(tick.bid>=m_PositionOpenPrice+m_TrailingStop*_Point)
-         if(m_PositionStopLoss<tick.bid-(m_TrailingStop+TrailingStop_Moving_Step)*_Point)
+         if(m_PositionStopLoss<tick.bid-(m_TrailingStop+TrailingStopMovingStep)*_Point)
            {
             double stopLossPrice=tick.bid-m_TrailingStop*_Point;
-            if(Write_Log_File)
+            if(WriteLogFile)
                m_Logger.WriteLogRequest("SetTrailingStopTickMode",
                   "StopLoss="+DoubleToString(stopLossPrice,_Digits));
 
@@ -1282,10 +1282,10 @@ void ActionTrade5::SetTrailingStopTickMode()
    else if(m_PositionType==OP_SELL)
      {   // Short position
       if(m_PositionOpenPrice-tick.ask>=_Point*m_TrailingStop)
-         if(m_PositionStopLoss>tick.ask+_Point *(m_TrailingStop+TrailingStop_Moving_Step))
+         if(m_PositionStopLoss>tick.ask+_Point *(m_TrailingStop+TrailingStopMovingStep))
            {
             double stopLossPrice=tick.ask+m_TrailingStop*_Point;
-            if(Write_Log_File)
+            if(WriteLogFile)
                m_Logger.WriteLogRequest("SetTrailingStopTickMode",
                   "StopLoss="+DoubleToString(stopLossPrice,_Digits));
 
@@ -1331,7 +1331,7 @@ void ActionTrade5::DetectSLTPActivation()
                      ", Profit="            +DoubleToString(oldProfit,2)+
                      ", ConsecutiveLosses=" +IntegerToString(m_ConsecutiveLosses);
 
-      if(Write_Log_File)
+      if(WriteLogFile)
          m_Logger.WriteNewLogLine(message);
       Print(message);
      }
@@ -1382,7 +1382,7 @@ TickType ActionTrade5::GetTickType(DataSet *dataSet,bool isNewBar)
       type=TickType_Open;
      }
 
-   bool isClose=((barOpenTime+period*60)-serverTime)<Bar_Close_Advance;
+   bool isClose=((barOpenTime+period*60)-serverTime)<BarCloseAdvance;
    if(isClose)
      {
       if(m_BarOpenTimeForLastCloseTick==barOpenTime)
