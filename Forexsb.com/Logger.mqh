@@ -26,104 +26,85 @@
 #property version   "2.00"
 #property strict
 
-
 //## Import Start
 
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
 class Logger
-  {
-   int               m_LogLines;
-   int               m_FileHandle;
+{
+    int logLines;
+    int fileHandle;
 
 public:
-   string            GetLogFileName(string symbol,int dataPeriod,int expertMagic);
-   int               CreateLogFile(string fileName);
-   void              WriteLogLine(string text);
-   void              WriteNewLogLine(string text);
-   void              WriteLogRequest(string text,string request);
-   bool              IsLogLinesLimitReached(int maxLines);
-   void              FlushLogFile(void);
-   void              CloseLogFile(void);
-   int               CloseExpert(void);
-  };
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
-string Logger::GetLogFileName(string symbol,int dataPeriod,int expertMagic)
-  {
-   string time=TimeToString(TimeCurrent(),TIME_DATE|TIME_SECONDS);
-   StringReplace(time,":","");
-   StringReplace(time," ","_");
-   string rnd=IntegerToString(MathRand());
-   string fileName=symbol+"_"+IntegerToString(dataPeriod)+"_"+IntegerToString(expertMagic)+"_"+time+"_"+rnd+".log";
-   return (fileName);
-  }
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
+    string GetLogFileName(string symbol, int dataPeriod, int expertMagic);
+    int CreateLogFile(string fileName);
+    void WriteLogLine(string text);
+    void WriteNewLogLine(string text);
+    void WriteLogRequest(string text, string request);
+    bool IsLogLinesLimitReached(int maxLines);
+    void FlushLogFile(void);
+    void CloseLogFile(void);
+    int CloseExpert(void);
+};
+
+string Logger::GetLogFileName(string symbol, int dataPeriod, int expertMagic)
+{
+    string time = TimeToString(TimeCurrent(), TIME_DATE | TIME_SECONDS);
+    StringReplace(time, ":", "");
+    StringReplace(time, " ", "_");
+    string rnd = IntegerToString(MathRand());
+    string fileName = symbol + "_" + IntegerToString(dataPeriod) + "_" +
+                      IntegerToString(expertMagic) + "_" + time + "_" + rnd + ".log";
+    return (fileName);
+}
+
 int Logger::CreateLogFile(string fileName)
-  {
-   m_LogLines = 0;
-   int handle = FileOpen(fileName, FILE_CSV|FILE_WRITE, ",");
-   if(handle>0)
-      m_FileHandle=handle;
-   else
-      Print("CreateFile: Error while creating log file!");
-   return (handle);
-  }
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
+{
+    logLines = 0;
+    int handle = FileOpen(fileName, FILE_CSV | FILE_WRITE, ",");
+    if (handle > 0)
+        fileHandle = handle;
+    else
+        Print("CreateFile: Error while creating log file!");
+    return (handle);
+}
+
 void Logger::WriteLogLine(string text)
-  {
-   if(m_FileHandle <= 0) return;
-   FileWrite(m_FileHandle,TimeToString(TimeCurrent(),TIME_DATE|TIME_SECONDS),text);
-   m_LogLines++;
-  }
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
+{
+    if (fileHandle <= 0) return;
+    FileWrite(fileHandle, TimeToString(TimeCurrent(), TIME_DATE | TIME_SECONDS), text);
+    logLines++;
+}
+
 void Logger::WriteNewLogLine(string text)
-  {
-   if(m_FileHandle <= 0) return;
-   FileWrite(m_FileHandle,"");
-   FileWrite(m_FileHandle,TimeToString(TimeCurrent(),TIME_DATE|TIME_SECONDS),text);
-   m_LogLines+=2;
-  }
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
-void Logger::WriteLogRequest(string text,string request)
-  {
-   if(m_FileHandle <= 0) return;
-   FileWrite(m_FileHandle,"\n"+text);
-   FileWrite(m_FileHandle,TimeToString(TimeCurrent(),TIME_DATE|TIME_SECONDS),request);
-   m_LogLines+=3;
-  }
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
+{
+    if (fileHandle <= 0) return;
+    FileWrite(fileHandle, "");
+    FileWrite(fileHandle, TimeToString(TimeCurrent(), TIME_DATE | TIME_SECONDS), text);
+    logLines += 2;
+}
+
+void Logger::WriteLogRequest(string text, string request)
+{
+    if (fileHandle <= 0) return;
+    FileWrite(fileHandle, "\n" + text);
+    FileWrite(fileHandle, TimeToString(TimeCurrent(), TIME_DATE | TIME_SECONDS), request);
+    logLines += 3;
+}
+
 void Logger::FlushLogFile()
-  {
-   if(m_FileHandle <= 0) return;
-   FileFlush(m_FileHandle);
-  }
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
+{
+    if (fileHandle <= 0) return;
+    FileFlush(fileHandle);
+}
+
 void Logger::CloseLogFile()
-  {
-   if(m_FileHandle <= 0) return;
-   WriteNewLogLine(StringFormat("%s Closed.",MQLInfoString(MQL_PROGRAM_NAME)));
-   FileClose(m_FileHandle);
-  }
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
+{
+    if (fileHandle <= 0) return;
+    WriteNewLogLine(StringFormat("%s Closed.", MQLInfoString(MQL_PROGRAM_NAME)));
+    FileClose(fileHandle);
+}
+
 bool Logger::IsLogLinesLimitReached(int maxLines)
-  {
-   return (m_LogLines>maxLines);
-  }
-//+------------------------------------------------------------------+
+{
+    return (logLines > maxLines);
+}
+

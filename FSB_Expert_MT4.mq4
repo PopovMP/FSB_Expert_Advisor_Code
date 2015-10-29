@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2014 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "27.0"
+#property version   "30.0"
 #property strict
 
 #include <Forexsb.com\ActionTrade4.mqh>
@@ -38,57 +38,51 @@ extern double Reducing_Amount = 77704; // Amount to close on reduction #TRADEUNI
 // If account equity drops below this value, the expert will close out all positions and stop automatic trade.
 // The value must be set in account currency. Example:
 // Protection_Min_Account = 700 will close positions if the equity drops below 700 USD (EUR if you account is in EUR).
-extern int Protection_Min_Account=0; // Stop trading at min account
+extern int Protection_Min_Account = 0; // Stop trading at min account
 
 // The expert checks the open positions at every tick and if found no SL or SL lower (higher for short) than selected,
 // It sets SL to the defined value. The value is in points. Example:
 // Protection_Max_StopLoss = 200 means 200 pips for 4 digit broker and 20 pips for 5 digit broker.
-extern int Protection_Max_StopLoss=0; // Ensure maximum Stop Loss [point]
+extern int Protection_Max_StopLoss = 0; // Ensure maximum Stop Loss [point]
 
 // A unique number of the expert's orders.
-extern int Expert_Magic=20011023; // Expert Magic Number
+extern int Expert_Magic = 20011023; // Expert Magic Number
 
 // How many seconds before the expected bar closing to rise a Bar Closing event.
-extern int Bar_Close_Advance=15; // Bar closing advance [sec]
+extern int Bar_Close_Advance = 15; // Bar closing advance [sec]
 
 // Expert writes a log file when Write_Log_File = true.
-extern bool Write_Log_File=false; // Write a log file
+extern bool Write_Log_File = false; // Write a log file
 
 // Custom comment. It can be used for setting a binnary option epxiration perod
-extern string Order_Comment=""; // Custom order comment
+extern string Order_Comment = ""; // Custom order comment
 
 // ----------------------------    Options   ---------------------------- //
 
 // Data bars for calculating the indicator values with the necessary precission.
 // If set to 0, the expert calculates them automatically.
-int Min_Data_Bars=0;
+int Min_Data_Bars = 0;
 
 // Have to be set to true for STP brokers that cannot set SL and TP together with the position (with OrderSend()).
 // When Separate_SL_TP = true, the expert first opens the position and after that sets StopLoss and TakeProfit.
-bool Separate_SL_TP=false; // Separate SL and TP orders
-
-// The expert loads this XML file form MetaTrader "Files" folder if no XML string is provided.
-string Strategy_File_Name="Strategy.xml"; // FSB Strategy Name
-
-// The strategy as an XML string. If XML is provide, the expert loads it instead of a file.
-string Strategy_XML="##STRATEGY##"; // XML String
+bool Separate_SL_TP = false; // Separate SL and TP orders
 
 // TrailingStop_Moving_Step determines the step of changing the Trailing Stop.
 // 0 <= TrailingStop_Moving_Step <= 2000
 // If TrailingStop_Moving_Step = 0, the Trailing Stop trails at every new extreme price in the position's direction.
 // If TrailingStop_Moving_Step > 0, the Trailing Stop moves at steps equal to the number of pips chosen.
 // This prevents sending multiple order modifications.
-int TrailingStop_Moving_Step=10;
+int TrailingStop_Moving_Step = 10;
 
 // FIFO (First In First Out) forces the expert to close positions starting from
 // the oldest one. This rule complies with the new NFA regulations.
 // If you want to close the positions from the newest one (FILO), change the variable to "false".
 // This doesn't change the normal work of Forex Strategy Builder.
-bool FIFO_order=true;
+bool FIFO_order = true;
 
 // When the log file reaches the preset number of lines,
 // the expert starts a new log file.
-int Max_Log_Lines_in_File=2000;
+int Max_Log_Lines_in_File = 2000;
 
 // Used to detect a chart change
 string __symbol = "";
@@ -96,6 +90,7 @@ int    __period = -1;
 
 //##IMPORT Enumerations.mqh
 //##IMPORT Helpers.mqh
+//##IMPORT HelperMq4.mqh
 //##IMPORT DataSet.mqh
 //##IMPORT DataMarket.mqh
 //##IMPORT IndicatorComp.mqh
@@ -104,43 +99,42 @@ int    __period = -1;
 //##IMPORT IndicatorManager.mqh
 //##IMPORT IndicatorSlot.mqh
 //##IMPORT Strategy.mqh
-//##IMPORT EasyXml.mqh
 //##IMPORT StrategyManager.mqh
+//##IMPORT Position.mqh
 //##IMPORT Logger.mqh
+//##IMPORT StrategyTrader.mqh
 //##IMPORT ActionTrade4.mqh
 
 // The Forex Strategy Builder Expert
-ActionTrade4* actionsTrade;
+ActionTrade* actionTrade;
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
 int OnInit()
   {
-   actionsTrade = new ActionTrade4();
+   actionTrade = new ActionTrade();
 
-   actionsTrade.EntryAmount    = (Entry_Amount   >77700) ? 0.1 : Entry_Amount;
-   actionsTrade.MaximumAmount  = (Maximum_Amount >77700) ? 0.1 : Maximum_Amount;
-   actionsTrade.AddingAmount   = (Adding_Amount  >77700) ? 0.1 : Adding_Amount;
-   actionsTrade.ReducingAmount = (Reducing_Amount>77700) ? 0.1 : Reducing_Amount;
-   actionsTrade.OrderComment           = Order_Comment;
-   actionsTrade.StrategyFileName       = Strategy_File_Name;
-   actionsTrade.StrategyXML            = Strategy_XML;
-   actionsTrade.MinDataBars            = Min_Data_Bars;
-   actionsTrade.ProtectionMinAccount   = Protection_Min_Account;
-   actionsTrade.ProtectionMaxStopLoss  = Protection_Max_StopLoss;
-   actionsTrade.ExpertMagic            = Expert_Magic;
-   actionsTrade.SeparateSLTP           = Separate_SL_TP;
-   actionsTrade.WriteLogFile           = Write_Log_File;
-   actionsTrade.TrailingStopMovingStep = TrailingStop_Moving_Step;
-   actionsTrade.FIFOorder              = FIFO_order;
-   actionsTrade.MaxLogLinesInFile      = Max_Log_Lines_in_File;
-   actionsTrade.BarCloseAdvance        = Bar_Close_Advance;
+   actionTrade.EntryAmount    = (Entry_Amount   >77700) ? 0.1 : Entry_Amount;
+   actionTrade.MaximumAmount  = (Maximum_Amount >77700) ? 0.1 : Maximum_Amount;
+   actionTrade.AddingAmount   = (Adding_Amount  >77700) ? 0.1 : Adding_Amount;
+   actionTrade.ReducingAmount = (Reducing_Amount>77700) ? 0.1 : Reducing_Amount;
+   actionTrade.OrderComment           = Order_Comment;
+   actionTrade.MinDataBars            = Min_Data_Bars;
+   actionTrade.ProtectionMinAccount   = Protection_Min_Account;
+   actionTrade.ProtectionMaxStopLoss  = Protection_Max_StopLoss;
+   actionTrade.ExpertMagic            = Expert_Magic;
+   actionTrade.SeparateSLTP           = Separate_SL_TP;
+   actionTrade.WriteLogFile           = Write_Log_File;
+   actionTrade.TrailingStopMovingStep = TrailingStop_Moving_Step;
+   actionTrade.FIFOorder              = FIFO_order;
+   actionTrade.MaxLogLinesInFile      = Max_Log_Lines_in_File;
+   actionTrade.BarCloseAdvance        = Bar_Close_Advance;
 
-   int result=actionsTrade.OnInit();
+   int result = actionTrade.OnInit();
 
-   if(result==INIT_SUCCEEDED)
-      actionsTrade.OnTick();
+   if(result == INIT_SUCCEEDED)
+      actionTrade.OnTick();
 
    return (result);
   }
@@ -153,23 +147,23 @@ void OnTick()
      {
       if(__period > 0)
       {
-         actionsTrade.OnDeinit(-1);
-         actionsTrade.OnInit();
+         actionTrade.OnDeinit(-1);
+         actionTrade.OnInit();
       }
-      __symbol=_Symbol;
-      __period=_Period;
+      __symbol = _Symbol;
+      __period = _Period;
      }
 
-   actionsTrade.OnTick();
+   actionTrade.OnTick();
   }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
 void OnDeinit(const int reason)
   {
-   actionsTrade.OnDeinit(reason);
+   actionTrade.OnDeinit(reason);
 
-   if(CheckPointer(actionsTrade)==POINTER_DYNAMIC)
-      delete actionsTrade;
+   if(CheckPointer(actionTrade) == POINTER_DYNAMIC)
+      delete actionTrade;
   }
 //+------------------------------------------------------------------+

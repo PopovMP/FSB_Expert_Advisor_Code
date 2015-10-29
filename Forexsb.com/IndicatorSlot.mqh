@@ -34,94 +34,82 @@
 
 //## Import Start
 
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
 class IndicatorSlot
-  {
+{
 public:
-   // Constructors
-                     IndicatorSlot();
-                    ~IndicatorSlot();
+    // Constructors
+    IndicatorSlot();
+    ~IndicatorSlot();
 
-   // Properties
-   int               SlotNumber;
-   SlotTypes         SlotType;
-   string            IndicatorName;
-   string            LogicalGroup;
-   int               SignalShift;
-   int               SignalRepeat;
-   string            IndicatorSymbol;
-   DataPeriod        IndicatorPeriod;
+    // Properties
+    int        SlotNumber;
+    SlotTypes  SlotType;
+    string     IndicatorName;
+    string     LogicalGroup;
+    int        SignalShift;
+    int        SignalRepeat;
+    string     IndicatorSymbol;
+    DataPeriod IndicatorPeriod;
 
-   Indicator        *IndicatorPointer;
+    Indicator *IndicatorPointer;
 
-   // Methods
-   bool              GetUsePreviousBarValue();
-   string            LogicalGroupToString();
-   string            AdvancedParamsToString();
-   string            GetIndicatorSymbol(string baseSymbol);
-   DataPeriod        GetIndicatorPeriod(DataPeriod basePeriod);
-  };
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
-IndicatorSlot::IndicatorSlot()
-  {
-  }
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
-IndicatorSlot::~IndicatorSlot()
-  {
-   if(CheckPointer(IndicatorPointer)==POINTER_DYNAMIC)
-      delete IndicatorPointer;
-  }
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
-bool IndicatorSlot::GetUsePreviousBarValue()
-  {
-   for(int i=0; i<ArraySize(IndicatorPointer.CheckParam); i++)
-      if(IndicatorPointer.CheckParam[i].Caption=="Use previous bar value")
-         return IndicatorPointer.CheckParam[i].Checked;
-   return false;
-  }
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
-string IndicatorSlot::LogicalGroupToString()
-  {
-   return ("Logical group: " + LogicalGroup);
-  }
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
-string IndicatorSlot::AdvancedParamsToString()
-  {
-   string text = "Signal shift: " + IntegerToString(SignalShift) + "\n";
-   if(SlotType == SlotTypes_OpenFilter || SlotType == SlotTypes_CloseFilter)
-      text+="Signal repeat: "+IntegerToString(SignalRepeat)+"\n";
+    // Methods
+    bool GetUsePreviousBarValue(void);
+    string LogicalGroupToString(void);
+    string AdvancedParamsToString(void);
+    string GetIndicatorSymbol(string baseSymbol);
+    DataPeriod GetIndicatorPeriod(DataPeriod basePeriod);
+};
 
-   string symbol = (IndicatorSymbol == "")            ? "Default" : IndicatorSymbol;
-   string period = (IndicatorPeriod == DataPeriod_M1) ? "Default" : DataPeriodToString(IndicatorPeriod);
-   text += "Symbol: " + symbol + "\n";
-   text += "Period: " + period + "\n";
+IndicatorSlot::IndicatorSlot(void)
+{
+}
 
-   return text;
-  }
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
+IndicatorSlot::~IndicatorSlot(void)
+{
+    if (CheckPointer(IndicatorPointer) == POINTER_DYNAMIC)
+        delete IndicatorPointer;
+}
+
+bool IndicatorSlot::GetUsePreviousBarValue(void)
+{
+    for (int i = 0; i < ArraySize(IndicatorPointer.CheckParam); i++)
+        if (IndicatorPointer.CheckParam[i].Caption == "Use previous bar value")
+            return (IndicatorPointer.CheckParam[i].Checked);
+    return (false);
+}
+
+string IndicatorSlot::LogicalGroupToString(void)
+{
+    return ("Logical group: " + LogicalGroup);
+}
+
+string IndicatorSlot::AdvancedParamsToString(void)
+{
+    string text = "Signal shift: " + IntegerToString(SignalShift) + "\n";
+    if (SlotType == SlotTypes_OpenFilter ||
+        SlotType == SlotTypes_CloseFilter)
+        text += "Signal repeat: " + IntegerToString(SignalRepeat) + "\n";
+
+    string symbol = (IndicatorSymbol == "")
+                    ? "Default"
+                    : IndicatorSymbol;
+    string period = (IndicatorPeriod == DataPeriod_M1)
+                    ? "Default"
+                    : DataPeriodToString(IndicatorPeriod);
+    text += "Symbol: " + symbol + "\n";
+    text += "Period: " + period + "\n";
+
+    return (text);
+}
+
 string IndicatorSlot::GetIndicatorSymbol(string baseSymbol)
-  {
-   return (IndicatorSymbol == "") ? baseSymbol : IndicatorSymbol;
-  }
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
+{
+    return (IndicatorSymbol == "" ? baseSymbol : IndicatorSymbol);
+}
+
 DataPeriod IndicatorSlot::GetIndicatorPeriod(DataPeriod basePeriod)
-  {
-   return (IndicatorPeriod < basePeriod) ? basePeriod : IndicatorPeriod;
-  }
-//+------------------------------------------------------------------+
+{
+    return (IndicatorPeriod < basePeriod ? basePeriod : IndicatorPeriod);
+}
+

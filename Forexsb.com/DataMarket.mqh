@@ -31,41 +31,52 @@
 //## Import Start
 
 class DataMarket
-  {
+{
 public:
-   bool              IsNewBid;
+    string     Symbol;
+    DataPeriod Period;
 
-   double            OldBid;
-   double            OldAsk;
-   double            OldClose;
-   double            Bid;
-   double            Ask;
-   double            Close;
-   long              Volume;
+    bool IsNewBid;
 
-   datetime          TickLocalTime;
-   datetime          TickServerTime;
+    double OldBid;
+    double OldAsk;
+    double OldClose;
+    double Bid;
+    double Ask;
+    double Close;
+    long   Volume;
 
-   double            AccountBalance;
-   double            AccountEquity;
-   double            AccountFreeMargin;
+    datetime TickLocalTime;
+    datetime TickServerTime;
+    datetime BarTime;
 
-   int               PositionTicket;
-   double            PositionLots;
-   double            PositionOpenPrice;
-   datetime          PositionOpenTime;
-   double            PositionStopLoss;
-   double            PositionTakeProfit;
-   double            PositionProfit;
-   string            PositionComment;
-   PosDirection      PositionDirection;
+    double AccountBalance;
+    double AccountEquity;
+    double AccountFreeMargin;
 
-   int               ConsecutiveLosses;
-   int               WrongStopLoss;
-   int               WrongTakeProf;
-   int               WrongStopsRetry;
-   bool              IsFailedCloseOrder;
-   int               CloseOrderTickCounter;
-   bool              IsSentCloseOrder;
-  };
-//+------------------------------------------------------------------+
+    double       PositionLots;
+    double       PositionOpenPrice;
+    datetime     PositionOpenTime;
+    double       PositionStopLoss;
+    double       PositionTakeProfit;
+    double       PositionProfit;
+    PosDirection PositionDirection;
+
+    int  ConsecutiveLosses;
+    int  WrongStopLoss;
+    int  WrongTakeProf;
+    int  WrongStopsRetry;
+    bool IsFailedCloseOrder;
+    int  CloseOrderTickCounter;
+    bool IsSentCloseOrder;
+
+    int    LotSize;
+    double Spread;
+    double Point;
+    int    StopLevel;
+    double TickValue;
+    double MinLot;
+    double MaxLot;
+    double LotStep;
+    double MarginRequired;
+};

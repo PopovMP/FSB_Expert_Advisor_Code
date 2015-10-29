@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2014 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "3.00"
 #property strict
 
 #include <Forexsb.com/Enumerations.mqh>
@@ -36,32 +36,31 @@ class DataSet
 public:
     // Constructor
      DataSet(string chart);
-    ~DataSet();
-    
+
     // Properties
     string     Chart;
     string     Symbol;
     DataPeriod Period;
-    
+
     int        LotSize;
     double     Spread;
     int        Digits;
     double     Point;
     double     Pip;
     bool       IsFiveDigits;
-    double     StopLevel;
+    int        StopLevel;
     double     TickValue;
     double     MinLot;
     double     MaxLot;
     double     LotStep;
     double     MarginRequired;
-    
+
     int        Bars;
-    
+
     datetime   ServerTime;
     double     Bid;
     double     Ask;
-    
+
     datetime   Time[];
     double     Open[];
     double     High[];
@@ -70,7 +69,7 @@ public:
     long       Volume[];
 
     // Methods
-    void SetPrecision();
+    void SetPrecision(void);
 };
 
 DataSet::DataSet(string chart)
@@ -82,11 +81,7 @@ DataSet::DataSet(string chart)
     Period = StringToDataPeriod(parts[1]);
 }
 
-DataSet::~DataSet()
-{
-}
-
-void DataSet::SetPrecision()
+void DataSet::SetPrecision(void)
 {
     IsFiveDigits = (Digits == 3 || Digits == 5);
     Point = 1/MathPow(10, Digits);

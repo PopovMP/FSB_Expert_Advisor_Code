@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2014 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "3.00"
 #property strict
 
 #include <Forexsb.com\Indicators\AcceleratorOscillator.mqh>
@@ -130,15 +130,13 @@
 //## Import Start
 
 class IndicatorManager
-  {
+{
 public:
    Indicator        *CreateIndicator(string indicatorName,SlotTypes slotType);
-  };
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
+};
+
 Indicator *IndicatorManager::CreateIndicator(string indicatorName,SlotTypes slotType)
-  {
+{
    if(indicatorName == "Accelerator Oscillator")    return new AcceleratorOscillator(slotType);
    if(indicatorName == "Account Percent Stop")      return new AccountPercentStop(slotType);
    if(indicatorName == "Accumulation Distribution") return new AccumulationDistribution(slotType);
@@ -241,5 +239,5 @@ Indicator *IndicatorManager::CreateIndicator(string indicatorName,SlotTypes slot
    if(indicatorName == "Williams' Percent Range")   return new WilliamsPercentRange(slotType);
    //## Add Custom
    return NULL;
-  }
-//+------------------------------------------------------------------+
+}
+

@@ -23,68 +23,60 @@
 
 #property copyright "Copyright (C) 2014 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "3.00"
 #property strict
 
 //## Import Start
 
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
-class CListParam
-  {
+class ListParameter
+{
 public:
-   // Constructors
-   CListParam()
-     {
-      Caption = "";
-      Text    = "";
-      Index   = -1;
-      Enabled = false;
-     }
+    // Constructors
+    ListParameter()
+    {
+        Caption = "";
+        Text    = "";
+        Index   = -1;
+        Enabled = false;
+    }
 
-   // Properties
-   string Caption;
-   string Text;
-   int    Index;
-   bool   Enabled;
-  };
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
-class CNumericParam
-  {
+    // Properties
+    string Caption;
+    string Text;
+    int    Index;
+    bool   Enabled;
+};
+
+class NumericParameter
+{
 public:
-   // Constructor
-   CNumericParam()
-     {
-      Caption = "";
-      Value   = 0;
-      Enabled = false;
-     }
+    // Constructor
+    NumericParameter()
+    {
+        Caption = "";
+        Value   = 0;
+        Enabled = false;
+    }
 
-   // Properties
-   string Caption;
-   double Value;
-   bool   Enabled;
-  };
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
-class CCheckParam
-  {
+    // Properties
+    string Caption;
+    double Value;
+    bool   Enabled;
+};
+
+class CheckParameter
+{
 public:
-   // Constructor
-   CCheckParam()
-     {
-      Caption = "";
-      Checked = false;
-      Enabled = false;
-     }
+    // Constructor
+    CheckParameter()
+    {
+        Caption = "";
+        Checked = false;
+        Enabled = false;
+    }
 
-   // Properties
-   string Caption;
-   bool   Checked;
-   bool   Enabled;
-  };
-//+------------------------------------------------------------------+
+    // Properties
+    string Caption;
+    bool   Checked;
+    bool   Enabled;
+};
