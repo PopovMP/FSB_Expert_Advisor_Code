@@ -45,7 +45,7 @@ public:
       ExecTime          = ExecutionTime_DuringTheBar;
       IsSeparateChart   = false;
       IsDiscreteValues  = false;
-      IsDeafultGroupAll = false;
+      IsDefaultGroupAll = false;
      }
 
    virtual void      Calculate(DataSet &dataSet);

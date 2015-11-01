@@ -1114,8 +1114,7 @@ bool ActionTrade::ModifyOrder(int orderTicket, double stopLossPrice, double take
         {
             orderOpenPrice = NormalizeDouble(OrderOpenPrice(), _Digits);
 
-            isSuccess = OrderModify(orderTicket, orderOpenPrice,
-                                    stopLossPrice, takeProfitPrice, 0);
+            isSuccess = OrderModify(orderTicket, orderOpenPrice, stopLossPrice, takeProfitPrice, 0);
 
             lastError = GetLastError();
             if (WriteLogFile)

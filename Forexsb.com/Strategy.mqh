@@ -220,15 +220,11 @@ bool Strategy::IsLogicalGroupSpecial(int slotNumber)
 {
     SlotTypes slotType = Slot[slotNumber].SlotType;
     string group = Slot[slotNumber].LogicalGroup;
-    if (slotType == SlotTypes_Open ||
-        slotType == SlotTypes_Close)
+    if (slotType == SlotTypes_Open || slotType == SlotTypes_Close)
         return (false);
-    if (slotType == SlotTypes_OpenFilter &&
-        group != GetDefaultGroup(slotNumber) &&
-        group != "[All]")
+    if (slotType == SlotTypes_OpenFilter && group != GetDefaultGroup(slotNumber) && group != "[All]")
         return (true);
-    if (slotType == SlotTypes_CloseFilter &&
-        group != GetDefaultGroup(slotNumber))
+    if (slotType == SlotTypes_CloseFilter && group != GetDefaultGroup(slotNumber))
         return (true);
     if (slotType == SlotTypes_CloseFilter)
     {
@@ -248,7 +244,9 @@ string Strategy::GetDefaultGroup(int slotNumber)
     SlotTypes slotType = GetSlotType(slotNumber);
     if (slotType == SlotTypes_OpenFilter)
     {
-        group = Slot[slotNumber].IndicatorPointer.IsDeafultGroupAll ? "All" : "A";
+        bool isDefault = Slot[slotNumber].IndicatorPointer.IsDeafultGroupAll ||
+                         Slot[slotNumber].IndicatorPointer.IsDefaultGroupAll;
+        group = isDefault ? "All" : "A";
     }
     else if (slotType == SlotTypes_CloseFilter)
     {
@@ -313,15 +311,15 @@ void Strategy::DynamicInfoSetValues(string &values[])
                 continue;
             }
 
-            string name = component.CompName;
+            string name   = component.CompName;
             double value0 = component.Value[bars - 1];
             double value1 = component.Value[bars - 2];
-            double dl0 = MathAbs(value0);
-            double dl1 = MathAbs(value0);
-            string sFr0 = dl0 < 10 ? "%10.5f" : dl0 < 100 ? "%10.5f" : dl0 < 1000 ? "%10.3f" :
-                          dl0 < 10000 ? "%10.3f" : dl0 < 100000 ? "%10.2f" : "%10.1f";
-            string sFr1 = dl1 < 10 ? "%10.5f" : dl1 < 100 ? "%10.5f" : dl1 < 1000 ? "%10.3f" :
-                          dl1 < 10000 ? "%10.3f" : dl1 < 100000 ? "%10.2f" : "%10.1f";
+            double dl0    = MathAbs(value0);
+            double dl1    = MathAbs(value0);
+            string sFr0   = dl0 < 10 ? "%10.5f" : dl0 < 100 ? "%10.5f" : dl0 < 1000 ? "%10.3f" :
+                            dl0 < 10000 ? "%10.3f" : dl0 < 100000 ? "%10.2f" : "%10.1f";
+            string sFr1   = dl1 < 10 ? "%10.5f" : dl1 < 100 ? "%10.5f" : dl1 < 1000 ? "%10.3f" :
+                            dl1 < 10000 ? "%10.3f" : dl1 < 100000 ? "%10.2f" : "%10.1f";
             string format = sFr1 + "    " + sFr0;
             if (component.ShowInDynInfo)
             {
@@ -330,9 +328,7 @@ void Strategy::DynamicInfoSetValues(string &values[])
                     type == IndComponentType_ForceClose     ||
                     type == IndComponentType_ForceCloseLong ||
                     type == IndComponentType_ForceCloseShort)
-                    values[index] = StringFormat("%13s    %13s",
-                                                 (value1 < 1 ? "No" : "Yes"),
-                                                 (value0 < 1 ? "No" : "Yes"));
+                    values[index] = StringFormat("%13s    %13s", (value1 < 1 ? "No" : "Yes"), (value0 < 1 ? "No" : "Yes"));
                 else
                     values[index] = StringFormat(format, value1, value0);
                 index++;
@@ -356,13 +352,13 @@ string Strategy::DynamicInfoText()
             int bars = ArraySize(component.Value);
             if (bars < 4) continue;
 
-            string name = component.CompName;
+            string name   = component.CompName;
             double value0 = component.Value[bars - 1];
             double value1 = component.Value[bars - 2];
             double value2 = component.Value[bars - 3];
-            double dl = MathAbs(value0);
-            string sFr = dl < 10 ? "%10.6f" : dl < 100 ? "%10.5f" : dl < 1000 ? "%10.4" :
-                         dl < 10000 ? "%10.3f" : dl < 100000 ? "%10.2f" : "%10.1f";
+            double dl     = MathAbs(value0);
+            string sFr    = dl < 10 ? "%10.6f" : dl < 100 ? "%10.5f" : dl < 1000 ? "%10.4" :
+                            dl < 10000 ? "%10.3f" : dl < 100000 ? "%10.2f" : "%10.1f";
             string format = "\n%-40s " + sFr + "    " + sFr + "    " + sFr;
             if (component.ShowInDynInfo)
             {
@@ -390,35 +386,34 @@ string Strategy::DynamicInfoText()
 
 string Strategy::ToString()
 {
-    string stopLoss     = UsePermanentSL    ? IntegerToString(PermanentSL)              : "None";
-    string takeProfit   = UsePermanentTP    ? IntegerToString(PermanentTP)              : "None";
-    string breakEven    = UseBreakEven      ? IntegerToString(BreakEven)                : "None";
-    string martingale   = UseMartingale     ? DoubleToString(MartingaleMultiplier, 2)   : "None";
+    string stopLoss   = UsePermanentSL ? IntegerToString(PermanentSL)            : "None";
+    string takeProfit = UsePermanentTP ? IntegerToString(PermanentTP)            : "None";
+    string breakEven  = UseBreakEven   ? IntegerToString(BreakEven)              : "None";
+    string martingale = UseMartingale  ? DoubleToString(MartingaleMultiplier, 2) : "None";
 
-    string text = "Name: "              + StrategyName                                      + "\n" +
-                  "Symbol: "            + GetSymbol()                                       + "\n" +
-                  "Period: "            + DataPeriodToString(GetPeriod())                   + "\n\n" +
-                  "Trade unit: "        + (UseAccountPercentEntry ? "Percent" : "Lot")      + "\n" +
-                  "Entry amount: "      + DoubleToString(EntryLots, 2)                      + "\n" +
-                  "Max open lots: "     + DoubleToString(MaxOpenLots, 2)                    + "\n\n" +
-                  "Same signal: "       + SameDirSignalActionToString(SameSignalAction)     + "\n" +
-                  "Adding amount: "     + DoubleToString(AddingLots, 2)                     + "\n" +
-                  "Opposite signal: "   + OppositeDirSignalActionToString(OppSignalAction)  + "\n" +
-                  "Reducing amount: "   + DoubleToString(ReducingLots, 2)                   + "\n\n" +
-                  "Stop Loss: "         + stopLoss                                          + "\n" +
-                  "Take Profit: "       + takeProfit                                        + "\n" +
-                  "Break Even: "        + breakEven                                         + "\n\n" +
-                  "Martingale: "        + martingale                                        + "\n\n" +
-                  "Description: "       + Description                                       + "\n\n";
+    string text = "Name: "            + StrategyName                                     + "\n" +
+                  "Symbol: "          + GetSymbol()                                      + "\n" +
+                  "Period: "          + DataPeriodToString(GetPeriod())                  + "\n\n" +
+                  "Trade unit: "      + (UseAccountPercentEntry ? "Percent" : "Lot")     + "\n" +
+                  "Entry amount: "    + DoubleToString(EntryLots, 2)                     + "\n" +
+                  "Max open lots: "   + DoubleToString(MaxOpenLots, 2)                   + "\n\n" +
+                  "Same signal: "     + SameDirSignalActionToString(SameSignalAction)    + "\n" +
+                  "Adding amount: "   + DoubleToString(AddingLots, 2)                    + "\n" +
+                  "Opposite signal: " + OppositeDirSignalActionToString(OppSignalAction) + "\n" +
+                  "Reducing amount: " + DoubleToString(ReducingLots, 2)                  + "\n\n" +
+                  "Stop Loss: "       + stopLoss                                         + "\n" +
+                  "Take Profit: "     + takeProfit                                       + "\n" +
+                  "Break Even: "      + breakEven                                        + "\n\n" +
+                  "Martingale: "      + martingale                                       + "\n\n" +
+                  "Description: "     + Description                                      + "\n\n";
 
     for (int slot = 0; slot < ArraySize(Slot); slot++)
     {
-        text += SlotTypeToString(Slot[slot].SlotType)                   + "\n" +
-                Slot[slot].IndicatorName                                + "\n" +
-                Slot[slot].IndicatorPointer.IndicatorParamToString()    + "\n";
+        text += SlotTypeToString(Slot[slot].SlotType)                + "\n" +
+                Slot[slot].IndicatorName                             + "\n" +
+                Slot[slot].IndicatorPointer.IndicatorParamToString() + "\n";
 
-        if (Slot[slot].SlotType == SlotTypes_OpenFilter ||
-            Slot[slot].SlotType == SlotTypes_CloseFilter)
+        if (Slot[slot].SlotType == SlotTypes_OpenFilter || Slot[slot].SlotType == SlotTypes_CloseFilter)
             text += Slot[slot].LogicalGroupToString();
         if (Slot[slot].IndicatorPointer.IsAllowLTF)
             text += Slot[slot].AdvancedParamsToString() + "\n";

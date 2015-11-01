@@ -124,7 +124,8 @@ public:
     bool UsePreviousBarValue;
     bool IsSeparateChart;
     bool IsBacktester;
-    bool IsDeafultGroupAll; // TODO FIXME Default
+    bool IsDeafultGroupAll; // XXX Outdated. Do not use.
+    bool IsDefaultGroupAll;
     bool IsAllowLTF;
 
     SlotTypes SlotType;
@@ -154,6 +155,7 @@ Indicator::Indicator(void)
     IsDiscreteValues  = false;
     IsSeparateChart   = false;
     IsDeafultGroupAll = false;
+    IsDefaultGroupAll = false;
     IsAllowLTF        = true;
 
     SlotType = SlotTypes_NotDefined;
@@ -274,17 +276,17 @@ int Indicator::NormalizeComponentFirstBar(int componentFirstBar, datetime &strat
 bool Indicator::IsSignalComponent(IndComponentType componentType)
 {
     return
-            componentType == IndComponentType_AllowOpenLong ||
-            componentType == IndComponentType_AllowOpenShort ||
-            componentType == IndComponentType_CloseLongPrice ||
-            componentType == IndComponentType_ClosePrice ||
+            componentType == IndComponentType_AllowOpenLong   ||
+            componentType == IndComponentType_AllowOpenShort  ||
+            componentType == IndComponentType_CloseLongPrice  ||
+            componentType == IndComponentType_ClosePrice      ||
             componentType == IndComponentType_CloseShortPrice ||
-            componentType == IndComponentType_ForceClose ||
-            componentType == IndComponentType_ForceCloseLong ||
+            componentType == IndComponentType_ForceClose      ||
+            componentType == IndComponentType_ForceCloseLong  ||
             componentType == IndComponentType_ForceCloseShort ||
-            componentType == IndComponentType_OpenClosePrice ||
-            componentType == IndComponentType_OpenLongPrice ||
-            componentType == IndComponentType_OpenPrice ||
+            componentType == IndComponentType_OpenClosePrice  ||
+            componentType == IndComponentType_OpenLongPrice   ||
+            componentType == IndComponentType_OpenPrice       ||
             componentType == IndComponentType_OpenShortPrice;
 }
 
@@ -312,7 +314,7 @@ string Indicator::IndicatorParamToString(void)
         if (CheckParam[i].Enabled)
             text += StringFormat("%s: %s\n", CheckParam[i].Caption, (CheckParam[i].Checked ? "Yes" : "No"));
 
-    return text;
+    return (text);
 }
 
 void Indicator::Price(BasePrice priceType, double &price[])
@@ -470,7 +472,7 @@ void Indicator::OscillatorLogic(int firstBar, int previous, const double &adIndV
                     }
                 }
 
-                indCompLong.Value[bar] = adIndValue[baseBar] < adIndValue[currentBar] - sigma ? 1 : 0;
+                indCompLong.Value[bar]  = adIndValue[baseBar] < adIndValue[currentBar] - sigma ? 1 : 0;
                 indCompShort.Value[bar] = adIndValue[baseBar] > adIndValue[currentBar] + sigma ? 1 : 0;
             }
             break;
@@ -478,9 +480,9 @@ void Indicator::OscillatorLogic(int firstBar, int previous, const double &adIndV
         case IndicatorLogic_The_indicator_falls:
             for (int bar = firstBar; bar < Data.Bars; bar++)
             {
-                int currentBar = bar - previous;
-                int baseBar = currentBar - 1;
-                bool isHigher = adIndValue[currentBar] > adIndValue[baseBar];
+                int  currentBar = bar - previous;
+                int  baseBar    = currentBar - 1;
+                bool isHigher   = adIndValue[currentBar] > adIndValue[baseBar];
 
                 if (!IsDiscreteValues) // Aroon oscillator uses IsDiscreteValues = true
                 {
@@ -493,7 +495,7 @@ void Indicator::OscillatorLogic(int firstBar, int previous, const double &adIndV
                     }
                 }
 
-                indCompLong.Value[bar] = adIndValue[baseBar] > adIndValue[currentBar] + sigma ? 1 : 0;
+                indCompLong.Value[bar]  = adIndValue[baseBar] > adIndValue[currentBar] + sigma ? 1 : 0;
                 indCompShort.Value[bar] = adIndValue[baseBar] < adIndValue[currentBar] - sigma ? 1 : 0;
             }
             break;
@@ -501,7 +503,7 @@ void Indicator::OscillatorLogic(int firstBar, int previous, const double &adIndV
         case IndicatorLogic_The_indicator_is_higher_than_the_level_line:
             for (int bar = firstBar; bar < Data.Bars; bar++)
             {
-                indCompLong.Value[bar] = adIndValue[bar - previous] > levelLong + sigma ? 1 : 0;
+                indCompLong.Value[bar]  = adIndValue[bar - previous] > levelLong + sigma  ? 1 : 0;
                 indCompShort.Value[bar] = adIndValue[bar - previous] < levelShort - sigma ? 1 : 0;
             }
             break;
@@ -509,7 +511,7 @@ void Indicator::OscillatorLogic(int firstBar, int previous, const double &adIndV
         case IndicatorLogic_The_indicator_is_lower_than_the_level_line:
             for (int bar = firstBar; bar < Data.Bars; bar++)
             {
-                indCompLong.Value[bar] = adIndValue[bar - previous] < levelLong - sigma ? 1 : 0;
+                indCompLong.Value[bar]  = adIndValue[bar - previous] < levelLong - sigma  ? 1 : 0;
                 indCompShort.Value[bar] = adIndValue[bar - previous] > levelShort + sigma ? 1 : 0;
             }
             break;
@@ -599,13 +601,12 @@ void Indicator::NoDirectionOscillatorLogic(int firstBar, int previous, const dou
         case IndicatorLogic_The_indicator_rises:
             for (int bar = firstBar; bar < Data.Bars; bar++)
             {
-                int currentBar = bar - previous;
-                int baseBar = currentBar - 1;
-                bool isHigher = adIndValue[currentBar] > adIndValue[baseBar];
+                int  currentBar = bar - previous;
+                int  baseBar    = currentBar - 1;
+                bool isHigher   = adIndValue[currentBar] > adIndValue[baseBar];
                 bool isNoChange = true;
 
-                while (MathAbs(adIndValue[currentBar] - adIndValue[baseBar]) < sigma && isNoChange &&
-                       baseBar > firstBar)
+                while (MathAbs(adIndValue[currentBar] - adIndValue[baseBar]) < sigma && isNoChange && baseBar > firstBar)
                 {
                     isNoChange = (isHigher == (adIndValue[baseBar + 1] > adIndValue[baseBar]));
                     baseBar--;
@@ -618,13 +619,12 @@ void Indicator::NoDirectionOscillatorLogic(int firstBar, int previous, const dou
         case IndicatorLogic_The_indicator_falls:
             for (int bar = firstBar; bar < Data.Bars; bar++)
             {
-                int currentBar = bar - previous;
-                int baseBar = currentBar - 1;
-                bool isHigher = adIndValue[currentBar] > adIndValue[baseBar];
+                int  currentBar = bar - previous;
+                int  baseBar    = currentBar - 1;
+                bool isHigher   = adIndValue[currentBar] > adIndValue[baseBar];
                 bool isNoChange = true;
 
-                while (MathAbs(adIndValue[currentBar] - adIndValue[baseBar]) < sigma && isNoChange &&
-                       baseBar > firstBar)
+                while (MathAbs(adIndValue[currentBar] - adIndValue[baseBar]) < sigma && isNoChange && baseBar > firstBar)
                 {
                     isNoChange = (isHigher == (adIndValue[baseBar + 1] > adIndValue[baseBar]));
                     baseBar--;
@@ -716,7 +716,7 @@ void Indicator::BandIndicatorLogic(int firstBar, int previous, const double &adU
 
     for (int bar = 0; bar < firstBar; bar++)
     {
-        indCompLong.Value[bar] = 0;
+        indCompLong.Value[bar]  = 0;
         indCompShort.Value[bar] = 0;
     }
 
@@ -725,7 +725,7 @@ void Indicator::BandIndicatorLogic(int firstBar, int previous, const double &adU
         case BandIndLogic_The_bar_opens_below_the_Upper_Band:
             for (int bar = firstBar; bar < Data.Bars; bar++)
             {
-                indCompLong.Value[bar] = Data.Open[bar] < adUpperBand[bar - previous] - sigma ? 1 : 0;
+                indCompLong.Value[bar]  = Data.Open[bar] < adUpperBand[bar - previous] - sigma ? 1 : 0;
                 indCompShort.Value[bar] = Data.Open[bar] > adLowerBand[bar - previous] + sigma ? 1 : 0;
             }
             break;
@@ -733,7 +733,7 @@ void Indicator::BandIndicatorLogic(int firstBar, int previous, const double &adU
         case BandIndLogic_The_bar_opens_above_the_Upper_Band:
             for (int bar = firstBar; bar < Data.Bars; bar++)
             {
-                indCompLong.Value[bar] = Data.Open[bar] > adUpperBand[bar - previous] + sigma ? 1 : 0;
+                indCompLong.Value[bar]  = Data.Open[bar] > adUpperBand[bar - previous] + sigma ? 1 : 0;
                 indCompShort.Value[bar] = Data.Open[bar] < adLowerBand[bar - previous] - sigma ? 1 : 0;
             }
             break;
@@ -741,7 +741,7 @@ void Indicator::BandIndicatorLogic(int firstBar, int previous, const double &adU
         case BandIndLogic_The_bar_opens_below_the_Lower_Band:
             for (int bar = firstBar; bar < Data.Bars; bar++)
             {
-                indCompLong.Value[bar] = Data.Open[bar] < adLowerBand[bar - previous] - sigma ? 1 : 0;
+                indCompLong.Value[bar]  = Data.Open[bar] < adLowerBand[bar - previous] - sigma ? 1 : 0;
                 indCompShort.Value[bar] = Data.Open[bar] > adUpperBand[bar - previous] + sigma ? 1 : 0;
             }
             break;
@@ -749,7 +749,7 @@ void Indicator::BandIndicatorLogic(int firstBar, int previous, const double &adU
         case BandIndLogic_The_bar_opens_above_the_Lower_Band:
             for (int bar = firstBar; bar < Data.Bars; bar++)
             {
-                indCompLong.Value[bar] = Data.Open[bar] > adLowerBand[bar - previous] + sigma ? 1 : 0;
+                indCompLong.Value[bar]  = Data.Open[bar] > adLowerBand[bar - previous] + sigma ? 1 : 0;
                 indCompShort.Value[bar] = Data.Open[bar] < adUpperBand[bar - previous] - sigma ? 1 : 0;
             }
             break;
@@ -833,7 +833,7 @@ void Indicator::BandIndicatorLogic(int firstBar, int previous, const double &adU
         case BandIndLogic_The_bar_closes_below_the_Upper_Band:
             for (int bar = firstBar; bar < Data.Bars; bar++)
             {
-                indCompLong.Value[bar] = Data.Close[bar] < adUpperBand[bar - previous] - sigma ? 1 : 0;
+                indCompLong.Value[bar]  = Data.Close[bar] < adUpperBand[bar - previous] - sigma ? 1 : 0;
                 indCompShort.Value[bar] = Data.Close[bar] > adLowerBand[bar - previous] + sigma ? 1 : 0;
             }
             break;
@@ -841,7 +841,7 @@ void Indicator::BandIndicatorLogic(int firstBar, int previous, const double &adU
         case BandIndLogic_The_bar_closes_above_the_Upper_Band:
             for (int bar = firstBar; bar < Data.Bars; bar++)
             {
-                indCompLong.Value[bar] = Data.Close[bar] > adUpperBand[bar - previous] + sigma ? 1 : 0;
+                indCompLong.Value[bar]  = Data.Close[bar] > adUpperBand[bar - previous] + sigma ? 1 : 0;
                 indCompShort.Value[bar] = Data.Close[bar] < adLowerBand[bar - previous] - sigma ? 1 : 0;
             }
             break;
@@ -849,7 +849,7 @@ void Indicator::BandIndicatorLogic(int firstBar, int previous, const double &adU
         case BandIndLogic_The_bar_closes_below_the_Lower_Band:
             for (int bar = firstBar; bar < Data.Bars; bar++)
             {
-                indCompLong.Value[bar] = Data.Close[bar] < adLowerBand[bar - previous] - sigma ? 1 : 0;
+                indCompLong.Value[bar]  = Data.Close[bar] < adLowerBand[bar - previous] - sigma ? 1 : 0;
                 indCompShort.Value[bar] = Data.Close[bar] > adUpperBand[bar - previous] + sigma ? 1 : 0;
             }
             break;
@@ -857,7 +857,7 @@ void Indicator::BandIndicatorLogic(int firstBar, int previous, const double &adU
         case BandIndLogic_The_bar_closes_above_the_Lower_Band:
             for (int bar = firstBar; bar < Data.Bars; bar++)
             {
-                indCompLong.Value[bar] = Data.Close[bar] > adLowerBand[bar - previous] + sigma ? 1 : 0;
+                indCompLong.Value[bar]  = Data.Close[bar] > adLowerBand[bar - previous] + sigma ? 1 : 0;
                 indCompShort.Value[bar] = Data.Close[bar] < adUpperBand[bar - previous] - sigma ? 1 : 0;
             }
             break;
@@ -875,16 +875,16 @@ void Indicator::IndicatorRisesLogic(int firstBar, int previous, const double &ad
 
     for (int bar = 0; bar < firstBar; bar++)
     {
-        indCompLong.Value[bar] = 0;
+        indCompLong.Value[bar]  = 0;
         indCompShort.Value[bar] = 0;
     }
 
     for (int bar = firstBar; bar < Data.Bars; bar++)
     {
-        int currentBar = bar - previous;
-        int baseBar = currentBar - 1;
+        int  currentBar = bar - previous;
+        int  baseBar    = currentBar - 1;
         bool isNoChange = true;
-        bool isHigher = adIndValue[currentBar] > adIndValue[baseBar];
+        bool isHigher   = adIndValue[currentBar] > adIndValue[baseBar];
 
         while (MathAbs(adIndValue[currentBar] - adIndValue[baseBar]) < sigma && isNoChange &&
                baseBar > firstBar)
@@ -893,7 +893,7 @@ void Indicator::IndicatorRisesLogic(int firstBar, int previous, const double &ad
             baseBar--;
         }
 
-        indCompLong.Value[bar] = adIndValue[currentBar] > adIndValue[baseBar] + sigma ? 1 : 0;
+        indCompLong.Value[bar]  = adIndValue[currentBar] > adIndValue[baseBar] + sigma ? 1 : 0;
         indCompShort.Value[bar] = adIndValue[currentBar] < adIndValue[baseBar] - sigma ? 1 : 0;
     }
 }
@@ -924,7 +924,7 @@ void Indicator::IndicatorFallsLogic(int firstBar, int previous, const double &ad
             baseBar--;
         }
 
-        indCompLong.Value[bar] = adIndValue[currentBar] < adIndValue[baseBar] - sigma ? 1 : 0;
+        indCompLong.Value[bar]  = adIndValue[currentBar] < adIndValue[baseBar] - sigma ? 1 : 0;
         indCompShort.Value[bar] = adIndValue[currentBar] > adIndValue[baseBar] + sigma ? 1 : 0;
     }
 }
@@ -945,7 +945,7 @@ void Indicator::IndicatorIsHigherThanAnotherIndicatorLogic(int firstBar, int pre
     for (int bar = firstBar; bar < Data.Bars; bar++)
     {
         int currentBar = bar - previous;
-        indCompLong.Value[bar] = adIndValue[currentBar] > adAnotherIndValue[currentBar] + sigma ? 1 : 0;
+        indCompLong.Value[bar]  = adIndValue[currentBar] > adAnotherIndValue[currentBar] + sigma ? 1 : 0;
         indCompShort.Value[bar] = adIndValue[currentBar] < adAnotherIndValue[currentBar] - sigma ? 1 : 0;
     }
 }
@@ -959,14 +959,14 @@ void Indicator::IndicatorIsLowerThanAnotherIndicatorLogic(int firstBar, int prev
 
     for (int bar = 0; bar < firstBar; bar++)
     {
-        indCompLong.Value[bar] = 0;
+        indCompLong.Value[bar]  = 0;
         indCompShort.Value[bar] = 0;
     }
 
     for (int bar = firstBar; bar < Data.Bars; bar++)
     {
         int currentBar = bar - previous;
-        indCompLong.Value[bar] = adIndValue[currentBar] < adAnotherIndValue[currentBar] - sigma ? 1 : 0;
+        indCompLong.Value[bar]  = adIndValue[currentBar] < adAnotherIndValue[currentBar] - sigma ? 1 : 0;
         indCompShort.Value[bar] = adIndValue[currentBar] > adAnotherIndValue[currentBar] + sigma ? 1 : 0;
     }
 }
@@ -1079,13 +1079,13 @@ void Indicator::BarOpensAboveIndicatorLogic(int firstBar, int previous, const do
 
     for (int bar = 0; bar < firstBar; bar++)
     {
-        indCompLong.Value[bar] = 0;
+        indCompLong.Value[bar]  = 0;
         indCompShort.Value[bar] = 0;
     }
 
     for (int bar = firstBar; bar < Data.Bars; bar++)
     {
-        indCompLong.Value[bar] = Data.Open[bar] > adIndValue[bar - previous] + sigma ? 1 : 0;
+        indCompLong.Value[bar]  = Data.Open[bar] > adIndValue[bar - previous] + sigma ? 1 : 0;
         indCompShort.Value[bar] = Data.Open[bar] < adIndValue[bar - previous] - sigma ? 1 : 0;
     }
 }
@@ -1104,7 +1104,7 @@ void Indicator::BarOpensBelowIndicatorLogic(int firstBar, int previous, const do
 
     for (int bar = firstBar; bar < Data.Bars; bar++)
     {
-        indCompLong.Value[bar] = Data.Open[bar] < adIndValue[bar - previous] - sigma ? 1 : 0;
+        indCompLong.Value[bar]  = Data.Open[bar] < adIndValue[bar - previous] - sigma ? 1 : 0;
         indCompShort.Value[bar] = Data.Open[bar] > adIndValue[bar - previous] + sigma ? 1 : 0;
     }
 }
@@ -1167,13 +1167,13 @@ void Indicator::BarClosesAboveIndicatorLogic(int firstBar, int previous, const d
 
     for (int bar = 0; bar < firstBar; bar++)
     {
-        indCompLong.Value[bar] = 0;
+        indCompLong.Value[bar]  = 0;
         indCompShort.Value[bar] = 0;
     }
 
     for (int bar = firstBar; bar < Data.Bars; bar++)
     {
-        indCompLong.Value[bar] = Data.Close[bar] > adIndValue[bar - previous] + sigma ? 1 : 0;
+        indCompLong.Value[bar]  = Data.Close[bar] > adIndValue[bar - previous] + sigma ? 1 : 0;
         indCompShort.Value[bar] = Data.Close[bar] < adIndValue[bar - previous] - sigma ? 1 : 0;
     }
 }
@@ -1186,13 +1186,13 @@ void Indicator::BarClosesBelowIndicatorLogic(int firstBar, int previous, const d
 
     for (int bar = 0; bar < firstBar; bar++)
     {
-        indCompLong.Value[bar] = 0;
+        indCompLong.Value[bar]  = 0;
         indCompShort.Value[bar] = 0;
     }
 
     for (int bar = firstBar; bar < Data.Bars; bar++)
     {
-        indCompLong.Value[bar] = Data.Close[bar] < adIndValue[bar - previous] - sigma ? 1 : 0;
+        indCompLong.Value[bar]  = Data.Close[bar] < adIndValue[bar - previous] - sigma ? 1 : 0;
         indCompShort.Value[bar] = Data.Close[bar] > adIndValue[bar - previous] + sigma ? 1 : 0;
     }
 }

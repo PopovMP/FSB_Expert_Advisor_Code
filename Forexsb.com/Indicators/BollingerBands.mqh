@@ -45,7 +45,7 @@ public:
       ExecTime          = ExecutionTime_DuringTheBar;
       IsSeparateChart   = false;
       IsDiscreteValues  = false;
-      IsDeafultGroupAll = false;
+      IsDefaultGroupAll = false;
      }
 
    virtual void Calculate(DataSet &dataSet);
@@ -150,14 +150,14 @@ void BollingerBands::Calculate(DataSet &dataSet)
             double open=Data.Open[bar]; // Current open price
 
             // Upper band
-            double valueUp=adUpBand[bar-prvs]; // Current value
-            double valueUp1=adUpBand[bar-prvs-1]; // Previous value
-            double tempValUp=valueUp;
+            double valueUp   = adUpBand[bar-prvs]; // Current value
+            double valueUp1  = adUpBand[bar-prvs-1]; // Previous value
+            double tempValUp = valueUp;
 
             if((valueUp1>Data.High[bar-1]  && valueUp<open) || // The Data.Open price jumps above the indicator
                (valueUp1<Data.Low[bar-1]   && valueUp>open) || // The Data.Open price jumps below the indicator
                (Data.Close[bar-1]<valueUp  && valueUp<open) || // The Data.Open price is in a positive gap
-               (Data.Close[bar-1]>valueUp  && valueUp>open)) // The Data.Open price is in a negative gap
+               (Data.Close[bar-1]>valueUp  && valueUp>open))   // The Data.Open price is in a negative gap
                tempValUp=open; // The entry/exit level is moved to Data.Open price
 
             // Lower band
@@ -165,10 +165,10 @@ void BollingerBands::Calculate(DataSet &dataSet)
             double valueDown1=adDnBand[bar-prvs-1]; // Previous value
             double tempValDown=valueDown;
 
-            if((valueDown1>Data.High[bar-1]  && valueDown<open) ||  // The Data.Open price jumps above the indicator
-               (valueDown1<Data.Low[bar-1]   && valueDown>open) ||  // The Data.Open price jumps below the indicator
+            if((valueDown1>Data.High[bar-1]  && valueDown<open) || // The Data.Open price jumps above the indicator
+               (valueDown1<Data.Low[bar-1]   && valueDown>open) || // The Data.Open price jumps below the indicator
                (Data.Close[bar-1]<valueDown  && valueDown<open) || // The Data.Open price is in a positive gap
-               (Data.Close[bar-1]>valueDown  && valueDown>open)) // The Data.Open price is in a negative gap
+               (Data.Close[bar-1]>valueDown  && valueDown>open))   // The Data.Open price is in a negative gap
                tempValDown=open; // The entry/exit level is moved to Data.Open price
 
             if(ListParam[0].Text=="Enter long at Upper Band" || ListParam[0].Text=="Exit long at Upper Band")
