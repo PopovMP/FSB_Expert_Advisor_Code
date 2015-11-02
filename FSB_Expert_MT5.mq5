@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2014 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "30.0"
+#property version   "31.0"
 #property strict
 
 #include <Forexsb.com\ActionTrade5.mqh>
