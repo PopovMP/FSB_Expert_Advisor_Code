@@ -158,15 +158,8 @@ enum PositionPriceDependence
    PositionPriceDependence_PriceSellHigher,
    PositionPriceDependence_PriceSellLower,
    PositionPriceDependence_BuyHigherSellLower,
-   PositionPriceDependence_BuyLowerSelHigher,
-   PositionPriceDependence_PriceBuyCrossesUpBandInwards,
-   PositionPriceDependence_PriceBuyCrossesUpBandOutwards,
-   PositionPriceDependence_PriceBuyCrossesDownBandInwards,
-   PositionPriceDependence_PriceBuyCrossesDownBandOutwards,
-   PositionPriceDependence_PriceSellCrossesUpBandInwards,
-   PositionPriceDependence_PriceSellCrossesUpBandOutwards,
-   PositionPriceDependence_PriceSellCrossesDownBandInwards,
-   PositionPriceDependence_PriceSellCrossesDownBandOutwards
+   PositionPriceDependence_BuyLowerSelHigher, // Deprecated
+   PositionPriceDependence_BuyLowerSellHigher
 };
 
 enum BasePrice
