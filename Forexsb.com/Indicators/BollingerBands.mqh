@@ -222,8 +222,6 @@ void BollingerBands::Calculate(DataSet &dataSet)
         {
          Component[0].PosPriceDependence = PositionPriceDependence_PriceBuyHigher;
          Component[2].PosPriceDependence = PositionPriceDependence_PriceSellLower;
-         Component[0].UsePreviousBar = prvs;
-         Component[2].UsePreviousBar = prvs;
          Component[3].DataType = IndComponentType_Other;
          Component[4].DataType = IndComponentType_Other;
          Component[3].ShowInDynInfo = false;
@@ -233,8 +231,6 @@ void BollingerBands::Calculate(DataSet &dataSet)
         {
          Component[0].PosPriceDependence = PositionPriceDependence_PriceBuyLower;
          Component[2].PosPriceDependence = PositionPriceDependence_PriceSellHigher;
-         Component[0].UsePreviousBar = prvs;
-         Component[2].UsePreviousBar = prvs;
          Component[3].DataType = IndComponentType_Other;
          Component[4].DataType = IndComponentType_Other;
          Component[3].ShowInDynInfo = false;
@@ -244,8 +240,6 @@ void BollingerBands::Calculate(DataSet &dataSet)
         {
          Component[0].PosPriceDependence = PositionPriceDependence_PriceSellLower;
          Component[2].PosPriceDependence = PositionPriceDependence_PriceBuyHigher;
-         Component[0].UsePreviousBar = prvs;
-         Component[2].UsePreviousBar = prvs;
          Component[3].DataType = IndComponentType_Other;
          Component[4].DataType = IndComponentType_Other;
          Component[3].ShowInDynInfo = false;
@@ -255,8 +249,6 @@ void BollingerBands::Calculate(DataSet &dataSet)
         {
          Component[0].PosPriceDependence = PositionPriceDependence_PriceSellHigher;
          Component[2].PosPriceDependence = PositionPriceDependence_PriceBuyLower;
-         Component[0].UsePreviousBar = prvs;
-         Component[2].UsePreviousBar = prvs;
          Component[3].DataType = IndComponentType_Other;
          Component[4].DataType = IndComponentType_Other;
          Component[3].ShowInDynInfo = false;

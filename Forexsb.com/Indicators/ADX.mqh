@@ -66,8 +66,8 @@ void ADX::Calculate(DataSet &dataSet)
 // Calculation
    int firstBar=2*period+2;
 
-   double diPos[]; ArrayResize(diPos,Data.Bars);  ArrayInitialize(diPos,0);
-   double diNeg[]; ArrayResize(diNeg,Data.Bars);  ArrayInitialize(diNeg,0);
+   double positive[]; ArrayResize(positive,Data.Bars);  ArrayInitialize(positive,0);
+   double negative[]; ArrayResize(negative,Data.Bars);  ArrayInitialize(negative,0);
 
    for(int bar=1; bar<Data.Bars; bar++)
      {
@@ -80,44 +80,45 @@ void ADX::Calculate(DataSet &dataSet)
       double deltaLow = Data.Low[bar-1]-Data.Low[bar];
 
       if(deltaHigh>0 && deltaHigh>deltaLow)
-         diPos[bar]=100*deltaHigh/trueRange;
+         positive[bar]=100*deltaHigh/trueRange;
 
       if(deltaLow>0 && deltaLow>deltaHigh)
-         diNeg[bar]=100*deltaLow/trueRange;
+         negative[bar]=100*deltaLow/trueRange;
      }
 
-   double adiPos[];
-   MovingAverage(period,0,maMethod,diPos,adiPos);
-   double adiNeg[];
-   MovingAverage(period,0,maMethod,diNeg,adiNeg);
+   double averagePositive[];
+   MovingAverage(period,0,maMethod,positive,averagePositive);
+   double averageNegative[];
+   MovingAverage(period,0,maMethod,negative,averageNegative);
 
-   double dx[]; ArrayResize(dx,Data.Bars); ArrayInitialize(dx,0);
+   double directionalIndex[]; ArrayResize(directionalIndex,Data.Bars); ArrayInitialize(directionalIndex,0);
 
    for(int bar=0; bar<Data.Bars; bar++)
-      if(MathAbs(adiPos[bar]-adiNeg[bar])>Epsilon())
-         dx[bar]=100*MathAbs((adiPos[bar]-adiNeg[bar])/(adiPos[bar]+adiNeg[bar]));
+      if(MathAbs(averagePositive[bar]-averageNegative[bar])>Epsilon())
+         directionalIndex[bar]=100*MathAbs((averagePositive[bar]-averageNegative[bar])/
+                                           (averagePositive[bar]+averageNegative[bar]));
 
-   double adx[];
-   MovingAverage(period,0,maMethod,dx,adx);
+   double averageDirectionalIndex[];
+   MovingAverage(period,0,maMethod,directionalIndex,averageDirectionalIndex);
 
 // Saving the components
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "ADX";
    Component[0].DataType = IndComponentType_IndicatorValue;
    Component[0].FirstBar = firstBar;
-   ArrayCopy(Component[0].Value,adx);
+   ArrayCopy(Component[0].Value,averageDirectionalIndex);
 
    ArrayResize(Component[1].Value,Data.Bars);
    Component[1].CompName = "ADI+";
    Component[1].DataType = IndComponentType_IndicatorValue;
    Component[1].FirstBar = firstBar;
-   ArrayCopy(Component[1].Value,adiPos);
+   ArrayCopy(Component[1].Value,averagePositive);
 
    ArrayResize(Component[2].Value,Data.Bars);
    Component[2].CompName = "ADI-";
    Component[2].DataType = IndComponentType_IndicatorValue;
    Component[2].FirstBar = firstBar;
-   ArrayCopy(Component[2].Value,adiNeg);
+   ArrayCopy(Component[2].Value,averageNegative);
 
    ArrayResize(Component[3].Value,Data.Bars);
    ArrayResize(Component[4].Value,Data.Bars);
@@ -159,7 +160,7 @@ void ADX::Calculate(DataSet &dataSet)
       logicRule=IndicatorLogic_The_indicator_changes_its_direction_downward;
 
 // ADX rises equal signals in both directions!
-   NoDirectionOscillatorLogic(firstBar,previous,adx,level,Component[3],logicRule);
+   NoDirectionOscillatorLogic(firstBar,previous,averageDirectionalIndex,level,Component[3],logicRule);
    ArrayCopy(Component[4].Value,Component[3].Value);
   }
 //+------------------------------------------------------------------+

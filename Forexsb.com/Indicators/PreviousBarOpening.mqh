@@ -119,7 +119,7 @@ void PreviousBarOpening::Calculate(DataSet &dataSet)
         }
       else if(ListParam[0].Text=="The position opens below the previous Bar Opening")
         {
-         Component[0].PosPriceDependence=PositionPriceDependence_BuyLowerSelHigher;
+         Component[0].PosPriceDependence=PositionPriceDependence_BuyLowerSellHigher;
          Component[1].DataType = IndComponentType_Other;
          Component[2].DataType = IndComponentType_Other;
          Component[1].ShowInDynInfo = false;

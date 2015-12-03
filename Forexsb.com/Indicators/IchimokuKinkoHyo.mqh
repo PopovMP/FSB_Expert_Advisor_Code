@@ -229,12 +229,10 @@ void IchimokuKinkoHyo::Calculate(DataSet &dataSet)
         }
       Component[5].PosPriceDependence=PositionPriceDependence_PriceBuyHigher;
       Component[5].DataType=IndComponentType_Other;
-      Component[5].UsePreviousBar= previousBar;
       Component[5].ShowInDynInfo = false;
 
       Component[6].PosPriceDependence=PositionPriceDependence_PriceSellLower;
       Component[6].DataType=IndComponentType_Other;
-      Component[6].UsePreviousBar= previousBar;
       Component[6].ShowInDynInfo = false;
      }
    else if(ListParam[0].Text=="The position opens inside or above Kumo") 
@@ -246,12 +244,10 @@ void IchimokuKinkoHyo::Calculate(DataSet &dataSet)
         }
       Component[5].PosPriceDependence=PositionPriceDependence_PriceBuyHigher;
       Component[5].DataType=IndComponentType_Other;
-      Component[5].UsePreviousBar= previousBar;
       Component[5].ShowInDynInfo = false;
 
       Component[6].PosPriceDependence=PositionPriceDependence_PriceSellLower;
       Component[6].DataType=IndComponentType_Other;
-      Component[6].UsePreviousBar= previousBar;
       Component[6].ShowInDynInfo = false;
      }
    else if(ListParam[0].Text=="Tenkan Sen is above Kumo") 

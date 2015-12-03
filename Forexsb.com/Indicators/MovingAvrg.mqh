@@ -153,7 +153,6 @@ void MovingAvrg::Calculate(DataSet &dataSet)
       else if(ListParam[0].Text=="The position opens above Moving Average") 
         {
          Component[0].PosPriceDependence=PositionPriceDependence_BuyHigherSellLower;
-         Component[0].UsePreviousBar=previous;
          Component[1].DataType=IndComponentType_Other;
          Component[1].ShowInDynInfo=false;
          Component[2].DataType=IndComponentType_Other;
@@ -161,8 +160,7 @@ void MovingAvrg::Calculate(DataSet &dataSet)
         }
       else if(ListParam[0].Text=="The position opens below Moving Average") 
         {
-         Component[0].PosPriceDependence=PositionPriceDependence_BuyLowerSelHigher;
-         Component[0].UsePreviousBar=previous;
+         Component[0].PosPriceDependence=PositionPriceDependence_BuyLowerSellHigher;
          Component[1].DataType=IndComponentType_Other;
          Component[1].ShowInDynInfo=false;
          Component[2].DataType=IndComponentType_Other;

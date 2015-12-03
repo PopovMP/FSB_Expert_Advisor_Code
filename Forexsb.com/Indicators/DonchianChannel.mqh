@@ -58,47 +58,47 @@ void DonchianChannel::Calculate(DataSet &dataSet)
    Data=GetPointer(dataSet);
 
 // Reading the parameters
-   int iPeriod=(int) NumParam[0].Value;
-   int iShift =(int) NumParam[1].Value;
-   int iPrvs=CheckParam[0].Checked ? 1 : 0;
+   int period=(int) NumParam[0].Value;
+   int shift =(int) NumParam[1].Value;
+   int previous=CheckParam[0].Checked ? 1 : 0;
 
 // Calculation
-   double adUpBand[]; ArrayResize(adUpBand,Data.Bars); ArrayInitialize(adUpBand,0);
-   double adDnBand[]; ArrayResize(adDnBand,Data.Bars); ArrayInitialize(adDnBand,0);
+   double upperBand[]; ArrayResize(upperBand,Data.Bars); ArrayInitialize(upperBand,0);
+   double lowerBand[]; ArrayResize(lowerBand,Data.Bars); ArrayInitialize(lowerBand,0);
 
-   int iFirstBar=iPeriod+iShift+iPrvs+2;
+   int firstBar=period+shift+previous+2;
 
-   for(int iBar=iFirstBar; iBar<Data.Bars-iShift; iBar++)
+   for(int bar=firstBar; bar<Data.Bars-shift; bar++)
      {
-      double dMax = DBL_MIN;
-      double dMin = DBL_MAX;
-      for(int i=0; i<iPeriod; i++)
+      double max = DBL_MIN;
+      double min = DBL_MAX;
+      for(int i=0; i<period; i++)
         {
-         if(Data.High[iBar - i]> dMax) dMax = Data.High[iBar - i];
-         if(Data.Low[iBar - i] < dMin) dMin = Data.Low[iBar - i];
+         if(Data.High[bar - i]> max) max = Data.High[bar - i];
+         if(Data.Low[bar - i] < min) min = Data.Low[bar - i];
         }
-      adUpBand[iBar + iShift] = dMax;
-      adDnBand[iBar + iShift] = dMin;
+      upperBand[bar + shift] = max;
+      lowerBand[bar + shift] = min;
      }
 
 // Saving the components
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "Upper Band";
    Component[0].DataType = IndComponentType_IndicatorValue;
-   Component[0].FirstBar = iFirstBar;
-   ArrayCopy(Component[0].Value,adUpBand);
+   Component[0].FirstBar = firstBar;
+   ArrayCopy(Component[0].Value,upperBand);
 
    ArrayResize(Component[1].Value,Data.Bars);
    Component[1].CompName = "Lower Band";
    Component[1].DataType = IndComponentType_IndicatorValue;
-   Component[1].FirstBar = iFirstBar;
-   ArrayCopy(Component[1].Value,adDnBand);
+   Component[1].FirstBar = firstBar;
+   ArrayCopy(Component[1].Value,lowerBand);
 
    ArrayResize(Component[2].Value,Data.Bars);
-   Component[2].FirstBar=iFirstBar;
+   Component[2].FirstBar=firstBar;
 
    ArrayResize(Component[3].Value,Data.Bars);
-   Component[3].FirstBar=iFirstBar;
+   Component[3].FirstBar=firstBar;
 
 // Sets the Component's type.
    if(SlotType==SlotTypes_Open)
@@ -132,65 +132,65 @@ void DonchianChannel::Calculate(DataSet &dataSet)
 
    if(SlotType==SlotTypes_Open || SlotType==SlotTypes_Close)
      {
-      if(iPeriod>1)
+      if(period>1)
         {
-         for(int iBar=iFirstBar; iBar<Data.Bars; iBar++)
+         for(int bar=firstBar; bar<Data.Bars; bar++)
            {
             // Covers the cases when the price can pass through the band without a signal.
-            double dOpen=Data.Open[iBar]; // Current open price
+            double dOpen=Data.Open[bar]; // Current open price
 
             // Upper band
-            double dValueUp=adUpBand[iBar-iPrvs]; // Current value
-            double dValueUp1=adUpBand[iBar-iPrvs-1]; // Previous value
+            double dValueUp=upperBand[bar-previous]; // Current value
+            double dValueUp1=upperBand[bar-previous-1]; // Previous value
             double dTempValUp=dValueUp;
 
-            if((dValueUp1>Data.High[iBar-1] && dValueUp<dOpen) || // The Data.Open price jumps above the indicator
-               (dValueUp1<Data.Low[iBar-1]  && dValueUp>dOpen) || // The Data.Open price jumps below the indicator
-               (Data.Close[iBar-1]<dValueUp && dValueUp<dOpen) || // The Data.Open price is in a positive gap
-               (Data.Close[iBar-1]>dValueUp && dValueUp>dOpen))   // The Data.Open price is in a negative gap
+            if((dValueUp1>Data.High[bar-1] && dValueUp<dOpen) || // The Data.Open price jumps above the indicator
+               (dValueUp1<Data.Low[bar-1]  && dValueUp>dOpen) || // The Data.Open price jumps below the indicator
+               (Data.Close[bar-1]<dValueUp && dValueUp<dOpen) || // The Data.Open price is in a positive gap
+               (Data.Close[bar-1]>dValueUp && dValueUp>dOpen))   // The Data.Open price is in a negative gap
                dTempValUp=dOpen; // The entry/exit level is moved to Data.Open price
 
             // Lower band
-            double dValueDown=adDnBand[iBar-iPrvs]; // Current value
-            double dValueDown1=adDnBand[iBar-iPrvs-1]; // Previous value
+            double dValueDown=lowerBand[bar-previous]; // Current value
+            double dValueDown1=lowerBand[bar-previous-1]; // Previous value
             double dTempValDown=dValueDown;
 
-            if((dValueDown1>Data.High[iBar-1] && dValueDown<dOpen) || 
+            if((dValueDown1>Data.High[bar-1] && dValueDown<dOpen) || 
                // The Data.Open price jumps above the indicator
-               (dValueDown1<Data.Low[iBar-1] && dValueDown>dOpen) || 
+               (dValueDown1<Data.Low[bar-1] && dValueDown>dOpen) || 
                // The Data.Open price jumps below the indicator
-               (Data.Close[iBar-1]<dValueDown && dValueDown<dOpen) || 
+               (Data.Close[bar-1]<dValueDown && dValueDown<dOpen) || 
                // The Data.Open price is in a positive gap
-               (Data.Close[iBar-1]>dValueDown && dValueDown>dOpen)) // The Data.Open price is in a negative gap
+               (Data.Close[bar-1]>dValueDown && dValueDown>dOpen)) // The Data.Open price is in a negative gap
                dTempValDown=dOpen; // The entry/exit level is moved to Data.Open price
 
             if(ListParam[0].Text=="Enter long at Upper Band" || 
                ListParam[0].Text=="Exit long at Upper Band")
               {
-               Component[2].Value[iBar] = dTempValUp;
-               Component[3].Value[iBar] = dTempValDown;
+               Component[2].Value[bar] = dTempValUp;
+               Component[3].Value[bar] = dTempValDown;
               }
             else
               {
-               Component[2].Value[iBar] = dTempValDown;
-               Component[3].Value[iBar] = dTempValUp;
+               Component[2].Value[bar] = dTempValDown;
+               Component[3].Value[bar] = dTempValUp;
               }
            }
         }
       else
         {
-         for(int iBar=2; iBar<Data.Bars; iBar++)
+         for(int bar=2; bar<Data.Bars; bar++)
            {
             if(ListParam[0].Text=="Enter long at Upper Band" || 
                ListParam[0].Text=="Exit long at Upper Band")
               {
-               Component[2].Value[iBar] = adUpBand[iBar - iPrvs];
-               Component[3].Value[iBar] = adDnBand[iBar - iPrvs];
+               Component[2].Value[bar] = upperBand[bar - previous];
+               Component[3].Value[bar] = lowerBand[bar - previous];
               }
             else
               {
-               Component[2].Value[iBar] = adDnBand[iBar - iPrvs];
-               Component[3].Value[iBar] = adUpBand[iBar - iPrvs];
+               Component[2].Value[bar] = lowerBand[bar - previous];
+               Component[3].Value[bar] = upperBand[bar - previous];
               }
            }
         }
@@ -198,27 +198,25 @@ void DonchianChannel::Calculate(DataSet &dataSet)
    else
      {
       if(ListParam[0].Text=="The bar opens below Upper Band") 
-         BandIndicatorLogic(iFirstBar,iPrvs,adUpBand,adDnBand,Component[2],Component[3],BandIndLogic_The_bar_opens_below_the_Upper_Band);
+         BandIndicatorLogic(firstBar,previous,upperBand,lowerBand,Component[2],Component[3],BandIndLogic_The_bar_opens_below_the_Upper_Band);
       else if(ListParam[0].Text=="The bar opens above Upper Band") 
-         BandIndicatorLogic(iFirstBar,iPrvs,adUpBand,adDnBand,Component[2],Component[3],BandIndLogic_The_bar_opens_above_the_Upper_Band);
+         BandIndicatorLogic(firstBar,previous,upperBand,lowerBand,Component[2],Component[3],BandIndLogic_The_bar_opens_above_the_Upper_Band);
       else if(ListParam[0].Text=="The bar opens below Lower Band") 
-         BandIndicatorLogic(iFirstBar,iPrvs,adUpBand,adDnBand,Component[2],Component[3],BandIndLogic_The_bar_opens_below_the_Lower_Band);
+         BandIndicatorLogic(firstBar,previous,upperBand,lowerBand,Component[2],Component[3],BandIndLogic_The_bar_opens_below_the_Lower_Band);
       else if(ListParam[0].Text=="The bar opens above Lower Band") 
-         BandIndicatorLogic(iFirstBar,iPrvs,adUpBand,adDnBand,Component[2],Component[3],BandIndLogic_The_bar_opens_above_the_Lower_Band);
+         BandIndicatorLogic(firstBar,previous,upperBand,lowerBand,Component[2],Component[3],BandIndLogic_The_bar_opens_above_the_Lower_Band);
       else if(ListParam[0].Text=="The bar opens below Upper Band after opening above it") 
-         BandIndicatorLogic(iFirstBar,iPrvs,adUpBand,adDnBand,Component[2],Component[3],BandIndLogic_The_bar_opens_below_Upper_Band_after_above);
+         BandIndicatorLogic(firstBar,previous,upperBand,lowerBand,Component[2],Component[3],BandIndLogic_The_bar_opens_below_Upper_Band_after_above);
       else if(ListParam[0].Text=="The bar opens above Upper Band after opening below it") 
-         BandIndicatorLogic(iFirstBar,iPrvs,adUpBand,adDnBand,Component[2],Component[3],BandIndLogic_The_bar_opens_above_Upper_Band_after_below);
+         BandIndicatorLogic(firstBar,previous,upperBand,lowerBand,Component[2],Component[3],BandIndLogic_The_bar_opens_above_Upper_Band_after_below);
       else if(ListParam[0].Text=="The bar opens below Lower Band after opening above it") 
-         BandIndicatorLogic(iFirstBar,iPrvs,adUpBand,adDnBand,Component[2],Component[3],BandIndLogic_The_bar_opens_below_Lower_Band_after_above);
+         BandIndicatorLogic(firstBar,previous,upperBand,lowerBand,Component[2],Component[3],BandIndLogic_The_bar_opens_below_Lower_Band_after_above);
       else if(ListParam[0].Text=="The bar opens above Lower Band after opening below it") 
-         BandIndicatorLogic(iFirstBar,iPrvs,adUpBand,adDnBand,Component[2],Component[3],BandIndLogic_The_bar_opens_above_Lower_Band_after_below);
+         BandIndicatorLogic(firstBar,previous,upperBand,lowerBand,Component[2],Component[3],BandIndLogic_The_bar_opens_above_Lower_Band_after_below);
       else if(ListParam[0].Text=="The position opens above Upper Band") 
         {
          Component[0].PosPriceDependence = PositionPriceDependence_PriceBuyHigher;
          Component[1].PosPriceDependence = PositionPriceDependence_PriceSellLower;
-         Component[0].UsePreviousBar = iPrvs;
-         Component[1].UsePreviousBar = iPrvs;
          Component[2].DataType = IndComponentType_Other;
          Component[3].DataType = IndComponentType_Other;
          Component[2].ShowInDynInfo = false;
@@ -228,8 +226,6 @@ void DonchianChannel::Calculate(DataSet &dataSet)
         {
          Component[0].PosPriceDependence = PositionPriceDependence_PriceBuyLower;
          Component[1].PosPriceDependence = PositionPriceDependence_PriceSellHigher;
-         Component[0].UsePreviousBar = iPrvs;
-         Component[1].UsePreviousBar = iPrvs;
          Component[2].DataType = IndComponentType_Other;
          Component[3].DataType = IndComponentType_Other;
          Component[2].ShowInDynInfo = false;
@@ -239,8 +235,6 @@ void DonchianChannel::Calculate(DataSet &dataSet)
         {
          Component[0].PosPriceDependence = PositionPriceDependence_PriceSellLower;
          Component[1].PosPriceDependence = PositionPriceDependence_PriceBuyHigher;
-         Component[0].UsePreviousBar = iPrvs;
-         Component[1].UsePreviousBar = iPrvs;
          Component[2].DataType = IndComponentType_Other;
          Component[3].DataType = IndComponentType_Other;
          Component[2].ShowInDynInfo = false;
@@ -250,21 +244,19 @@ void DonchianChannel::Calculate(DataSet &dataSet)
         {
          Component[0].PosPriceDependence = PositionPriceDependence_PriceSellHigher;
          Component[1].PosPriceDependence = PositionPriceDependence_PriceBuyLower;
-         Component[0].UsePreviousBar = iPrvs;
-         Component[1].UsePreviousBar = iPrvs;
          Component[2].DataType = IndComponentType_Other;
          Component[3].DataType = IndComponentType_Other;
          Component[2].ShowInDynInfo = false;
          Component[3].ShowInDynInfo = false;
         }
       else if(ListParam[0].Text=="The bar closes below Upper Band") 
-         BandIndicatorLogic(iFirstBar,iPrvs,adUpBand,adDnBand,Component[2],Component[3],BandIndLogic_The_bar_closes_below_the_Upper_Band);
+         BandIndicatorLogic(firstBar,previous,upperBand,lowerBand,Component[2],Component[3],BandIndLogic_The_bar_closes_below_the_Upper_Band);
       else if(ListParam[0].Text=="The bar closes above Upper Band") 
-         BandIndicatorLogic(iFirstBar,iPrvs,adUpBand,adDnBand,Component[2],Component[3],BandIndLogic_The_bar_closes_above_the_Upper_Band);
+         BandIndicatorLogic(firstBar,previous,upperBand,lowerBand,Component[2],Component[3],BandIndLogic_The_bar_closes_above_the_Upper_Band);
       else if(ListParam[0].Text=="The bar closes below Lower Band") 
-         BandIndicatorLogic(iFirstBar,iPrvs,adUpBand,adDnBand,Component[2],Component[3],BandIndLogic_The_bar_closes_below_the_Lower_Band);
+         BandIndicatorLogic(firstBar,previous,upperBand,lowerBand,Component[2],Component[3],BandIndLogic_The_bar_closes_below_the_Lower_Band);
       else if(ListParam[0].Text=="The bar closes above Lower Band") 
-         BandIndicatorLogic(iFirstBar,iPrvs,adUpBand,adDnBand,Component[2],Component[3],BandIndLogic_The_bar_closes_above_the_Lower_Band);
+         BandIndicatorLogic(firstBar,previous,upperBand,lowerBand,Component[2],Component[3],BandIndLogic_The_bar_closes_above_the_Lower_Band);
      }
   }
 //+------------------------------------------------------------------+
