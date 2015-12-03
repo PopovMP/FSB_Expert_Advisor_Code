@@ -55,28 +55,25 @@ public:
 //+------------------------------------------------------------------+
 void PreviousHighLow::Calculate(DataSet &dataSet)
   {
-   Data=GetPointer(dataSet);
+   Data = GetPointer(dataSet);
 
-   double dShift=NumParam[0].Value*Data.Point;
+   double verticalShift = NumParam[0].Value * Data.Point;
+   int    previous = CheckParam[0].Checked ? 1 : 0;
+   int    firstBar = previous;
 
 // Calculation
-   double adHighPrice[]; ArrayResize(adHighPrice,Data.Bars); ArrayInitialize(adHighPrice,0);
-   double adLowPrice[];  ArrayResize(adLowPrice,Data.Bars);  ArrayInitialize(adLowPrice,0);
+   double high[]; ArrayResize(high,Data.Bars); ArrayInitialize(high,0);
+   double low[];  ArrayResize(low,Data.Bars);  ArrayInitialize(low,0);
+   double upperBand[]; ArrayResize(upperBand,Data.Bars); ArrayInitialize(upperBand,0);
+   double lowerBand[]; ArrayResize(lowerBand,Data.Bars); ArrayInitialize(lowerBand,0);
 
-   const int firstBar=2;
 
-   for(int iBar=firstBar; iBar<Data.Bars; iBar++)
-     {
-      adHighPrice[iBar]= Data.High[iBar-1];
-      adLowPrice[iBar] = Data.Low[iBar-1];
-     }
-
-   double adUpperBand[]; ArrayResize(adUpperBand,Data.Bars); ArrayInitialize(adUpperBand,0);
-   double adLowerBand[]; ArrayResize(adLowerBand,Data.Bars); ArrayInitialize(adLowerBand,0);
    for(int bar=firstBar; bar<Data.Bars; bar++)
      {
-      adUpperBand[bar] = adHighPrice[bar] + dShift;
-      adLowerBand[bar] = adLowPrice[bar] - dShift;
+      high[bar] = Data.High[bar-previous];
+      low[bar]  = Data.Low[bar-previous];
+      upperBand[bar] = high[bar] + verticalShift;
+      lowerBand[bar] = low[bar]  - verticalShift;
      }
 
 // Saving the components
@@ -84,13 +81,13 @@ void PreviousHighLow::Calculate(DataSet &dataSet)
    Component[0].CompName = "Previous High";
    Component[0].DataType = IndComponentType_IndicatorValue;
    Component[0].FirstBar = firstBar;
-   ArrayCopy(Component[0].Value,adHighPrice);
+   ArrayCopy(Component[0].Value,high);
 
    ArrayResize(Component[1].Value,Data.Bars);
    Component[1].CompName = "Previous Low";
    Component[1].DataType = IndComponentType_IndicatorValue;
    Component[1].FirstBar = firstBar;
-   ArrayCopy(Component[1].Value,adLowPrice);
+   ArrayCopy(Component[1].Value,low);
 
    ArrayResize(Component[2].Value,Data.Bars);
    Component[2].FirstBar=firstBar;
@@ -130,30 +127,30 @@ void PreviousHighLow::Calculate(DataSet &dataSet)
 
    if(ListParam[0].Text=="Enter long at the previous high" || ListParam[0].Text=="Exit long at the previous high")
      {
-      ArrayCopy(Component[2].Value, adUpperBand);
-      ArrayCopy(Component[3].Value, adLowerBand);
+      ArrayCopy(Component[2].Value, upperBand);
+      ArrayCopy(Component[3].Value, lowerBand);
      }
    else if(ListParam[0].Text=="Enter long at the previous low" || ListParam[0].Text=="Exit long at the previous low")
      {
-      ArrayCopy(Component[2].Value, adLowerBand);
-      ArrayCopy(Component[3].Value, adUpperBand);
+      ArrayCopy(Component[2].Value, lowerBand);
+      ArrayCopy(Component[3].Value, upperBand);
      }
    else if(ListParam[0].Text=="The bar opens below the previous high")
-      BandIndicatorLogic(firstBar,0,adUpperBand,adLowerBand,Component[2],Component[3],BandIndLogic_The_bar_opens_below_the_Upper_Band);
+      BandIndicatorLogic(firstBar,0,upperBand,lowerBand,Component[2],Component[3],BandIndLogic_The_bar_opens_below_the_Upper_Band);
    else if(ListParam[0].Text=="The bar opens above the previous high")
-      BandIndicatorLogic(firstBar,0,adUpperBand,adLowerBand,Component[2],Component[3],BandIndLogic_The_bar_opens_above_the_Upper_Band);
+      BandIndicatorLogic(firstBar,0,upperBand,lowerBand,Component[2],Component[3],BandIndLogic_The_bar_opens_above_the_Upper_Band);
    else if(ListParam[0].Text=="The bar opens below the previous low")
-      BandIndicatorLogic(firstBar,0,adUpperBand,adLowerBand,Component[2],Component[3],BandIndLogic_The_bar_opens_below_the_Lower_Band);
+      BandIndicatorLogic(firstBar,0,upperBand,lowerBand,Component[2],Component[3],BandIndLogic_The_bar_opens_below_the_Lower_Band);
    else if(ListParam[0].Text=="The bar opens above the previous low")
-      BandIndicatorLogic(firstBar,0,adUpperBand,adLowerBand,Component[2],Component[3],BandIndLogic_The_bar_opens_above_the_Lower_Band);
+      BandIndicatorLogic(firstBar,0,upperBand,lowerBand,Component[2],Component[3],BandIndLogic_The_bar_opens_above_the_Lower_Band);
    else if(ListParam[0].Text=="The bar closes below the previous high")
-      BandIndicatorLogic(firstBar,0,adUpperBand,adLowerBand,Component[2],Component[3],BandIndLogic_The_bar_closes_below_the_Upper_Band);
+      BandIndicatorLogic(firstBar,0,upperBand,lowerBand,Component[2],Component[3],BandIndLogic_The_bar_closes_below_the_Upper_Band);
    else if(ListParam[0].Text=="The bar closes above the previous high")
-      BandIndicatorLogic(firstBar,0,adUpperBand,adLowerBand,Component[2],Component[3],BandIndLogic_The_bar_closes_above_the_Upper_Band);
+      BandIndicatorLogic(firstBar,0,upperBand,lowerBand,Component[2],Component[3],BandIndLogic_The_bar_closes_above_the_Upper_Band);
    else if(ListParam[0].Text=="The bar closes below the previous low")
-      BandIndicatorLogic(firstBar,0,adUpperBand,adLowerBand,Component[2],Component[3],BandIndLogic_The_bar_closes_below_the_Lower_Band);
+      BandIndicatorLogic(firstBar,0,upperBand,lowerBand,Component[2],Component[3],BandIndLogic_The_bar_closes_below_the_Lower_Band);
    else if(ListParam[0].Text=="The bar closes above the previous low")
-      BandIndicatorLogic(firstBar,0,adUpperBand,adLowerBand,Component[2],Component[3],BandIndLogic_The_bar_closes_above_the_Lower_Band);
+      BandIndicatorLogic(firstBar,0,upperBand,lowerBand,Component[2],Component[3],BandIndLogic_The_bar_closes_above_the_Lower_Band);
    else if(ListParam[0].Text=="The position opens above the previous high")
      {
       Component[0].DataType = IndComponentType_Other;
@@ -164,8 +161,8 @@ void PreviousHighLow::Calculate(DataSet &dataSet)
       Component[3].CompName = "Shifted previous low";
       Component[3].DataType = IndComponentType_Other;
       Component[3].PosPriceDependence=PositionPriceDependence_PriceSellLower;
-      ArrayCopy(Component[2].Value, adUpperBand);
-      ArrayCopy(Component[3].Value, adLowerBand);
+      ArrayCopy(Component[2].Value, upperBand);
+      ArrayCopy(Component[3].Value, lowerBand);
      }
    else if(ListParam[0].Text=="The position opens below the previous high")
      {
@@ -177,8 +174,8 @@ void PreviousHighLow::Calculate(DataSet &dataSet)
       Component[3].CompName = "Shifted previous low";
       Component[3].DataType = IndComponentType_Other;
       Component[3].PosPriceDependence=PositionPriceDependence_PriceSellHigher;
-      ArrayCopy(Component[2].Value, adUpperBand);
-      ArrayCopy(Component[3].Value, adLowerBand);
+      ArrayCopy(Component[2].Value, upperBand);
+      ArrayCopy(Component[3].Value, lowerBand);
      }
    else if(ListParam[0].Text=="The position opens above the previous low")
      {
@@ -190,8 +187,8 @@ void PreviousHighLow::Calculate(DataSet &dataSet)
       Component[3].CompName = "Shifted previous high";
       Component[3].DataType = IndComponentType_Other;
       Component[3].PosPriceDependence=PositionPriceDependence_PriceSellLower;
-      ArrayCopy(Component[2].Value, adLowerBand);
-      ArrayCopy(Component[3].Value, adUpperBand);
+      ArrayCopy(Component[2].Value, lowerBand);
+      ArrayCopy(Component[3].Value, upperBand);
      }
    else if(ListParam[0].Text=="The position opens below the previous low")
      {
@@ -203,8 +200,8 @@ void PreviousHighLow::Calculate(DataSet &dataSet)
       Component[3].CompName = "Shifted previous high";
       Component[3].DataType = IndComponentType_Other;
       Component[3].PosPriceDependence=PositionPriceDependence_PriceSellHigher;
-      ArrayCopy(Component[2].Value, adLowerBand);
-      ArrayCopy(Component[3].Value, adUpperBand);
+      ArrayCopy(Component[2].Value, lowerBand);
+      ArrayCopy(Component[3].Value, upperBand);
      }
   }
 //+------------------------------------------------------------------+
