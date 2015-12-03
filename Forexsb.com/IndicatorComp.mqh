@@ -47,7 +47,7 @@ public:
     // Properties
     string                  CompName;
     int                     FirstBar;
-    int                     UsePreviousBar;
+    int                     UsePreviousBar; // Deprecated
     IndComponentType        DataType;
     PositionPriceDependence PosPriceDependence;
     bool                    ShowInDynInfo;

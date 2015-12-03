@@ -533,17 +533,19 @@ void StrategyTrader::AnalyzeEntryLogicConditions(string group, double buyPrice, 
         for (int i = 0; i < strategy.Slot[slotIndex].IndicatorPointer.Components(); i++)
         {
             IndicatorComp *component = strategy.Slot[slotIndex].IndicatorPointer.Component[i];
-            if (component.DataType == IndComponentType_AllowOpenLong &&
-                component.GetLastValue() < 0.5)
-                canOpenLong = false;
-
-            if (component.DataType == IndComponentType_AllowOpenShort &&
-                component.GetLastValue() < 0.5)
-                canOpenShort = false;
-
-            if (component.PosPriceDependence != PositionPriceDependence_None)
+            if (component.PosPriceDependence == PositionPriceDependence_None)
             {
-                double indicatorValue = component.GetLastValue(component.UsePreviousBar);
+                if (component.DataType == IndComponentType_AllowOpenLong &&
+                    component.GetLastValue() < 0.5)
+                    canOpenLong = false;
+    
+                if (component.DataType == IndComponentType_AllowOpenShort &&
+                    component.GetLastValue() < 0.5)
+                    canOpenShort = false;
+            }
+            else
+            {
+                double indicatorValue = component.GetLastValue();
                 switch (component.PosPriceDependence)
                 {
                     case PositionPriceDependence_PriceBuyHigher:
@@ -559,11 +561,12 @@ void StrategyTrader::AnalyzeEntryLogicConditions(string group, double buyPrice, 
                         canOpenShort = canOpenShort && sellPrice < indicatorValue - epsilon;
                         break;
                     case PositionPriceDependence_BuyHigherSellLower:
-                        canOpenLong = canOpenLong && buyPrice > indicatorValue + epsilon;
+                        canOpenLong  = canOpenLong  && buyPrice  > indicatorValue + epsilon;
                         canOpenShort = canOpenShort && sellPrice < indicatorValue - epsilon;
                         break;
-                    case PositionPriceDependence_BuyLowerSelHigher:
-                        canOpenLong = canOpenLong && buyPrice < indicatorValue - epsilon;
+                    case PositionPriceDependence_BuyLowerSelHigher: // Deprecated
+                    case PositionPriceDependence_BuyLowerSellHigher:
+                        canOpenLong  = canOpenLong  && buyPrice  < indicatorValue - epsilon;
                         canOpenShort = canOpenShort && sellPrice > indicatorValue + epsilon;
                         break;
                 }

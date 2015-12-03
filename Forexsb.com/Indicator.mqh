@@ -198,7 +198,9 @@ void Indicator::NormalizeComponents(DataSet &strategyDataSet)
     for (int i = 0; i < Components(); i++)
     {
         double value[];
-        int ltfShift = Data.Period > strategyDataSet.Period ? 1 : 0;
+        int ltfShift = 0;
+        if (Component[i].PosPriceDependence != PositionPriceDependence_None)
+            ltfShift = Data.Period > strategyDataSet.Period ? 1 : 0;
         NormalizeComponentValue(Component[i].Value, strategyDataSet.Time, value, ltfShift);
         ArrayCopy(Component[i].Value, value);
         Component[i].FirstBar = NormalizeComponentFirstBar(Component[i].FirstBar, strategyDataSet.Time);
