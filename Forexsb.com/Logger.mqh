@@ -107,4 +107,3 @@ bool Logger::IsLogLinesLimitReached(int maxLines)
 {
     return (logLines > maxLines);
 }
-

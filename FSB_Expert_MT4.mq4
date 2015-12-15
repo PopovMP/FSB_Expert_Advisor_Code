@@ -23,39 +23,49 @@
 
 #property copyright "Copyright (C) 2014 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "32.0"
+#property version   "33.0"
 #property strict
 
 #include <Forexsb.com\ActionTrade4.mqh>
 
 // -----------------------    External variables   ----------------------- //
 
-extern double Entry_Amount    = 77701; // Amount for a new position #TRADEUNIT#
-extern double Maximum_Amount  = 77702; // Maximum position amount [lot]
-extern double Adding_Amount   = 77703; // Amount to add on addition #TRADEUNIT#
-extern double Reducing_Amount = 77704; // Amount to close on reduction #TRADEUNIT#
+static input string StrategyProperties__ = "------------"; // ------ Strategy Properties ------
+
+static input double Entry_Amount    = 77701; // Amount for a new position #TRADEUNIT#
+static input double Maximum_Amount  = 77702; // Maximum position amount [lot]
+static input double Adding_Amount   = 77703; // Amount to add on addition #TRADEUNIT#
+static input double Reducing_Amount = 77704; // Amount to close on reduction #TRADEUNIT#
+input int Stop_Loss   = 77705; // Stop Loss [point]
+input int Take_Profit = 77706; // Take Profit [point]
+input int Break_Even  = 77707; // Break Even [point]
+static input double Martingale_Multiplier = 77708; // Martingale Multiplier
+
+//##INDICATORS_INPUT_PARAMS
+
+static input string ExpertSettings__ = "------------"; // ------ Expert Settings ------
+
+// A unique number of the expert's orders.
+static input int Expert_Magic = 20011023; // Expert Magic Number
 
 // If account equity drops below this value, the expert will close out all positions and stop automatic trade.
 // The value must be set in account currency. Example:
 // Protection_Min_Account = 700 will close positions if the equity drops below 700 USD (EUR if you account is in EUR).
-extern int Protection_Min_Account = 0; // Stop trading at min account
+static input int Protection_Min_Account = 0; // Stop trading at min account
 
 // The expert checks the open positions at every tick and if found no SL or SL lower (higher for short) than selected,
 // It sets SL to the defined value. The value is in points. Example:
 // Protection_Max_StopLoss = 200 means 200 pips for 4 digit broker and 20 pips for 5 digit broker.
-extern int Protection_Max_StopLoss = 0; // Ensure maximum Stop Loss [point]
-
-// A unique number of the expert's orders.
-extern int Expert_Magic = 20011023; // Expert Magic Number
+static input int Protection_Max_StopLoss = 0; // Ensure maximum Stop Loss [point]
 
 // How many seconds before the expected bar closing to rise a Bar Closing event.
-extern int Bar_Close_Advance = 15; // Bar closing advance [sec]
+static input int Bar_Close_Advance = 15; // Bar closing advance [sec]
 
 // Expert writes a log file when Write_Log_File = true.
-extern bool Write_Log_File = false; // Write a log file
+static input bool Write_Log_File = false; // Write a log file
 
 // Custom comment. It can be used for setting a binnary option epxiration perod
-extern string Order_Comment = ""; // Custom order comment
+static input string Order_Comment = ""; // Custom order comment
 
 // ----------------------------    Options   ---------------------------- //
 
@@ -105,65 +115,56 @@ int    __period = -1;
 //##IMPORT StrategyTrader.mqh
 //##IMPORT ActionTrade4.mqh
 
-// The Forex Strategy Builder Expert
 ActionTrade* actionTrade;
 
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
 int OnInit()
-  {
-   actionTrade = new ActionTrade();
+{
+    actionTrade = new ActionTrade();
 
-   actionTrade.EntryAmount    = (Entry_Amount   >77700) ? 0.1 : Entry_Amount;
-   actionTrade.MaximumAmount  = (Maximum_Amount >77700) ? 0.1 : Maximum_Amount;
-   actionTrade.AddingAmount   = (Adding_Amount  >77700) ? 0.1 : Adding_Amount;
-   actionTrade.ReducingAmount = (Reducing_Amount>77700) ? 0.1 : Reducing_Amount;
-   actionTrade.OrderComment           = Order_Comment;
-   actionTrade.MinDataBars            = Min_Data_Bars;
-   actionTrade.ProtectionMinAccount   = Protection_Min_Account;
-   actionTrade.ProtectionMaxStopLoss  = Protection_Max_StopLoss;
-   actionTrade.ExpertMagic            = Expert_Magic;
-   actionTrade.SeparateSLTP           = Separate_SL_TP;
-   actionTrade.WriteLogFile           = Write_Log_File;
-   actionTrade.TrailingStopMovingStep = TrailingStop_Moving_Step;
-   actionTrade.FIFOorder              = FIFO_order;
-   actionTrade.MaxLogLinesInFile      = Max_Log_Lines_in_File;
-   actionTrade.BarCloseAdvance        = Bar_Close_Advance;
+    actionTrade.EntryAmount            = Entry_Amount    > 77700 ? 0.1 : Entry_Amount;
+    actionTrade.MaximumAmount          = Maximum_Amount  > 77700 ? 0.1 : Maximum_Amount;
+    actionTrade.AddingAmount           = Adding_Amount   > 77700 ? 0.1 : Adding_Amount;
+    actionTrade.ReducingAmount         = Reducing_Amount > 77700 ? 0.1 : Reducing_Amount;
+    actionTrade.OrderComment           = Order_Comment;
+    actionTrade.MinDataBars            = Min_Data_Bars;
+    actionTrade.ProtectionMinAccount   = Protection_Min_Account;
+    actionTrade.ProtectionMaxStopLoss  = Protection_Max_StopLoss;
+    actionTrade.ExpertMagic            = Expert_Magic;
+    actionTrade.SeparateSLTP           = Separate_SL_TP;
+    actionTrade.WriteLogFile           = Write_Log_File;
+    actionTrade.TrailingStopMovingStep = TrailingStop_Moving_Step;
+    actionTrade.FIFOorder              = FIFO_order;
+    actionTrade.MaxLogLinesInFile      = Max_Log_Lines_in_File;
+    actionTrade.BarCloseAdvance        = Bar_Close_Advance;
 
-   int result = actionTrade.OnInit();
+    int result = actionTrade.OnInit();
 
-   if(result == INIT_SUCCEEDED)
-      actionTrade.OnTick();
+    if (result == INIT_SUCCEEDED)
+        actionTrade.OnTick();
 
-   return (result);
-  }
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
+    return (result);
+}
+
 void OnTick()
-  {
-   if(__symbol!=_Symbol || __period!=_Period)
-     {
-      if(__period > 0)
-      {
-         actionTrade.OnDeinit(-1);
-         actionTrade.OnInit();
-      }
-      __symbol = _Symbol;
-      __period = _Period;
-     }
+{
+    if (__symbol != _Symbol || __period != _Period)
+    {
+        if(__period > 0)
+        {
+            actionTrade.OnDeinit(-1);
+            actionTrade.OnInit();
+        }
+        __symbol = _Symbol;
+        __period = _Period;
+    }
 
-   actionTrade.OnTick();
-  }
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
+    actionTrade.OnTick();
+}
+
 void OnDeinit(const int reason)
-  {
-   actionTrade.OnDeinit(reason);
+{
+    actionTrade.OnDeinit(reason);
 
-   if(CheckPointer(actionTrade) == POINTER_DYNAMIC)
-      delete actionTrade;
-  }
-//+------------------------------------------------------------------+
+    if (CheckPointer(actionTrade) == POINTER_DYNAMIC)
+        delete actionTrade;
+}

@@ -112,4 +112,3 @@ DataPeriod IndicatorSlot::GetIndicatorPeriod(DataPeriod basePeriod)
 {
     return (IndicatorPeriod < basePeriod ? basePeriod : IndicatorPeriod);
 }
-

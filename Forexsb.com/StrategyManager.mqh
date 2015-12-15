@@ -41,10 +41,11 @@ public:
 
 Strategy *StrategyManager::GetStrategy(void)
 {
-    IndicatorManager indicatorManager;
+    IndicatorManager *indicatorManager = new IndicatorManager();
 
-//##STRATEGY_CREATION_CODE##
+    Strategy *strategy = new Strategy(0, 0); //##STRATEGY_CREATION_CODE##
+
+    delete indicatorManager;
 
     return strategy;
 }
-
