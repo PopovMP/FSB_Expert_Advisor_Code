@@ -538,14 +538,15 @@ void StrategyTrader::AnalyzeEntryLogicConditions(string group, double buyPrice, 
                 if (component.DataType == IndComponentType_AllowOpenLong &&
                     component.GetLastValue() < 0.5)
                     canOpenLong = false;
-    
+
                 if (component.DataType == IndComponentType_AllowOpenShort &&
                     component.GetLastValue() < 0.5)
                     canOpenShort = false;
             }
             else
             {
-                double indicatorValue = component.GetLastValue();
+                int previous = strategy.Slot[slotIndex].GetUsePreviousBarValue() ? 1 : 0;
+                double indicatorValue = component.GetLastValue(previous);
                 switch (component.PosPriceDependence)
                 {
                     case PositionPriceDependence_PriceBuyHigher:
