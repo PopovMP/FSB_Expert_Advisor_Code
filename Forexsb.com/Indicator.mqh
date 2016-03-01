@@ -140,7 +140,7 @@ public:
 
     // Methods
     virtual void Calculate(DataSet &dataSet);
-    void NormalizeComponents(DataSet &strategyDataSet);
+    void NormalizeComponents(DataSet &strategyDataSet, int ltfShift);
     void ShiftSignal(int shift);
     void RepeatSignal(int repeat);
     int Components(void);
@@ -193,14 +193,11 @@ void Indicator::Calculate(DataSet &dataSet)
 {
 }
 
-void Indicator::NormalizeComponents(DataSet &strategyDataSet)
+void Indicator::NormalizeComponents(DataSet &strategyDataSet, int ltfShift)
 {
     for (int i = 0; i < Components(); i++)
     {
         double value[];
-        int ltfShift = 0;
-        if (Component[i].PosPriceDependence != PositionPriceDependence_None)
-            ltfShift = Data.Period > strategyDataSet.Period ? 1 : 0;
         NormalizeComponentValue(Component[i].Value, strategyDataSet.Time, value, ltfShift);
         ArrayCopy(Component[i].Value, value);
         Component[i].FirstBar = NormalizeComponentFirstBar(Component[i].FirstBar, strategyDataSet.Time);

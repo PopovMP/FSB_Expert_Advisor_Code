@@ -175,13 +175,38 @@ void Strategy::CalculateStrategy(DataSet *&dataSet[])
         {
             if (dataSet[j].Chart != chart)
                 continue;
+            
             Slot[i].IndicatorPointer.Calculate(dataSet[j]);
+            
             if (IsLongerTimeFrame(i))
-                Slot[i].IndicatorPointer.NormalizeComponents(dataSet[0]);
+            {
+                bool isBasePriceOpen = false;
+                for (int p = 1; p < 5; p++)
+                {
+                    if (Slot[i].IndicatorPointer.ListParam[p].Caption == "Base price" &&
+                        Slot[i].IndicatorPointer.ListParam[p].Text == "Open" )
+                    {
+                        isBasePriceOpen = true;
+                        break;
+                    }
+                }
+                int ltfShift;
+                if (isBasePriceOpen)
+                    ltfShift = 0;
+                else
+                    ltfShift = Slot[i].IndicatorPeriod != DataPeriod_M1 &&
+                              !Slot[i].IndicatorPointer.UsePreviousBarValue ? 1 : 0;
+                
+                Slot[i].IndicatorPointer.NormalizeComponents(dataSet[0], ltfShift);
+            }
             if (Slot[i].SignalShift > 0)
+            {
                 Slot[i].IndicatorPointer.ShiftSignal(Slot[i].SignalShift);
+            }
             if (Slot[i].SignalRepeat > 0)
+            {
                 Slot[i].IndicatorPointer.RepeatSignal(Slot[i].SignalRepeat);
+            }
         }
     }
 }
