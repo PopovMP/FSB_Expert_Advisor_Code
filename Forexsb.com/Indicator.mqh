@@ -44,8 +44,8 @@ protected:
 
     double Epsilon(void);
 
-    void NormalizeComponentValue(const double &componentValue[], const datetime &strategyTime[], double &output[],
-                                 int ltfShift);
+    void NormalizeComponentValue(const double &componentValue[], const datetime &strategyTime[],
+                                 int ltfShift, bool isCloseFilterShift, double &output[]);
 
     int NormalizeComponentFirstBar(int componentFirstBar, datetime &strategyTime[]);
 
@@ -140,7 +140,7 @@ public:
 
     // Methods
     virtual void Calculate(DataSet &dataSet);
-    void NormalizeComponents(DataSet &strategyDataSet, int ltfShift);
+    void NormalizeComponents(DataSet &strategyDataSet, int ltfShift, bool isCloseFilterShift);
     void ShiftSignal(int shift);
     void RepeatSignal(int repeat);
     int Components(void);
@@ -193,12 +193,12 @@ void Indicator::Calculate(DataSet &dataSet)
 {
 }
 
-void Indicator::NormalizeComponents(DataSet &strategyDataSet, int ltfShift)
+void Indicator::NormalizeComponents(DataSet &strategyDataSet, int ltfShift, bool isCloseFilterShift)
 {
     for (int i = 0; i < Components(); i++)
     {
         double value[];
-        NormalizeComponentValue(Component[i].Value, strategyDataSet.Time, value, ltfShift);
+        NormalizeComponentValue(Component[i].Value, strategyDataSet.Time, ltfShift, isCloseFilterShift, value);
         ArrayCopy(Component[i].Value, value);
         Component[i].FirstBar = NormalizeComponentFirstBar(Component[i].FirstBar, strategyDataSet.Time);
     }
@@ -238,14 +238,14 @@ void Indicator::RepeatSignal(int repeat)
     }
 }
 
-Indicator::NormalizeComponentValue(const double &componentValue[], const datetime &strategyTime[], double &output[],
-                                   int ltfShift)
+Indicator::NormalizeComponentValue(const double &componentValue[], const datetime &strategyTime[],
+                                   int ltfShift, bool isCloseFilterShift, double &output[])
 {
     int strategyBars = ArraySize(strategyTime);
-    ArrayResize(output, strategyBars);
-    ArrayInitialize(output, 0);
-
+    ArrayResize(output, strategyBars); ArrayInitialize(output, 0);
     int reachedBar = 0;
+    datetime strategyPeriodMinutes = strategyTime[1] - strategyTime[0];
+    
     for (int ltfBar = ltfShift; ltfBar < Data.Bars; ltfBar++)
     {
         datetime ltfOpenTime = Data.Time[ltfBar];
@@ -255,10 +255,19 @@ Indicator::NormalizeComponentValue(const double &componentValue[], const datetim
         {
             reachedBar = bar;
             datetime time = strategyTime[bar];
-            if (time >= ltfOpenTime && time < ltfCloseTime)
-                output[bar] = componentValue[ltfBar - ltfShift];
-            else if (time >= ltfCloseTime)
-                break;
+            datetime barCloseTime = time + strategyPeriodMinutes;
+            
+            if (isCloseFilterShift && barCloseTime == ltfCloseTime)
+            {
+                output[bar] = componentValue[ltfBar];
+            }
+            else
+            {
+                if (time >= ltfOpenTime && time < ltfCloseTime)
+                    output[bar] = componentValue[ltfBar - ltfShift];
+                else if (time >= ltfCloseTime)
+                    break;
+            }
         }
     }
 }

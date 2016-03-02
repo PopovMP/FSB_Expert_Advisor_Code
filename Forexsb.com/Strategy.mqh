@@ -180,7 +180,10 @@ void Strategy::CalculateStrategy(DataSet *&dataSet[])
             
             if (IsLongerTimeFrame(i))
             {
+                int ltfShift;
                 bool isBasePriceOpen = false;
+                bool isCloseFilterShift = false;
+                
                 for (int p = 1; p < 5; p++)
                 {
                     if (Slot[i].IndicatorPointer.ListParam[p].Caption == "Base price" &&
@@ -190,19 +193,26 @@ void Strategy::CalculateStrategy(DataSet *&dataSet[])
                         break;
                     }
                 }
-                int ltfShift;
+                
                 if (isBasePriceOpen)
+                {
                     ltfShift = 0;
+                }
                 else
+                {
                     ltfShift = Slot[i].IndicatorPeriod != DataPeriod_M1 &&
                               !Slot[i].IndicatorPointer.UsePreviousBarValue ? 1 : 0;
+                    isCloseFilterShift = Slot[i].SlotType == SlotTypes_CloseFilter;
+                }
                 
-                Slot[i].IndicatorPointer.NormalizeComponents(dataSet[0], ltfShift);
+                Slot[i].IndicatorPointer.NormalizeComponents(dataSet[0], ltfShift, isCloseFilterShift);
             }
+
             if (Slot[i].SignalShift > 0)
             {
                 Slot[i].IndicatorPointer.ShiftSignal(Slot[i].SignalShift);
             }
+
             if (Slot[i].SignalRepeat > 0)
             {
                 Slot[i].IndicatorPointer.RepeatSignal(Slot[i].SignalRepeat);
