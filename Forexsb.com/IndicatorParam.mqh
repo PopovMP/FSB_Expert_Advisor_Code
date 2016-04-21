@@ -1,5 +1,5 @@
 //+--------------------------------------------------------------------+
-//| Copyright:  (C) 2014 Forex Software Ltd.                           |
+//| Copyright:  (C) 2016 Forex Software Ltd.                           |
 //| Website:    http://forexsb.com/                                    |
 //| Support:    http://forexsb.com/forum/                              |
 //| License:    Proprietary under the following circumstances:         |
@@ -21,7 +21,7 @@
 //| product, even if advised of the possibility of such damages.       |
 //+--------------------------------------------------------------------+
 
-#property copyright "Copyright (C) 2014 Forex Software Ltd."
+#property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
 #property version   "3.00"
 #property strict

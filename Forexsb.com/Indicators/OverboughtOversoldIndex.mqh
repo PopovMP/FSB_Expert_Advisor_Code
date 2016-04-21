@@ -1,5 +1,5 @@
 //+--------------------------------------------------------------------+
-//| Copyright:  (C) 2014 Forex Software Ltd.                           |
+//| Copyright:  (C) 2016 Forex Software Ltd.                           |
 //| Website:    http://forexsb.com/                                    |
 //| Support:    http://forexsb.com/forum/                              |
 //| License:    Proprietary under the following circumstances:         |
@@ -21,7 +21,7 @@
 //| product, even if advised of the possibility of such damages.       |
 //+--------------------------------------------------------------------+
 
-#property copyright "Copyright (C) 2014 Forex Software Ltd."
+#property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
 #property version   "2.00"
 #property strict
@@ -63,22 +63,25 @@ void OverboughtOversoldIndex::Calculate(DataSet &dataSet)
    int prvs=CheckParam[0].Checked ? 1 : 0;
 
 // Calculation
-   int iFirstBar=period+2;
+   int firstBar=period+2;
 
-   double adObos[];
-   ArrayResize(adObos,Data.Bars);
-   ArrayInitialize(adObos,0);
+   double obos[];
+   ArrayResize(obos,Data.Bars);
+   ArrayInitialize(obos,0);
 
    for(int bar=period; bar<Data.Bars; bar++)
      {
-      double dMin = DBL_MAX;
-      double dMax = DBL_MIN;
+      double min = DBL_MAX;
+      double max = DBL_MIN;
       for(int i=0; i<period; i++)
         {
-         if(Data.High[bar - i]> dMax) dMax = Data.High[bar - i];
-         if(Data.Low[bar - i] < dMin) dMin = Data.Low[bar - i];
+         if(Data.High[bar - i]> max) max = Data.High[bar - i];
+         if(Data.Low[bar - i] < min) min = Data.Low[bar - i];
         }
-      adObos[bar]=100*(Data.Close[bar]-dMin)/(dMax-dMin);
+      if (MathAbs(min - max) < 0.00001)
+         obos[bar] = 0;
+      else
+         obos[bar] = 100*(Data.Close[bar] - min)/(max - min);
      }
 
 // Saving the components
@@ -86,14 +89,14 @@ void OverboughtOversoldIndex::Calculate(DataSet &dataSet)
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "OBOS";
    Component[0].DataType = IndComponentType_IndicatorValue;
-   Component[0].FirstBar = iFirstBar;
-   ArrayCopy(Component[0].Value,adObos);
+   Component[0].FirstBar = firstBar;
+   ArrayCopy(Component[0].Value,obos);
 
    ArrayResize(Component[1].Value,Data.Bars);
-   Component[1].FirstBar=iFirstBar;
+   Component[1].FirstBar=firstBar;
 
    ArrayResize(Component[2].Value,Data.Bars);
-   Component[2].FirstBar=iFirstBar;
+   Component[2].FirstBar=firstBar;
 
 // Sets the Component's type
    if(SlotType==SlotTypes_OpenFilter)
@@ -131,6 +134,6 @@ void OverboughtOversoldIndex::Calculate(DataSet &dataSet)
    else if(ListParam[0].Text=="Overbought Oversold Index changes its direction downward") 
       indLogic=IndicatorLogic_The_indicator_changes_its_direction_downward;
 
-   OscillatorLogic(iFirstBar,prvs,adObos,level,100-level,Component[1],Component[2],indLogic);
+   OscillatorLogic(firstBar,prvs,obos,level,100-level,Component[1],Component[2],indLogic);
   }
 //+------------------------------------------------------------------+
