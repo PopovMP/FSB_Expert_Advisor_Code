@@ -546,6 +546,9 @@ void StrategyTrader::AnalyzeEntryLogicConditions(string group, double buyPrice, 
             else
             {
                 int previous = strategy.Slot[slotIndex].GetUsePreviousBarValue() ? 1 : 0;
+                if (strategy.IsLongerTimeFrame(slotIndex))
+                    previous = 0;
+
                 double indicatorValue = component.GetLastValue(previous);
                 switch (component.PosPriceDependence)
                 {
@@ -1027,6 +1030,8 @@ double StrategyTrader::TradingSize(double size)
 {
     if (strategy.UseAccountPercentEntry)
         size = (size / 100) * market.AccountEquity / market.MarginRequired;
+    if (size > strategy.MaxOpenLots)
+        size = strategy.MaxOpenLots;
     return (actionTrade.NormalizeEntrySize(size));
 }
 

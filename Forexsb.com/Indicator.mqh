@@ -121,10 +121,10 @@ public:
     string IndicatorName;
     string WarningMessage;
     bool IsDiscreteValues;
-    bool UsePreviousBarValue;
+    bool UsePreviousBarValue; // Important! Otdated Do not use.
     bool IsSeparateChart;
     bool IsBacktester;
-    bool IsDeafultGroupAll; // XXX Outdated. Do not use.
+    bool IsDeafultGroupAll; // Important! Outdated. Do not use.
     bool IsDefaultGroupAll;
     bool IsAllowLTF;
 
@@ -197,6 +197,9 @@ void Indicator::NormalizeComponents(DataSet &strategyDataSet, int ltfShift, bool
 {
     for (int i = 0; i < Components(); i++)
     {
+        if (Component[i].PosPriceDependence != PositionPriceDependence_None)
+            ltfShift = 1;
+
         double value[];
         NormalizeComponentValue(Component[i].Value, strategyDataSet.Time, ltfShift, isCloseFilterShift, value);
         ArrayCopy(Component[i].Value, value);

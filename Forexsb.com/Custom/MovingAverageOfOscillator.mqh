@@ -68,20 +68,18 @@ void MovingAverageOfOscillator::Calculate(DataSet &dataSet)
    int       iPrvs     = CheckParam[0].Checked ? 1 : 0;
 
 // Calculation
-   int iFirstBar=nSlow+nFast+2;
+   int iFirstBar=MathMax(MathMax(nFast,nSlow),nSignal)+iPrvs+2;
 
    double basePrc[];
    Price(basePrice,basePrc);
-   double adMASlow[];
-   MovingAverage(nSlow,0,maMethod,basePrc,adMASlow);
-   double adMAFast[];
-   MovingAverage(nFast,0,maMethod,basePrc,adMAFast);
+   double adMASlow[]; MovingAverage(nSlow,0,maMethod,basePrc,adMASlow);
+   double adMAFast[]; MovingAverage(nFast,0,maMethod,basePrc,adMAFast);
 
    double adMACD[];
    ArrayResize(adMACD,Data.Bars);
    ArrayInitialize(adMACD,0);
 
-   for(int iBar=nSlow-1; iBar<Data.Bars; iBar++)
+   for(int iBar=0; iBar<Data.Bars; iBar++)
       adMACD[iBar]=adMAFast[iBar]-adMASlow[iBar];
 
    double maSignalLine[];
@@ -92,7 +90,7 @@ void MovingAverageOfOscillator::Calculate(DataSet &dataSet)
    ArrayResize(adHistogram,Data.Bars);
    ArrayInitialize(adHistogram,0);
 
-   for(int iBar=nSlow+nSignal-1; iBar<Data.Bars; iBar++)
+   for(int iBar=0; iBar<Data.Bars; iBar++)
       adHistogram[iBar]=adMACD[iBar]-maSignalLine[iBar];
 
 // Saving the components

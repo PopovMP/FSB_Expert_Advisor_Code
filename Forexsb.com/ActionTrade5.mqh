@@ -628,6 +628,7 @@ int ActionTrade::SetAggregatePosition(Position *pos)
     pos.TakeProfitPrice  = 0;
     pos.Profit           = 0;
     pos.Commission       = 0;
+    pos.Ticket           = 0;
     pos.PosComment       = "";
 
     if (!PositionSelect(_Symbol))
@@ -645,6 +646,7 @@ int ActionTrade::SetAggregatePosition(Position *pos)
     pos.Commission = NormalizeDouble(PositionGetDouble(POSITION_COMMISSION), 2);
     pos.StopLossPrice   = NormalizeDouble(PositionGetDouble(POSITION_SL), _Digits);
     pos.TakeProfitPrice = NormalizeDouble(PositionGetDouble(POSITION_TP), _Digits);
+    pos.Ticket     = PositionGetInteger(POSITION_TICKET);
     pos.PosComment = PositionGetString(POSITION_COMMENT);
 
     return (1);
@@ -680,12 +682,36 @@ bool ActionTrade::ManageOrderSend(int type, double lots, int stopLoss, int takeP
             request.action       = TRADE_ACTION_DEAL;
             request.symbol       = _Symbol;
             request.volume       = orderLots;
-            request.type         = (type == OP_BUY) ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
             request.type_filling = ORDER_FILLING_FOK;
+            request.type         = (type == OP_BUY) ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
+            request.price        = (type == OP_BUY) ? tick.bid : tick.ask;
             request.deviation    = 10;
             request.sl           = stopLossPrice;
             request.tp           = takeProfitPrice;
             request.comment      = OrderComment;
+
+            if (PositionSelect(_Symbol))
+            {
+               ulong  posType = PositionGetInteger(POSITION_TYPE);
+               ulong  ticket  = PositionGetInteger(POSITION_TICKET);
+               double volume  = PositionGetDouble(POSITION_VOLUME);
+
+               if ((posType == OP_BUY  && type == OP_BUY ) ||
+                   (posType == OP_SELL && type == OP_SELL))
+               {
+                    request.position = ticket; // Adding
+               }
+               else if ((posType == OP_BUY  && type == OP_SELL) ||
+                        (posType == OP_SELL && type == OP_BUY ))
+               {
+                  if (volume == orderLots)
+                      request.position = ticket; // Close
+                  else if (volume > orderLots)
+                      request.position = ticket; // Reducing
+                  else if (volume < orderLots)
+                      request.position = ticket; // Reverse
+               }
+            }
 
             bool isOrderCheck = OrderCheck(request, check);
             string retcode = ResultRetcodeDescription(check.retcode);

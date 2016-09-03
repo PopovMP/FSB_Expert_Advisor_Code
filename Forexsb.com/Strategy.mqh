@@ -42,8 +42,6 @@ private:
     int closeSlotsCount;
 
     // Methods
-    bool IsLongerTimeFrame(int slotNumber);
-
     string GetSlotChart(int slotNumber);
 
 public:
@@ -95,6 +93,7 @@ public:
     bool        IsUsingLogicalGroups(void);
     bool        IsLogicalGroupSpecial(int slotNumber);
     string      GetDefaultGroup(int slotNumber);
+    bool        IsLongerTimeFrame(int slotNumber);
     void        CalculateStrategy(DataSet *&dataSet[]);
     string      DynamicInfoText(void);
     void        DynamicInfoInitArrays(string &params[], string &values[]);
@@ -201,7 +200,7 @@ void Strategy::CalculateStrategy(DataSet *&dataSet[])
                 else
                 {
                     ltfShift = Slot[i].IndicatorPeriod != DataPeriod_M1 &&
-                              !Slot[i].IndicatorPointer.UsePreviousBarValue ? 1 : 0;
+                              !Slot[i].GetUsePreviousBarValue() ? 1 : 0;
                     isCloseFilterShift = Slot[i].SlotType == SlotTypes_CloseFilter;
                 }
                 

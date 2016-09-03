@@ -82,8 +82,8 @@ void ExitHour::Calculate(DataSet &dataSet)
      }
 
 // Check the last bar
-   MqlDateTime mqlTime1; TimeToStruct(Data.Time[Data.Bars-1],mqlTime1);
-   if(mqlTime1.hour==exitHour)
+   MqlDateTime mqlTime; TimeToStruct(Data.Time[Data.Bars-1],mqlTime);
+   if(mqlTime.hour * 3600 + mqlTime.min * 60 + Data.Period * 60 == exitHour * 3600)
       adBars[Data.Bars-1]=Data.Close[Data.Bars-1];
 
 // Saving the components

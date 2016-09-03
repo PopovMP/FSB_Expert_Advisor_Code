@@ -48,6 +48,7 @@ public:
     double TakeProfitPrice;
     double Profit;
     double Commission;
+    long   Ticket;
     string PosComment;
 
     // Methods
