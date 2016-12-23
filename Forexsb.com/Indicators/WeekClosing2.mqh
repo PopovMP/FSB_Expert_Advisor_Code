@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -34,21 +34,22 @@
 class WeekClosing2 : public Indicator
   {
 public:
-    WeekClosing2(SlotTypes slotType)
-     {
-      SlotType=slotType;
-
-      IndicatorName="Week Closing 2";
-
-      IsAllowLTF        = true;
-      ExecTime          = ExecutionTime_DuringTheBar;
-      IsSeparateChart   = false;
-      IsDiscreteValues  = false;
-      IsDefaultGroupAll = false;
-     }
-
-   virtual void Calculate(DataSet &dataSet);
+                     WeekClosing2(SlotTypes slotType);
+   virtual void      Calculate(DataSet &dataSet);
   };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void WeekClosing2::WeekClosing2(SlotTypes slotType)
+  {
+   SlotType          = slotType;
+   IndicatorName     = "Week Closing 2";
+   IsAllowLTF        = true;
+   ExecTime          = ExecutionTime_DuringTheBar;
+   IsSeparateChart   = false;
+   IsDiscreteValues  = false;
+   IsDefaultGroupAll = false;
+  }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -59,59 +60,51 @@ void WeekClosing2::Calculate(DataSet &dataSet)
    int fridayClosingHour=(int) NumParam[0].Value;
    int fridayClosingMin =(int) NumParam[1].Value;
 
-// Calculation
-   double adClosePrice[];
-   ArrayResize(adClosePrice,Data.Bars);
-   ArrayInitialize(adClosePrice,0);
+   double closePrice[]; ArrayResize(closePrice,Data.Bars); ArrayInitialize(closePrice,0);
 
    for(int bar=0; bar<Data.Bars-1; bar++)
      {
       MqlDateTime time0; TimeToStruct(Data.Time[bar+0], time0);
       MqlDateTime time1; TimeToStruct(Data.Time[bar+1], time1);
       if(time0.day_of_week>3 && time1.day_of_week<3)
-         adClosePrice[bar]=Data.Close[bar];
+         closePrice[bar]=Data.Close[bar];
      }
 
-   double adAllowOpenLong[];
-   ArrayResize(adAllowOpenLong,Data.Bars);
-   ArrayInitialize(adAllowOpenLong,1);
-   double adAllowOpenShort[];
-   ArrayResize(adAllowOpenShort,Data.Bars);
-   ArrayInitialize(adAllowOpenShort,1);
+   double allowOpenLong[];  ArrayResize(allowOpenLong, Data.Bars); ArrayInitialize(allowOpenLong, 1);
+   double allowOpenShort[]; ArrayResize(allowOpenShort,Data.Bars); ArrayInitialize(allowOpenShort,1);
 
-// Check the last bar
    datetime time=Data.Time[Data.Bars-1];
    MqlDateTime mqlTime; TimeToStruct(time,mqlTime);
    if(mqlTime.day_of_week==5)
      {
-      datetime fridayTime=(time/86400)*86400+fridayClosingHour*60*60+fridayClosingMin*60;
+      datetime dayOpen=(time/86400)*86400;
+      datetime fridayTime=dayOpen+fridayClosingHour*60*60+fridayClosingMin*60;
       if(time>=fridayTime)
         {
-         adClosePrice[Data.Bars-1]=Data.Close[Data.Bars-1];
-         adAllowOpenLong[Data.Bars-1]=0;
-         adAllowOpenShort[Data.Bars-1]=0;
+         closePrice[Data.Bars-1]=Data.Close[Data.Bars-1];
+         allowOpenLong[Data.Bars-1]=0;
+         allowOpenShort[Data.Bars-1]=0;
         }
      }
-// Saving the components
+   Component[0].CompName      = "Week Closing";
+   Component[0].DataType      = IndComponentType_ClosePrice;
+   Component[0].ShowInDynInfo = false;
+   Component[0].FirstBar      = 2;
    ArrayResize(Component[0].Value,Data.Bars);
-   Component[0].CompName = "Week Closing";
-   Component[0].DataType = IndComponentType_ClosePrice;
-   Component[0].ShowInDynInfo=false;
-   Component[0].FirstBar=2;
-   ArrayCopy(Component[0].Value,adClosePrice);
+   ArrayCopy(Component[0].Value,closePrice);
 
+   Component[1].DataType      = IndComponentType_AllowOpenLong;
+   Component[1].CompName      = "Is long entry allowed";
+   Component[1].ShowInDynInfo = false;
+   Component[1].FirstBar      = 2;
    ArrayResize(Component[1].Value,Data.Bars);
-   Component[1].DataType = IndComponentType_AllowOpenLong;
-   Component[1].CompName = "Is long entry allowed";
-   Component[1].ShowInDynInfo=false;
-   Component[1].FirstBar=2;
-   ArrayCopy(Component[1].Value,adAllowOpenLong);
+   ArrayCopy(Component[1].Value,allowOpenLong);
 
+   Component[2].DataType      = IndComponentType_AllowOpenShort;
+   Component[2].CompName      = "Is short entry allowed";
+   Component[2].ShowInDynInfo = false;
+   Component[2].FirstBar      = 2;
    ArrayResize(Component[2].Value,Data.Bars);
-   Component[2].DataType = IndComponentType_AllowOpenShort;
-   Component[2].CompName = "Is short entry allowed";
-   Component[2].ShowInDynInfo=false;
-   Component[2].FirstBar=2;
-   ArrayCopy(Component[2].Value,adAllowOpenShort);
+   ArrayCopy(Component[2].Value,allowOpenShort);
   }
 //+------------------------------------------------------------------+

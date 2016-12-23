@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -34,22 +34,23 @@
 class MAOscillator : public Indicator
   {
 public:
-                     MAOscillator(SlotTypes slotType)
-     {
-      SlotType=slotType;
-
-      IndicatorName="MA Oscillator";
-
-      WarningMessage    = "";
-      IsAllowLTF        = true;
-      ExecTime          = ExecutionTime_DuringTheBar;
-      IsSeparateChart   = true;
-      IsDiscreteValues  = false;
-      IsDefaultGroupAll = false;
-     }
-
+                     MAOscillator(SlotTypes slotType);
    virtual void      Calculate(DataSet &dataSet);
   };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void MAOscillator::MAOscillator(SlotTypes slotType)
+  {
+   SlotType          = slotType;
+   IndicatorName     = "MA Oscillator";
+   WarningMessage    = "";
+   IsAllowLTF        = true;
+   ExecTime          = ExecutionTime_DuringTheBar;
+   IsSeparateChart   = true;
+   IsDiscreteValues  = false;
+   IsDefaultGroupAll = false;
+  }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -57,37 +58,36 @@ void MAOscillator::Calculate(DataSet &dataSet)
   {
    Data=GetPointer(dataSet);
 
-// Reading the parameters
    MAMethod maMethod=(MAMethod) ListParam[1].Index;
    BasePrice basePrice=(BasePrice) ListParam[2].Index;
-   int iNFastMA = (int) NumParam[0].Value;
-   int iNSlowMA = (int) NumParam[1].Value;
-   double dLevel= NumParam[2].Value;
-   int iPrvs=CheckParam[0].Checked ? 1 : 0;
+   int fastPeriod = (int) NumParam[0].Value;
+   int slowPeriod = (int) NumParam[1].Value;
+   double level= NumParam[2].Value;
+   int previous=CheckParam[0].Checked ? 1 : 0;
 
-   int iFirstBar=iNSlowMA+2;
-   double basePrc[];  Price(basePrice,basePrc);
-   double adMAFast[]; MovingAverage(iNFastMA,0,maMethod,basePrc,adMAFast);
-   double adMASlow[]; MovingAverage(iNSlowMA,0,maMethod,basePrc,adMASlow);
-   double adMAOscillator[]; ArrayResize(adMAOscillator,Data.Bars);ArrayInitialize(adMAOscillator,0);
+   int firstBar=MathMax(fastPeriod,slowPeriod)+previous+2;
+   double price[];  Price(basePrice,price);
+   double maFast[]; MovingAverage(fastPeriod,0,maMethod,price,maFast);
+   double maSlow[]; MovingAverage(slowPeriod,0,maMethod,price,maSlow);
+   double oscillator[]; ArrayResize(oscillator,Data.Bars); ArrayInitialize(oscillator,0);
 
-   for(int iBar=iNSlowMA; iBar<Data.Bars; iBar++)
-      adMAOscillator[iBar]=adMAFast[iBar]-adMASlow[iBar];
+   for(int bar=firstBar; bar<Data.Bars; bar++)
+     {
+      oscillator[bar]=maFast[bar]-maSlow[bar];
+     }
 
-// Saving the components
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "MA Oscillator";
    Component[0].DataType = IndComponentType_IndicatorValue;
-   Component[0].FirstBar = iFirstBar;
-   ArrayCopy(Component[0].Value,adMAOscillator);
+   Component[0].FirstBar = firstBar;
+   ArrayCopy(Component[0].Value,oscillator);
 
    ArrayResize(Component[1].Value,Data.Bars);
-   Component[1].FirstBar=iFirstBar;
+   Component[1].FirstBar=firstBar;
 
    ArrayResize(Component[2].Value,Data.Bars);
-   Component[2].FirstBar=iFirstBar;
+   Component[2].FirstBar=firstBar;
 
-// Sets the Component's type
    if(SlotType==SlotTypes_OpenFilter)
      {
       Component[1].DataType = IndComponentType_AllowOpenLong;
@@ -103,50 +103,25 @@ void MAOscillator::Calculate(DataSet &dataSet)
       Component[2].CompName = "Close out short position";
      }
 
-// Calculation of the logic
    IndicatorLogic indLogic=IndicatorLogic_It_does_not_act_as_a_filter;
 
-   if(ListParam[0].Text=="MA Oscillator rises") 
-     {
+   if(ListParam[0].Text=="MA Oscillator rises")
       indLogic=IndicatorLogic_The_indicator_rises;
-     }
-
-   if(ListParam[0].Text=="MA Oscillator falls") 
-     {
+   else if(ListParam[0].Text=="MA Oscillator falls")
       indLogic=IndicatorLogic_The_indicator_falls;
-     }
-
-   if(ListParam[0].Text=="MA Oscillator is higher than the Level line") 
-     {
+   else if(ListParam[0].Text=="MA Oscillator is higher than the Level line")
       indLogic=IndicatorLogic_The_indicator_is_higher_than_the_level_line;
-     }
-
-   if(ListParam[0].Text=="MA Oscillator is lower than the Level line") 
-     {
+   else if(ListParam[0].Text=="MA Oscillator is lower than the Level line")
       indLogic=IndicatorLogic_The_indicator_is_lower_than_the_level_line;
-     }
-
-   if(ListParam[0].Text=="MA Oscillator crosses the Level line upward") 
-     {
+   else if(ListParam[0].Text=="MA Oscillator crosses the Level line upward")
       indLogic=IndicatorLogic_The_indicator_crosses_the_level_line_upward;
-     }
-
-   if(ListParam[0].Text=="MA Oscillator crosses the Level line downward") 
-     {
+   else if(ListParam[0].Text=="MA Oscillator crosses the Level line downward")
       indLogic=IndicatorLogic_The_indicator_crosses_the_level_line_downward;
-     }
-
-   if(ListParam[0].Text=="MA Oscillator changes its direction upward") 
-     {
+   else if(ListParam[0].Text=="MA Oscillator changes its direction upward")
       indLogic=IndicatorLogic_The_indicator_changes_its_direction_upward;
-     }
-
-   if(ListParam[0].Text=="MA Oscillator changes its direction downward") 
-     {
+   else if(ListParam[0].Text=="MA Oscillator changes its direction downward")
       indLogic=IndicatorLogic_The_indicator_changes_its_direction_downward;
-     }
 
-   OscillatorLogic(iFirstBar,iPrvs,adMAOscillator,dLevel,-dLevel,Component[1],Component[2],
-                   indLogic);
+   OscillatorLogic(firstBar,previous,oscillator,level,-level,Component[1],Component[2],indLogic);
   }
 //+------------------------------------------------------------------+

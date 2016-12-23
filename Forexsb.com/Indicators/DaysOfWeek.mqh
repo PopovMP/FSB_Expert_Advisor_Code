@@ -34,22 +34,23 @@
 class DaysOfWeek : public Indicator
   {
 public:
-    DaysOfWeek(SlotTypes slotType)
-     {
-      SlotType=slotType;
-
-      IndicatorName="Day of Week";
-
-      WarningMessage    = "";
-      IsAllowLTF        = true;
-      ExecTime          = ExecutionTime_DuringTheBar;
-      IsSeparateChart   = false;
-      IsDiscreteValues  = false;
-      IsDefaultGroupAll = true;
-     }
-
-   virtual void Calculate(DataSet &dataSet);
+                     DaysOfWeek(SlotTypes slotType);
+   virtual void      Calculate(DataSet &dataSet);
   };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void DaysOfWeek::DaysOfWeek(SlotTypes slotType)
+  {
+   SlotType          = slotType;
+   IndicatorName     = "Day of Week";
+   WarningMessage    = "";
+   IsAllowLTF        = true;
+   ExecTime          = ExecutionTime_DuringTheBar;
+   IsSeparateChart   = false;
+   IsDiscreteValues  = false;
+   IsDefaultGroupAll = true;
+  }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -57,19 +58,16 @@ void DaysOfWeek::Calculate(DataSet &dataSet)
   {
    Data=GetPointer(dataSet);
 
-// Reading the parameters
    int dowFromDay  = ListParam[1].Index;
    int dowUntilDay = ListParam[2].Index;
 
-// Calculation
    const int firstBar=1;
    double signal[]; ArrayResize(signal,Data.Bars); ArrayInitialize(signal,0);
 
-// Calculation of the logic
    for(int bar=firstBar; bar<Data.Bars; bar++)
      {
-      MqlDateTime mqlTime; TimeToStruct(Data.Time[bar], mqlTime);
-      int time = mqlTime.day_of_week;
+      MqlDateTime mqlTime; TimeToStruct(Data.Time[bar],mqlTime);
+      int time=mqlTime.day_of_week;
 
       if(dowFromDay<dowUntilDay)
          signal[bar]=(time>=dowFromDay && time<dowUntilDay) ? 1 : 0;
@@ -79,19 +77,18 @@ void DaysOfWeek::Calculate(DataSet &dataSet)
          signal[bar]=1;
      }
 
-// Saving the components
-   ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "Allow long entry";
    Component[0].DataType = IndComponentType_AllowOpenLong;
    Component[0].ShowInDynInfo=false;
    Component[0].FirstBar=firstBar;
+   ArrayResize(Component[0].Value,Data.Bars);
    ArrayCopy(Component[0].Value,signal);
 
-   ArrayResize(Component[1].Value,Data.Bars);
    Component[1].CompName = "Allow short entry";
    Component[1].DataType = IndComponentType_AllowOpenShort;
    Component[1].ShowInDynInfo=false;
    Component[1].FirstBar=firstBar;
+   ArrayResize(Component[1].Value,Data.Bars);
    ArrayCopy(Component[1].Value,signal);
   }
 //+------------------------------------------------------------------+

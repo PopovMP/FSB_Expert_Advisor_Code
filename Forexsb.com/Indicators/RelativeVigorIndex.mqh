@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -57,11 +57,9 @@ void RelativeVigorIndex::Calculate(DataSet &dataSet)
   {
    Data=GetPointer(dataSet);
 
-// Reading the parameters
    int period=(int) NumParam[0].Value;
-   int prvs=CheckParam[0].Checked ? 1 : 0;
+   int previous=CheckParam[0].Checked ? 1 : 0;
 
-// Calculation
    int firstBar=period+4;
 
    double adRvi[]; ArrayResize(adRvi,Data.Bars); ArrayInitialize(adRvi,0);
@@ -85,10 +83,8 @@ void RelativeVigorIndex::Calculate(DataSet &dataSet)
      }
 
    double adMASignal[];ArrayResize(adMASignal,Data.Bars); ArrayInitialize(adMASignal,0);
-   for(int iBar=4; iBar<Data.Bars; iBar++)
-      adMASignal[iBar]=(adRvi[iBar]+2*adRvi[iBar-1]+2*adRvi[iBar-2]+adRvi[iBar-3])/6;
-
-// Saving the components
+   for(int bar=4; bar<Data.Bars; bar++)
+      adMASignal[bar]=(adRvi[bar]+2*adRvi[bar-1]+2*adRvi[bar-2]+adRvi[bar-3])/6;
 
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "RVI Line";
@@ -108,7 +104,6 @@ void RelativeVigorIndex::Calculate(DataSet &dataSet)
    ArrayResize(Component[3].Value,Data.Bars);
    Component[3].FirstBar=firstBar;
 
-// Sets the Component's type
    if(SlotType==SlotTypes_OpenFilter)
      {
       Component[2].DataType = IndComponentType_AllowOpenLong;
@@ -125,28 +120,28 @@ void RelativeVigorIndex::Calculate(DataSet &dataSet)
      }
 
    if(ListParam[0].Text=="RVI line rises") 
-      OscillatorLogic(firstBar,prvs,adRvi,0,0,Component[2],Component[3], IndicatorLogic_The_indicator_rises);
+      OscillatorLogic(firstBar,previous,adRvi,0,0,Component[2],Component[3], IndicatorLogic_The_indicator_rises);
    else if(ListParam[0].Text=="RVI line falls") 
-      OscillatorLogic(firstBar,prvs,adRvi,0,0,Component[2],Component[3], IndicatorLogic_The_indicator_falls);
+      OscillatorLogic(firstBar,previous,adRvi,0,0,Component[2],Component[3], IndicatorLogic_The_indicator_falls);
    else if(ListParam[0].Text=="RVI line is higher than zero") 
-      OscillatorLogic(firstBar,prvs,adRvi,0,0,Component[2],Component[3], IndicatorLogic_The_indicator_is_higher_than_the_level_line);
+      OscillatorLogic(firstBar,previous,adRvi,0,0,Component[2],Component[3], IndicatorLogic_The_indicator_is_higher_than_the_level_line);
    else if(ListParam[0].Text=="RVI line is lower than zero") 
-      OscillatorLogic(firstBar,prvs,adRvi,0,0,Component[2],Component[3], IndicatorLogic_The_indicator_is_lower_than_the_level_line);
+      OscillatorLogic(firstBar,previous,adRvi,0,0,Component[2],Component[3], IndicatorLogic_The_indicator_is_lower_than_the_level_line);
    else if(ListParam[0].Text=="RVI line crosses the zero line upward") 
-      OscillatorLogic(firstBar,prvs,adRvi,0,0,Component[2],Component[3], IndicatorLogic_The_indicator_crosses_the_level_line_upward);
+      OscillatorLogic(firstBar,previous,adRvi,0,0,Component[2],Component[3], IndicatorLogic_The_indicator_crosses_the_level_line_upward);
    else if(ListParam[0].Text=="RVI line crosses the zero line downward") 
-      OscillatorLogic(firstBar,prvs,adRvi,0,0,Component[2],Component[3], IndicatorLogic_The_indicator_crosses_the_level_line_downward);
+      OscillatorLogic(firstBar,previous,adRvi,0,0,Component[2],Component[3], IndicatorLogic_The_indicator_crosses_the_level_line_downward);
    else if(ListParam[0].Text=="RVI line changes its direction upward") 
-      OscillatorLogic(firstBar,prvs,adRvi,0,0,Component[2],Component[3], IndicatorLogic_The_indicator_changes_its_direction_upward);
+      OscillatorLogic(firstBar,previous,adRvi,0,0,Component[2],Component[3], IndicatorLogic_The_indicator_changes_its_direction_upward);
    else if(ListParam[0].Text=="RVI line changes its direction downward") 
-      OscillatorLogic(firstBar,prvs,adRvi,0,0,Component[2],Component[3], IndicatorLogic_The_indicator_changes_its_direction_downward);
+      OscillatorLogic(firstBar,previous,adRvi,0,0,Component[2],Component[3], IndicatorLogic_The_indicator_changes_its_direction_downward);
    else if(ListParam[0].Text=="RVI line crosses the Signal line upward") 
-      IndicatorCrossesAnotherIndicatorUpwardLogic(firstBar,prvs,adRvi,adMASignal,Component[2], Component[3]);
+      IndicatorCrossesAnotherIndicatorUpwardLogic(firstBar,previous,adRvi,adMASignal,Component[2], Component[3]);
    else if(ListParam[0].Text=="RVI line crosses the Signal line downward") 
-      IndicatorCrossesAnotherIndicatorDownwardLogic(firstBar,prvs,adRvi,adMASignal,Component[2], Component[3]);
+      IndicatorCrossesAnotherIndicatorDownwardLogic(firstBar,previous,adRvi,adMASignal,Component[2], Component[3]);
    else if(ListParam[0].Text=="RVI line is higher than the Signal line") 
-      IndicatorIsHigherThanAnotherIndicatorLogic(firstBar,prvs,adRvi,adMASignal,Component[2], Component[3]);
+      IndicatorIsHigherThanAnotherIndicatorLogic(firstBar,previous,adRvi,adMASignal,Component[2], Component[3]);
    else if(ListParam[0].Text=="RVI line is lower than the Signal line") 
-      IndicatorIsLowerThanAnotherIndicatorLogic(firstBar,prvs,adRvi,adMASignal,Component[2], Component[3]);
+      IndicatorIsLowerThanAnotherIndicatorLogic(firstBar,previous,adRvi,adMASignal,Component[2], Component[3]);
   }
 //+------------------------------------------------------------------+

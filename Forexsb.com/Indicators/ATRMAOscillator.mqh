@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -34,22 +34,23 @@
 class ATRMAOscillator : public Indicator
   {
 public:
-   ATRMAOscillator(SlotTypes slotType)
-     {
-      SlotType=slotType;
-
-      IndicatorName="ATR MA Oscillator";
-
-      WarningMessage    = "";
-      IsAllowLTF        = true;
-      ExecTime          = ExecutionTime_DuringTheBar;
-      IsSeparateChart   = true;
-      IsDiscreteValues  = false;
-      IsDefaultGroupAll = false;
-     }
-
-   virtual void Calculate(DataSet &dataSet);
+                     ATRMAOscillator(SlotTypes slotType);
+   virtual void      Calculate(DataSet &dataSet);
   };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void ATRMAOscillator::ATRMAOscillator(SlotTypes slotType)
+  {
+   SlotType          = slotType;
+   IndicatorName     = "ATR MA Oscillator";
+   WarningMessage    = "";
+   IsAllowLTF        = true;
+   ExecTime          = ExecutionTime_DuringTheBar;
+   IsSeparateChart   = true;
+   IsDiscreteValues  = false;
+   IsDefaultGroupAll = false;
+  }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -57,16 +58,13 @@ void ATRMAOscillator::Calculate(DataSet &dataSet)
   {
    Data=GetPointer(dataSet);
 
-// Reading the parameters
    MAMethod maSignalMaMethod=(MAMethod) ListParam[2].Index;
    int period1 = (int) NumParam[0].Value;
    int period2 = (int) NumParam[1].Value;
    int previous= CheckParam[0].Checked ? 1 : 0;
 
-// Calculation
-   int firstBar=period1+period2+2;
+   int firstBar=MathMax(period1,period2)+previous+2;
    double oscillator[]; ArrayResize(oscillator,Data.Bars); ArrayInitialize(oscillator,0);
-   
 
 // ----------------------------------------------------
    AverageTrueRange *atr=new AverageTrueRange(SlotType);
@@ -86,9 +84,9 @@ void ATRMAOscillator::Calculate(DataSet &dataSet)
 // -----------------------------------------------------
 
    for(int bar=firstBar; bar<Data.Bars; bar++)
+     {
       oscillator[bar]=indicator1[bar]-indicator2[bar];
-
-// Saving the components
+     }
 
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "Histogram";
@@ -102,7 +100,6 @@ void ATRMAOscillator::Calculate(DataSet &dataSet)
    ArrayResize(Component[2].Value,Data.Bars);
    Component[2].FirstBar=firstBar;
 
-// Sets the Component's type
    if(SlotType==SlotTypes_OpenFilter)
      {
       Component[1].DataType = IndComponentType_AllowOpenLong;
@@ -118,7 +115,6 @@ void ATRMAOscillator::Calculate(DataSet &dataSet)
       Component[2].CompName = "Close out short position";
      }
 
-// Calculation of the logic
    IndicatorLogic indLogic=IndicatorLogic_It_does_not_act_as_a_filter;
 
    if(ListParam[0].Text=="ATR MA Oscillator rises")

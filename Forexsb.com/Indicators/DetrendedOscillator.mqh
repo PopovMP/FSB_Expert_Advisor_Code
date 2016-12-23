@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -34,22 +34,23 @@
 class DetrendedOscillator : public Indicator
   {
 public:
-    DetrendedOscillator(SlotTypes slotType)
-     {
-      SlotType=slotType;
-
-      IndicatorName="Detrended Oscillator";
-
-      WarningMessage    = "";
-      IsAllowLTF        = true;
-      ExecTime          = ExecutionTime_DuringTheBar;
-      IsSeparateChart   = true;
-      IsDiscreteValues  = false;
-      IsDefaultGroupAll = false;
-     }
-
-   virtual void Calculate(DataSet &dataSet);
+                     DetrendedOscillator(SlotTypes slotType);
+   virtual void      Calculate(DataSet &dataSet);
   };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void DetrendedOscillator::DetrendedOscillator(SlotTypes slotType)
+  {
+   SlotType          = slotType;
+   IndicatorName     = "Detrended Oscillator";
+   WarningMessage    = "";
+   IsAllowLTF        = true;
+   ExecTime          = ExecutionTime_DuringTheBar;
+   IsSeparateChart   = true;
+   IsDiscreteValues  = false;
+   IsDefaultGroupAll = false;
+  }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -57,40 +58,38 @@ void DetrendedOscillator::Calculate(DataSet &dataSet)
   {
    Data=GetPointer(dataSet);
 
-// Reading the parameters
    MAMethod maMethod1 = (MAMethod) ListParam[1].Index;
    MAMethod maMethod2 = (MAMethod) ListParam[2].Index;
    BasePrice price=(BasePrice) ListParam[3].Index;
-   int iPeriod1 = (int) NumParam[0].Value;
-   int iPeriod2 = (int) NumParam[1].Value;
-   int iPrvs=CheckParam[0].Checked ? 1 : 0;
+   int period1 = (int) NumParam[0].Value;
+   int period2 = (int) NumParam[1].Value;
+   int previous=CheckParam[0].Checked ? 1 : 0;
 
-// Calculation
-   int iFirstBar=iPeriod1+iPeriod2+1;
+   int firstBar=MathMax(period1,period2)+previous+2;
 
    double adPrice[]; Price(price,adPrice);
-   double adMA[];    MovingAverage(iPeriod1,0,maMethod1,adPrice,adMA);
+   double ma[];      MovingAverage(period1,0,maMethod1,adPrice,ma);
    double adMAPr[];  ArrayResize(adMAPr,Data.Bars); ArrayInitialize(adMAPr,0);
 
-   for(int iBar=0; iBar<Data.Bars; iBar++)
-      adMAPr[iBar]=adPrice[iBar]-adMA[iBar];
+   for(int bar=0; bar<Data.Bars; bar++)
+     {
+      adMAPr[bar]=adPrice[bar]-ma[bar];
+     }
 
-   double adDo[]; MovingAverage(iPeriod2,0,maMethod2,adMAPr,adDo);
+   double adDo[]; MovingAverage(period2,0,maMethod2,adMAPr,adDo);
 
-// Saving the components
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "Detrended Oscillator";
    Component[0].DataType = IndComponentType_IndicatorValue;
-   Component[0].FirstBar = iFirstBar;
+   Component[0].FirstBar = firstBar;
    ArrayCopy(Component[0].Value,adDo);
 
    ArrayResize(Component[1].Value,Data.Bars);
-   Component[1].FirstBar=iFirstBar;
+   Component[1].FirstBar=firstBar;
 
    ArrayResize(Component[2].Value,Data.Bars);
-   Component[2].FirstBar=iFirstBar;
+   Component[2].FirstBar=firstBar;
 
-// Sets the Component's type
    if(SlotType==SlotTypes_OpenFilter)
      {
       Component[1].DataType = IndComponentType_AllowOpenLong;
@@ -106,26 +105,25 @@ void DetrendedOscillator::Calculate(DataSet &dataSet)
       Component[2].CompName = "Close out short position";
      }
 
-// Calculation of the logic
    IndicatorLogic indLogic=IndicatorLogic_It_does_not_act_as_a_filter;
 
-   if(ListParam[0].Text=="Detrended Oscillator rises") 
+   if(ListParam[0].Text=="Detrended Oscillator rises")
       indLogic=IndicatorLogic_The_indicator_rises;
-   else if(ListParam[0].Text=="Detrended Oscillator falls") 
+   else if(ListParam[0].Text=="Detrended Oscillator falls")
       indLogic=IndicatorLogic_The_indicator_falls;
-   else if(ListParam[0].Text=="Detrended Oscillator is higher than the zero line") 
+   else if(ListParam[0].Text=="Detrended Oscillator is higher than the zero line")
       indLogic=IndicatorLogic_The_indicator_is_higher_than_the_level_line;
-   else if(ListParam[0].Text=="Detrended Oscillator is lower than the zero line") 
+   else if(ListParam[0].Text=="Detrended Oscillator is lower than the zero line")
       indLogic=IndicatorLogic_The_indicator_is_lower_than_the_level_line;
-   else if(ListParam[0].Text=="Detrended Oscillator crosses the zero line upward") 
+   else if(ListParam[0].Text=="Detrended Oscillator crosses the zero line upward")
       indLogic=IndicatorLogic_The_indicator_crosses_the_level_line_upward;
-   else if(ListParam[0].Text=="Detrended Oscillator crosses the zero line downward") 
+   else if(ListParam[0].Text=="Detrended Oscillator crosses the zero line downward")
       indLogic=IndicatorLogic_The_indicator_crosses_the_level_line_downward;
-   else if(ListParam[0].Text=="Detrended Oscillator changes its direction upward") 
+   else if(ListParam[0].Text=="Detrended Oscillator changes its direction upward")
       indLogic=IndicatorLogic_The_indicator_changes_its_direction_upward;
-   else if(ListParam[0].Text=="Detrended Oscillator changes its direction downward") 
+   else if(ListParam[0].Text=="Detrended Oscillator changes its direction downward")
       indLogic=IndicatorLogic_The_indicator_changes_its_direction_downward;
 
-   OscillatorLogic(iFirstBar,iPrvs,adDo,0,0,Component[1],Component[2],indLogic);
+   OscillatorLogic(firstBar,previous,adDo,0,0,Component[1],Component[2],indLogic);
   }
 //+------------------------------------------------------------------+

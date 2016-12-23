@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -34,22 +34,23 @@
 class DayOfMonth : public Indicator
   {
 public:
-   DayOfMonth(SlotTypes slotType)
-     {
-      SlotType=slotType;
-
-      IndicatorName="Day of Month";
-
-      WarningMessage    = "";
-      IsAllowLTF        = true;
-      ExecTime          = ExecutionTime_DuringTheBar;
-      IsSeparateChart   = false;
-      IsDiscreteValues  = false;
-      IsDefaultGroupAll = false;
-     }
-
-   virtual void Calculate(DataSet &dataSet);
+                     DayOfMonth(SlotTypes slotType);
+   virtual void      Calculate(DataSet &dataSet);
   };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void DayOfMonth::DayOfMonth(SlotTypes slotType)
+  {
+   SlotType          = slotType;
+   IndicatorName     = "Day of Month";
+   WarningMessage    = "";
+   IsAllowLTF        = true;
+   ExecTime          = ExecutionTime_DuringTheBar;
+   IsSeparateChart   = false;
+   IsDiscreteValues  = false;
+   IsDefaultGroupAll = false;
+  }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -58,23 +59,23 @@ void DayOfMonth::Calculate(DataSet &dataSet)
    Data=GetPointer(dataSet);
 
 // Reading the parameters
-   int iFromDay  = (int)NumParam[0].Value;
-   int iUntilDay = (int)NumParam[1].Value;
+   int fromDay  = (int)NumParam[0].Value;
+   int untilDay = (int)NumParam[1].Value;
 
 // Calculation
-   int iFirstBar=1;
-   double adBars[]; ArrayResize(adBars,Data.Bars); ArrayInitialize(adBars,0);
+   int firstBar=2;
+   double signal[]; ArrayResize(signal,Data.Bars); ArrayInitialize(signal,0);
 
 // Calculation of the logic
-   for(int bar=iFirstBar; bar<Data.Bars; bar++)
+   for(int bar=firstBar; bar<Data.Bars; bar++)
      {
-      MqlDateTime time; TimeToStruct(Data.Time[bar], time);
-      if(iFromDay<iUntilDay)
-         adBars[bar]=time.day>=iFromDay && time.day<iUntilDay ? 1 : 0;
-      else if(iFromDay>iUntilDay)
-         adBars[bar]=time.day>=iFromDay || time.day<iUntilDay ? 1 : 0;
+      MqlDateTime time; TimeToStruct(Data.Time[bar],time);
+      if(fromDay<untilDay)
+         signal[bar]=time.day>=fromDay && time.day<untilDay ? 1 : 0;
+      else if(fromDay>untilDay)
+         signal[bar]=time.day>=fromDay || time.day<untilDay ? 1 : 0;
       else
-         adBars[bar]=1;
+         signal[bar]=1;
      }
 
 // Saving the components
@@ -82,14 +83,14 @@ void DayOfMonth::Calculate(DataSet &dataSet)
    Component[0].CompName      = "Allow long entry";
    Component[0].DataType      = IndComponentType_AllowOpenLong;
    Component[0].ShowInDynInfo = false;
-   Component[0].FirstBar      = iFirstBar;
-   ArrayCopy(Component[0].Value,adBars);
+   Component[0].FirstBar      = firstBar;
+   ArrayCopy(Component[0].Value,signal);
 
    ArrayResize(Component[1].Value,Data.Bars);
    Component[1].CompName      = "Allow short entry";
    Component[1].DataType      = IndComponentType_AllowOpenShort;
    Component[1].ShowInDynInfo = false;
-   Component[1].FirstBar      = iFirstBar;
-   ArrayCopy(Component[1].Value,adBars);
+   Component[1].FirstBar      = firstBar;
+   ArrayCopy(Component[1].Value,signal);
   }
 //+------------------------------------------------------------------+

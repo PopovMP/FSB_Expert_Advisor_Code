@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -34,21 +34,22 @@
 class DayClosing2 : public Indicator
   {
 public:
-    DayClosing2(SlotTypes slotType)
-     {
-      SlotType=slotType;
-
-      IndicatorName="Day Closing 2";
-
-      IsAllowLTF        = true;
-      ExecTime          = ExecutionTime_DuringTheBar;
-      IsSeparateChart   = false;
-      IsDiscreteValues  = false;
-      IsDefaultGroupAll = false;
-     }
-
-   virtual void Calculate(DataSet &dataSet);
+                     DayClosing2(SlotTypes slotType);
+   virtual void      Calculate(DataSet &dataSet);
   };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void DayClosing2::DayClosing2(SlotTypes slotType)
+  {
+   SlotType          = slotType;
+   IndicatorName     = "Day Closing 2";
+   IsAllowLTF        = true;
+   ExecTime          = ExecutionTime_DuringTheBar;
+   IsSeparateChart   = false;
+   IsDiscreteValues  = false;
+   IsDefaultGroupAll = false;
+  }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -56,66 +57,58 @@ void DayClosing2::Calculate(DataSet &dataSet)
   {
    Data=GetPointer(dataSet);
 
-// Reading the parameters
    int dayClosingHour    = (int) NumParam[0].Value;
    int dayClosingMin     = (int) NumParam[1].Value;
    int fridayClosingHour = (int) NumParam[2].Value;
    int fridayClosingMin  = (int) NumParam[3].Value;
 
-// Calculation
-   double adClosePrice[]; ArrayResize(adClosePrice,Data.Bars); ArrayInitialize(adClosePrice,0);
+   double closePrice[]; ArrayResize(closePrice,Data.Bars); ArrayInitialize(closePrice,0);
 
    for(int bar=1; bar<Data.Bars; bar++)
      {
       MqlDateTime time0; TimeToStruct(Data.Time[bar - 0], time0);
       MqlDateTime time1; TimeToStruct(Data.Time[bar - 1], time1);
       if(time1.day!=time0.day)
-         adClosePrice[bar-1]=Data.Close[bar-1];
+         closePrice[bar-1]=Data.Close[bar-1];
      }
 
-   double adAllowOpenLong[];
-   ArrayResize(adAllowOpenLong,Data.Bars);
-   ArrayInitialize(adAllowOpenLong,1);
-   double adAllowOpenShort[];
-   ArrayResize(adAllowOpenShort,Data.Bars);
-   ArrayInitialize(adAllowOpenShort,1);
+   double allowOpenLong[];  ArrayResize(allowOpenLong, Data.Bars); ArrayInitialize(allowOpenLong, 1);
+   double allowOpenShort[]; ArrayResize(allowOpenShort,Data.Bars); ArrayInitialize(allowOpenShort,1);
 
-// Check the last bar
    datetime dayOpeningTime=(Data.ServerTime/86400)*86400;
 
    MqlDateTime mqlCloseTime;
    TimeToStruct(Data.ServerTime,mqlCloseTime);
 
-   datetime closeTime=mqlCloseTime.day_of_week==5
-                      ? dayOpeningTime+fridayClosingHour*3600+fridayClosingMin*60
-                      : dayOpeningTime+dayClosingHour*3600+dayClosingMin*60;
+   datetime closeTime=(mqlCloseTime.day_of_week==5)
+                      ?(dayOpeningTime+fridayClosingHour*3600+fridayClosingMin*60)
+                      :(dayOpeningTime+dayClosingHour*3600+dayClosingMin*60);
 
    if(Data.ServerTime>=closeTime)
      {
-      adClosePrice[Data.Bars-1]=Data.Close[Data.Bars-1];
-      adAllowOpenLong[Data.Bars-1]=0;  // Prevent entries after closing time
-      adAllowOpenShort[Data.Bars-1]=0; // Prevent entries after closing time
+      closePrice[Data.Bars-1]=Data.Close[Data.Bars-1];
+      allowOpenLong[Data.Bars-1]=0;  // Prevent long entries after the closing time
+      allowOpenShort[Data.Bars-1]=0; // Prevent short entries after the closing time
      }
 
-// Saving the components
-   ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "Closing price of the day";
    Component[0].DataType = IndComponentType_ClosePrice;
    Component[0].FirstBar = 2;
-   ArrayCopy(Component[0].Value,adClosePrice);
+   ArrayResize(Component[0].Value,Data.Bars);
+   ArrayCopy(Component[0].Value,closePrice);
 
+   Component[1].DataType      = IndComponentType_AllowOpenLong;
+   Component[1].CompName      = "Is long entry allowed";
+   Component[1].ShowInDynInfo = false;
+   Component[1].FirstBar      = 2;
    ArrayResize(Component[1].Value,Data.Bars);
-   Component[1].DataType = IndComponentType_AllowOpenLong;
-   Component[1].CompName = "Is long entry allowed";
-   Component[1].ShowInDynInfo=false;
-   Component[1].FirstBar=2;
-   ArrayCopy(Component[1].Value,adAllowOpenLong);
+   ArrayCopy(Component[1].Value,allowOpenLong);
 
+   Component[2].DataType      = IndComponentType_AllowOpenShort;
+   Component[2].CompName      = "Is short entry allowed";
+   Component[2].ShowInDynInfo = false;
+   Component[2].FirstBar      = 2;
    ArrayResize(Component[2].Value,Data.Bars);
-   Component[2].DataType = IndComponentType_AllowOpenShort;
-   Component[2].CompName = "Is short entry allowed";
-   Component[2].ShowInDynInfo=false;
-   Component[2].FirstBar=2;
-   ArrayCopy(Component[2].Value,adAllowOpenShort);
+   ArrayCopy(Component[2].Value,allowOpenShort);
   }
 //+------------------------------------------------------------------+

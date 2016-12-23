@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -34,22 +34,23 @@
 class AroonHistogram : public Indicator
   {
 public:
-    AroonHistogram(SlotTypes slotType)
-     {
-      SlotType=slotType;
-
-      IndicatorName="Aroon Histogram";
-
-      WarningMessage    = "";
-      IsAllowLTF        = true;
-      ExecTime          = ExecutionTime_DuringTheBar;
-      IsSeparateChart   = true;
-      IsDiscreteValues  = true;
-      IsDefaultGroupAll = false;
-     }
-
-   virtual void Calculate(DataSet &dataSet);
+                     AroonHistogram(SlotTypes slotType);
+   virtual void      Calculate(DataSet &dataSet);
   };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void AroonHistogram::AroonHistogram(SlotTypes slotType)
+  {
+   SlotType          = slotType;
+   IndicatorName     = "Aroon Histogram";
+   WarningMessage    = "";
+   IsAllowLTF        = true;
+   ExecTime          = ExecutionTime_DuringTheBar;
+   IsSeparateChart   = true;
+   IsDiscreteValues  = true;
+   IsDefaultGroupAll = false;
+  }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -57,69 +58,66 @@ void AroonHistogram::Calculate(DataSet &dataSet)
   {
    Data=GetPointer(dataSet);
 
-// Reading the parameters
    BasePrice basePrice=(BasePrice) ListParam[1].Index;
-   int iPeriod=(int) NumParam[0].Value;
-   double dLevel=NumParam[1].Value;
-   int prev=CheckParam[0].Checked ? 1 : 0;
+   int period=(int) NumParam[0].Value;
+   double level=NumParam[1].Value;
+   int previous=CheckParam[0].Checked ? 1 : 0;
 
-// Calculation
-   int iFirstBar=iPeriod+2;
-   double adBasePrice[];
-   Price(basePrice,adBasePrice);
-   double adUp[];    ArrayResize(adUp,Data.Bars);    ArrayInitialize(adUp,0);
-   double adDown[];  ArrayResize(adDown,Data.Bars);  ArrayInitialize(adDown,0);
-   double adAroon[]; ArrayResize(adAroon,Data.Bars); ArrayInitialize(adAroon,0);
+   int firstBar=period+previous+2;
+   double price[]; Price(basePrice,price);
+   double up[];    ArrayResize(up,Data.Bars);    ArrayInitialize(up,0);
+   double down[];  ArrayResize(down,Data.Bars);  ArrayInitialize(down,0);
+   double aroon[]; ArrayResize(aroon,Data.Bars); ArrayInitialize(aroon,0);
 
-   for(int bar=iPeriod; bar<Data.Bars; bar++)
+   for(int bar=period; bar<Data.Bars; bar++)
      {
-      double dHighestHigh=DBL_MIN;
-      double dLowestLow  =DBL_MAX;
-      for(int i=0; i<iPeriod; i++)
+      double highestHigh=DBL_MIN;
+      double lowestLow  =DBL_MAX;
+      for(int i=0; i<period; i++)
         {
-         int iBaseBar=bar-iPeriod+1+i;
-         if(adBasePrice[iBaseBar]>dHighestHigh)
+         int baseBar=bar-period+1+i;
+         if(price[baseBar]>highestHigh)
            {
-            dHighestHigh=adBasePrice[iBaseBar];
-            adUp[bar]=100.0*i/(iPeriod-1);
+            highestHigh=price[baseBar];
+            up[bar]=100.0*i/(period-1);
            }
-         if(adBasePrice[iBaseBar]<dLowestLow)
+         if(price[baseBar]<lowestLow)
            {
-            dLowestLow=adBasePrice[iBaseBar];
-            adDown[bar]=100.0*i/(iPeriod-1);
+            lowestLow=price[baseBar];
+            down[bar]=100.0*i/(period-1);
            }
         }
      }
 
-   for(int bar=iFirstBar; bar<Data.Bars; bar++)
-      adAroon[bar]=adUp[bar]-adDown[bar];
+   for(int bar=firstBar; bar<Data.Bars; bar++)
+     {
+      aroon[bar]=up[bar]-down[bar];
+     }
 
-// Saving the components
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "Aroon Histogram";
    Component[0].DataType = IndComponentType_IndicatorValue;
-   Component[0].FirstBar = iFirstBar;
-   ArrayCopy(Component[0].Value,adAroon);
+   Component[0].FirstBar = firstBar;
+   ArrayCopy(Component[0].Value,aroon);
 
    ArrayResize(Component[1].Value,Data.Bars);
    Component[1].CompName = "Aroon Up";
    Component[1].DataType = IndComponentType_IndicatorValue;
-   Component[1].FirstBar = iFirstBar;
-   ArrayCopy(Component[1].Value,adUp);
+   Component[1].FirstBar = firstBar;
+   ArrayCopy(Component[1].Value,up);
 
    ArrayResize(Component[2].Value,Data.Bars);
    Component[2].CompName = "Aroon Down";
    Component[2].DataType = IndComponentType_IndicatorValue;
-   Component[2].FirstBar = iFirstBar;
-   ArrayCopy(Component[2].Value,adDown);
+   Component[2].FirstBar = firstBar;
+   ArrayCopy(Component[2].Value,down);
 
    ArrayResize(Component[3].Value,Data.Bars);
-   Component[3].FirstBar=iFirstBar;
+   Component[3].FirstBar=firstBar;
 
    ArrayResize(Component[4].Value,Data.Bars);
-   Component[4].FirstBar=iFirstBar;
+   Component[4].FirstBar=firstBar;
 
-// Sets the Component's type
    if(SlotType==SlotTypes_OpenFilter)
      {
       Component[3].DataType = IndComponentType_AllowOpenLong;
@@ -135,7 +133,6 @@ void AroonHistogram::Calculate(DataSet &dataSet)
       Component[4].CompName = "Close out short position";
      }
 
-// Calculation of the logic
    IndicatorLogic indLogic=IndicatorLogic_It_does_not_act_as_a_filter;
 
    if(ListParam[0].Text=="Aroon Histogram rises")
@@ -155,6 +152,6 @@ void AroonHistogram::Calculate(DataSet &dataSet)
    else if(ListParam[0].Text=="Aroon Histogram changes its direction downward")
       indLogic=IndicatorLogic_The_indicator_changes_its_direction_downward;
 
-   OscillatorLogic(iFirstBar,prev,adAroon,dLevel,-dLevel,Component[3],Component[4],indLogic);
+   OscillatorLogic(firstBar,previous,aroon,level,-level,Component[3],Component[4],indLogic);
   }
 //+------------------------------------------------------------------+

@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -34,12 +34,16 @@
 class WilliamsPercentRange : public Indicator
   {
 public:
-   WilliamsPercentRange(SlotTypes slotType)
+                     WilliamsPercentRange(SlotTypes slotType);
+   virtual void      Calculate(DataSet &dataSet);
+  };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void WilliamsPercentRange::WilliamsPercentRange(SlotTypes slotType)
      {
-      SlotType=slotType;
-
-      IndicatorName="Williams' Percent Range";
-
+      SlotType          = slotType;
+      IndicatorName     = "Williams' Percent Range";
       WarningMessage    = "";
       IsAllowLTF        = true;
       ExecTime          = ExecutionTime_DuringTheBar;
@@ -47,9 +51,6 @@ public:
       IsDiscreteValues  = false;
       IsDefaultGroupAll = false;
      }
-
-   virtual void Calculate(DataSet &dataSet);
-  };
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -57,33 +58,30 @@ void WilliamsPercentRange::Calculate(DataSet &dataSet)
   {
    Data=GetPointer(dataSet);
 
-// Reading the parameters
    MAMethod method=(MAMethod) ListParam[1].Index;
    int period=(int) NumParam[0].Value;
    int smoothing=(int) NumParam[1].Value;
    int level=(int) NumParam[2].Value;
-   int prvs = CheckParam[0].Checked ? 1 : 0;
+   int previous=CheckParam[0].Checked ? 1 : 0;
 
-// Calculation
-   int firstBar=period+smoothing+prvs+2;
+   int firstBar=MathMax(period,smoothing)+previous+2;
 
    double adR[]; ArrayResize(adR,Data.Bars); ArrayInitialize(adR,0);
    for(int bar=period; bar<Data.Bars; bar++)
      {
-      double dMin = DBL_MAX;
-      double dMax = DBL_MIN;
+      double min = DBL_MAX;
+      double max = DBL_MIN;
       for(int index=0; index<period; index++)
         {
-         if(Data.High[bar - index]> dMax) dMax = Data.High[bar - index];
-         if(Data.Low[bar - index] < dMin) dMin = Data.Low[bar - index];
+         if(Data.High[bar - index]> max) max = Data.High[bar - index];
+         if(Data.Low[bar - index] < min) min = Data.Low[bar - index];
         }
-      adR[bar]=-100*(dMax-Data.Close[bar])/(dMax-dMin);
+      adR[bar]=-100*(max-Data.Close[bar])/(max-min);
      }
 
    double adRSmoothed[];
    MovingAverage(smoothing,0,method,adR,adRSmoothed);
 
-// Saving the components
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "%R";
    Component[0].DataType = IndComponentType_IndicatorValue;
@@ -96,7 +94,6 @@ void WilliamsPercentRange::Calculate(DataSet &dataSet)
    ArrayResize(Component[2].Value,Data.Bars);
    Component[2].FirstBar=firstBar;
 
-// Sets the Component's type
    if(SlotType==SlotTypes_OpenFilter)
      {
       Component[1].DataType = IndComponentType_AllowOpenLong;
@@ -112,26 +109,25 @@ void WilliamsPercentRange::Calculate(DataSet &dataSet)
       Component[2].CompName = "Close out short position";
      }
 
-// Calculation of the logic
    IndicatorLogic indLogic=IndicatorLogic_It_does_not_act_as_a_filter;
 
-   if(ListParam[0].Text=="WPR rises") 
+   if(ListParam[0].Text=="WPR rises")
       indLogic=IndicatorLogic_The_indicator_rises;
-   else if(ListParam[0].Text=="WPR falls") 
+   else if(ListParam[0].Text=="WPR falls")
       indLogic=IndicatorLogic_The_indicator_falls;
-   else if(ListParam[0].Text=="WPR is higher than the Level line") 
+   else if(ListParam[0].Text=="WPR is higher than the Level line")
       indLogic=IndicatorLogic_The_indicator_is_higher_than_the_level_line;
-   else if(ListParam[0].Text=="WPR is lower than the Level line") 
+   else if(ListParam[0].Text=="WPR is lower than the Level line")
       indLogic=IndicatorLogic_The_indicator_is_lower_than_the_level_line;
-   else if(ListParam[0].Text=="WPR crosses the Level line upward") 
+   else if(ListParam[0].Text=="WPR crosses the Level line upward")
       indLogic=IndicatorLogic_The_indicator_crosses_the_level_line_upward;
-   else if(ListParam[0].Text=="WPR crosses the Level line downward") 
+   else if(ListParam[0].Text=="WPR crosses the Level line downward")
       indLogic=IndicatorLogic_The_indicator_crosses_the_level_line_downward;
-   else if(ListParam[0].Text=="WPR changes its direction upward") 
+   else if(ListParam[0].Text=="WPR changes its direction upward")
       indLogic=IndicatorLogic_The_indicator_changes_its_direction_upward;
-   else if(ListParam[0].Text=="WPR changes its direction downward") 
+   else if(ListParam[0].Text=="WPR changes its direction downward")
       indLogic=IndicatorLogic_The_indicator_changes_its_direction_downward;
 
-   OscillatorLogic(firstBar,prvs,adRSmoothed,level,-100-level,Component[1],Component[2], indLogic);
+   OscillatorLogic(firstBar,previous,adRSmoothed,level,-100-level,Component[1],Component[2],indLogic);
   }
 //+------------------------------------------------------------------+

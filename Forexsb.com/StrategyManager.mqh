@@ -30,22 +30,24 @@
 #include <Forexsb.com/IndicatorSlot.mqh>
 #include <Forexsb.com/Strategy.mqh>
 #include <Forexsb.com/IndicatorManager.mqh>
-
 //## Import Start
 
 class StrategyManager
-{
+  {
 public:
-    Strategy *GetStrategy(void);
-};
-
+   Strategy         *GetStrategy(void);
+  };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
 Strategy *StrategyManager::GetStrategy(void)
-{
-    IndicatorManager *indicatorManager = new IndicatorManager();
+  {
+    IndicatorManager *indicatorManager=new IndicatorManager();
 
     Strategy *strategy = new Strategy(0, 0); //##STRATEGY_CREATION_CODE##
 
     delete indicatorManager;
 
     return strategy;
-}
+  }
+//+------------------------------------------------------------------+

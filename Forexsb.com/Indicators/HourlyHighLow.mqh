@@ -69,7 +69,6 @@ void HourlyHighLow::Calculate(DataSet &dataSet)
 
    const int firstBar=2;
 
-// Calculation
    double adHighPrice[]; ArrayResize(adHighPrice,Data.Bars); ArrayInitialize(adHighPrice,0);
    double adLowPrice[];  ArrayResize(adLowPrice,Data.Bars);  ArrayInitialize(adLowPrice,0);
 
@@ -114,7 +113,6 @@ void HourlyHighLow::Calculate(DataSet &dataSet)
       isOnTimePrev=isOnTime;
      }
 
-// Shifting the price
    double adUpperBand[]; ArrayResize(adUpperBand,Data.Bars); ArrayInitialize(adUpperBand,0);
    double adLowerBand[]; ArrayResize(adLowerBand,Data.Bars); ArrayInitialize(adLowerBand,0);
    for(int bar=firstBar; bar<Data.Bars; bar++)
@@ -123,7 +121,6 @@ void HourlyHighLow::Calculate(DataSet &dataSet)
       adLowerBand[bar] = adLowPrice[bar] - shift;
      }
 
-// Saving the components
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "Hourly High";
    Component[0].DataType = IndComponentType_IndicatorValue;
@@ -142,7 +139,6 @@ void HourlyHighLow::Calculate(DataSet &dataSet)
    ArrayResize(Component[3].Value,Data.Bars);
    Component[3].FirstBar=firstBar;
 
-// Sets the Component's type
    if(SlotType==SlotTypes_Open)
      {
       Component[2].CompName = "Long position entry price";

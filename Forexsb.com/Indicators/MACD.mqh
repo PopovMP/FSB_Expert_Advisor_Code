@@ -34,22 +34,23 @@
 class MACD : public Indicator
   {
 public:
-    MACD(SlotTypes slotType)
-     {
-      SlotType=slotType;
-
-      IndicatorName="MACD";
-
-      WarningMessage    = "";
-      IsAllowLTF        = true;
-      ExecTime          = ExecutionTime_DuringTheBar;
-      IsSeparateChart   = true;
-      IsDiscreteValues  = false;
-      IsDefaultGroupAll = false;
-     }
-
-   virtual void Calculate(DataSet &dataSet);
+                     MACD(SlotTypes slotType);
+   virtual void      Calculate(DataSet &dataSet);
   };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void MACD::MACD(SlotTypes slotType)
+  {
+   SlotType          = slotType;
+   IndicatorName     = "MACD";
+   WarningMessage    = "";
+   IsAllowLTF        = true;
+   ExecTime          = ExecutionTime_DuringTheBar;
+   IsSeparateChart   = true;
+   IsDiscreteValues  = false;
+   IsDefaultGroupAll = false;
+  }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -57,42 +58,41 @@ void MACD::Calculate(DataSet &dataSet)
   {
    Data=GetPointer(dataSet);
 
-// Reading the parameters
    MAMethod maMethod = (MAMethod) ListParam[1].Index;
    MAMethod slMethod = (MAMethod) ListParam[3].Index;
    BasePrice basePrice=(BasePrice) ListParam[2].Index;
    int slowPeriod = (int) NumParam[0].Value;
    int fastPeriod = (int) NumParam[1].Value;
-   int signalLinePeriod=(int) NumParam[2].Value;
+   int signalPeriod=(int) NumParam[2].Value;
    int previous=CheckParam[0].Checked ? 1 : 0;
 
-// Calculation
-   int firstBar=slowPeriod+fastPeriod+3;
+   int firstBar=MathMax(MathMax(slowPeriod,fastPeriod),signalPeriod)+previous+2;
 
-   double basePrc[];  Price(basePrice,basePrc);
-   double adMASlow[]; MovingAverage(slowPeriod,0,maMethod,basePrc,adMASlow);
-   double adMAFast[]; MovingAverage(fastPeriod,0,maMethod,basePrc,adMAFast);
-   double adMACD[];   ArrayResize(adMACD,Data.Bars); ArrayInitialize(adMACD,0);
+   double price[];  Price(basePrice,price);
+   double maSlow[]; MovingAverage(slowPeriod,0,maMethod,price,maSlow);
+   double maFast[]; MovingAverage(fastPeriod,0,maMethod,price,maFast);
+   double macd[];   ArrayResize(macd,Data.Bars); ArrayInitialize(macd,0);
 
    for(int bar=slowPeriod-1; bar<Data.Bars; bar++)
-      adMACD[bar]=adMAFast[bar]-adMASlow[bar];
+     {
+      macd[bar]=maFast[bar]-maSlow[bar];
+     }
 
    double maSignalLine[];
-   MovingAverage(signalLinePeriod,0,slMethod,adMACD,maSignalLine);
+   MovingAverage(signalPeriod,0,slMethod,macd,maSignalLine);
 
-// adHistogram represents MACD oscillator
-   double adHistogram[]; ArrayResize(adHistogram,Data.Bars);ArrayInitialize(adHistogram,0);
+   double histogram[]; ArrayResize(histogram,Data.Bars);ArrayInitialize(histogram,0);
 
-   for(int bar=slowPeriod+signalLinePeriod-1; bar<Data.Bars; bar++)
-      adHistogram[bar]=adMACD[bar]-maSignalLine[bar];
-
-// Saving the components
+   for(int bar=slowPeriod+signalPeriod-1; bar<Data.Bars; bar++)
+   {
+      histogram[bar]=macd[bar]-maSignalLine[bar];
+   }
 
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "Histogram";
    Component[0].DataType = IndComponentType_IndicatorValue;
    Component[0].FirstBar = firstBar;
-   ArrayCopy(Component[0].Value,adHistogram);
+   ArrayCopy(Component[0].Value,histogram);
 
    ArrayResize(Component[1].Value,Data.Bars);
    Component[1].CompName = "Signal line";
@@ -104,13 +104,11 @@ void MACD::Calculate(DataSet &dataSet)
    Component[2].CompName = "MACD line";
    Component[2].DataType = IndComponentType_IndicatorValue;
    Component[2].FirstBar = firstBar;
-   ArrayCopy(Component[2].Value,adMACD);
+   ArrayCopy(Component[2].Value,macd);
 
    ArrayResize(Component[3].Value,Data.Bars);
-
    ArrayResize(Component[4].Value,Data.Bars);
 
-// Sets the Component's type
    if(SlotType==SlotTypes_OpenFilter)
      {
       Component[3].DataType = IndComponentType_AllowOpenLong;
@@ -127,28 +125,28 @@ void MACD::Calculate(DataSet &dataSet)
      }
 
    if(ListParam[0].Text=="MACD line rises")
-      OscillatorLogic(firstBar,previous,adMACD,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_rises);
+      OscillatorLogic(firstBar,previous,macd,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_rises);
    else if(ListParam[0].Text=="MACD line falls")
-      OscillatorLogic(firstBar,previous,adMACD,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_falls);
+      OscillatorLogic(firstBar,previous,macd,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_falls);
    else if(ListParam[0].Text=="MACD line is higher than zero")
-      OscillatorLogic(firstBar,previous,adMACD,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_is_higher_than_the_level_line);
+      OscillatorLogic(firstBar,previous,macd,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_is_higher_than_the_level_line);
    else if(ListParam[0].Text=="MACD line is lower than zero")
-      OscillatorLogic(firstBar,previous,adMACD,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_is_lower_than_the_level_line);
+      OscillatorLogic(firstBar,previous,macd,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_is_lower_than_the_level_line);
    else if(ListParam[0].Text=="MACD line crosses the zero line upward")
-      OscillatorLogic(firstBar,previous,adMACD,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_crosses_the_level_line_upward);
+      OscillatorLogic(firstBar,previous,macd,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_crosses_the_level_line_upward);
    else if(ListParam[0].Text=="MACD line crosses the zero line downward")
-      OscillatorLogic(firstBar,previous,adMACD,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_crosses_the_level_line_downward);
+      OscillatorLogic(firstBar,previous,macd,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_crosses_the_level_line_downward);
    else if(ListParam[0].Text=="MACD line changes its direction upward")
-      OscillatorLogic(firstBar,previous,adMACD,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_changes_its_direction_upward);
+      OscillatorLogic(firstBar,previous,macd,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_changes_its_direction_upward);
    else if(ListParam[0].Text=="MACD line changes its direction downward")
-      OscillatorLogic(firstBar,previous,adMACD,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_changes_its_direction_downward);
+      OscillatorLogic(firstBar,previous,macd,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_changes_its_direction_downward);
    else if(ListParam[0].Text=="MACD line crosses the Signal line upward")
-      OscillatorLogic(firstBar,previous,adHistogram,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_crosses_the_level_line_upward);
+      OscillatorLogic(firstBar,previous,histogram,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_crosses_the_level_line_upward);
    else if(ListParam[0].Text=="MACD line crosses the Signal line downward")
-      OscillatorLogic(firstBar,previous,adHistogram,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_crosses_the_level_line_downward);
+      OscillatorLogic(firstBar,previous,histogram,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_crosses_the_level_line_downward);
    else if(ListParam[0].Text=="MACD line is higher than the Signal line")
-      OscillatorLogic(firstBar,previous,adHistogram,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_is_higher_than_the_level_line);
+      OscillatorLogic(firstBar,previous,histogram,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_is_higher_than_the_level_line);
    else if(ListParam[0].Text=="MACD line is lower than the Signal line")
-      OscillatorLogic(firstBar,previous,adHistogram,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_is_lower_than_the_level_line);
+      OscillatorLogic(firstBar,previous,histogram,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_is_lower_than_the_level_line);
   }
 //+------------------------------------------------------------------+

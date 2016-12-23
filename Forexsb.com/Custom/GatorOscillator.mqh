@@ -34,22 +34,23 @@
 class GatorOscillator : public Indicator
   {
 public:
-    GatorOscillator(SlotTypes slotType)
-     {
-      SlotType=slotType;
-
-      IndicatorName="Gator Oscillator";
-
-      WarningMessage    = "";
-      IsAllowLTF        = true;
-      ExecTime          = ExecutionTime_DuringTheBar;
-      IsSeparateChart   = true;
-      IsDiscreteValues  = false;
-      IsDefaultGroupAll = false;
-     }
-
-   virtual void Calculate(DataSet &dataSet);
+                     GatorOscillator(SlotTypes slotType);
+   virtual void      Calculate(DataSet &dataSet);
   };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void GatorOscillator::GatorOscillator(SlotTypes slotType)
+  {
+   SlotType          = slotType;
+   IndicatorName     = "Gator Oscillator";
+   WarningMessage    = "";
+   IsAllowLTF        = true;
+   ExecTime          = ExecutionTime_DuringTheBar;
+   IsSeparateChart   = true;
+   IsDiscreteValues  = false;
+   IsDefaultGroupAll = false;
+  }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -65,24 +66,25 @@ void GatorOscillator::Calculate(DataSet &dataSet)
    int iSTeeth = (int)NumParam[3].Value;
    int iNLips  = (int)NumParam[4].Value;
    int iSLips  = (int)NumParam[5].Value;
-   int iPrvs   = CheckParam[0].Checked ? 1 : 0;
+   int previous= CheckParam[0].Checked ? 1 : 0;
 
-   int iFirstBar=MathMax(iNJaws+iSJaws+2,iNTeeth+iSTeeth+2);
-   iFirstBar=MathMax(iFirstBar,iNLips+iSLips+2);
+   int firstBar=MathMax(iNJaws+iSJaws,iNTeeth+iSTeeth);
+   firstBar=MathMax(firstBar,iNLips+iSLips);
+   firstBar+=previous+2;
 
 // Calculation
-   double basePrc[];  Price(basePrice,basePrc);
-   double adJaws[];   MovingAverage(iNJaws,iSJaws,maMethod,basePrc,adJaws);
-   double adTeeth[];  MovingAverage(iNTeeth,iSTeeth,maMethod,basePrc,adTeeth);
-   double adLips[];   MovingAverage(iNLips,iSLips,maMethod,basePrc,adLips);
+   double basePrc[]; Price(basePrice,basePrc);
+   double adJaws[];  MovingAverage(iNJaws,iSJaws,maMethod,basePrc,adJaws);
+   double adTeeth[]; MovingAverage(iNTeeth,iSTeeth,maMethod,basePrc,adTeeth);
+   double adLips[];  MovingAverage(iNLips,iSLips,maMethod,basePrc,adLips);
 
    double adUpperGator[]; ArrayResize(adUpperGator,Data.Bars);
    double adLowerGator[]; ArrayResize(adLowerGator,Data.Bars);
 
-   for(int iBar=0; iBar<Data.Bars; iBar++)
+   for(int bar=0; bar<Data.Bars; bar++)
      {
-      adUpperGator[iBar] =  MathAbs(adJaws[iBar]  - adTeeth[iBar]);
-      adLowerGator[iBar] = -MathAbs(adTeeth[iBar] - adLips[iBar]);
+      adUpperGator[bar] =  MathAbs(adJaws[bar]  - adTeeth[bar]);
+      adLowerGator[bar] = -MathAbs(adTeeth[bar] - adLips[bar]);
      }
 
 // Saving the components
@@ -90,20 +92,20 @@ void GatorOscillator::Calculate(DataSet &dataSet)
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName  = "Upper Gator";
    Component[0].DataType  = IndComponentType_IndicatorValue;
-   Component[0].FirstBar  = iFirstBar;
+   Component[0].FirstBar  = firstBar;
    ArrayCopy(Component[0].Value,adUpperGator);
 
    ArrayResize(Component[1].Value,Data.Bars);
    Component[1].CompName  = "Lower Gator";
    Component[1].DataType  = IndComponentType_IndicatorValue;
-   Component[1].FirstBar  = iFirstBar;
+   Component[1].FirstBar  = firstBar;
    ArrayCopy(Component[1].Value,adLowerGator);
 
    ArrayResize(Component[2].Value,Data.Bars);
-   Component[2].FirstBar=iFirstBar;
+   Component[2].FirstBar=firstBar;
 
    ArrayResize(Component[3].Value,Data.Bars);
-   Component[3].FirstBar=iFirstBar;
+   Component[3].FirstBar=firstBar;
 
 // Sets the Component's type.
    if(SlotType==SlotTypes_OpenFilter)
@@ -123,26 +125,26 @@ void GatorOscillator::Calculate(DataSet &dataSet)
 
    if(ListParam[0].Text=="The Gator Oscillator expands")
      {
-      for(int iBar=iFirstBar; iBar<Data.Bars; iBar++)
+      for(int bar=firstBar; bar<Data.Bars; bar++)
         {
-         Component[2].Value[iBar]=(adUpperGator[iBar-iPrvs]-adLowerGator[iBar-iPrvs])>
-                                  (adUpperGator[iBar-iPrvs-1]-adLowerGator[iBar-iPrvs-1])+
-                                  Sigma()? 1: 0;
-         Component[3].Value[iBar]=(adUpperGator[iBar-iPrvs]-adLowerGator[iBar-iPrvs])>
-                                  (adUpperGator[iBar-iPrvs-1]-adLowerGator[iBar-iPrvs-1])+
-                                  Sigma()? 1: 0;
+         Component[2].Value[bar]=(adUpperGator[bar-previous]-adLowerGator[bar-previous])>
+                                 (adUpperGator[bar-previous-1]-adLowerGator[bar-previous-1])+
+                                 Sigma()? 1: 0;
+         Component[3].Value[bar]=(adUpperGator[bar-previous]-adLowerGator[bar-previous])>
+                                 (adUpperGator[bar-previous-1]-adLowerGator[bar-previous-1])+
+                                 Sigma()? 1: 0;
         }
      }
    else if(ListParam[0].Text=="The Gator Oscillator contracts")
      {
-      for(int iBar=iFirstBar; iBar<Data.Bars; iBar++)
+      for(int bar=firstBar; bar<Data.Bars; bar++)
         {
-         Component[2].Value[iBar]=(adUpperGator[iBar-iPrvs]-adLowerGator[iBar-iPrvs])<
-                                  (adUpperGator[iBar-iPrvs-1]-adLowerGator[iBar-iPrvs-1]) -
-                                  Sigma() ? 1 : 0;
-         Component[3].Value[iBar]=(adUpperGator[iBar-iPrvs]-adLowerGator[iBar-iPrvs])<
-                                  (adUpperGator[iBar-iPrvs-1]-adLowerGator[iBar-iPrvs-1]) -
-                                  Sigma() ? 1 : 0;
+         Component[2].Value[bar]=(adUpperGator[bar-previous]-adLowerGator[bar-previous])<
+                                 (adUpperGator[bar-previous-1]-adLowerGator[bar-previous-1]) -
+                                 Sigma() ? 1 : 0;
+         Component[3].Value[bar]=(adUpperGator[bar-previous]-adLowerGator[bar-previous])<
+                                 (adUpperGator[bar-previous-1]-adLowerGator[bar-previous-1]) -
+                                 Sigma() ? 1 : 0;
         }
      }
   }

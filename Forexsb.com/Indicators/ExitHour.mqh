@@ -34,23 +34,24 @@
 class ExitHour : public Indicator
   {
 public:
-    ExitHour(SlotTypes slotType)
+                 ExitHour(SlotTypes slotType);
+    virtual void Calculate(DataSet &dataSet);
+  };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void ExitHour::ExitHour(SlotTypes slotType)
      {
-      SlotType=slotType;
-
-      IndicatorName="Exit Hour";
-
-      WarningMessage="Exit Hour indicator works properly on 4H and lower time frame."+"\n"+
-                     "It sends close signal when bar closes at the specified hour.";
+      SlotType          = slotType;
+      IndicatorName     = "Exit Hour";
+      WarningMessage    = "Exit Hour indicator works properly on 4H and lower time frame."+"\n"+
+                          "It sends close signal when bar closes at the specified hour.";
       IsAllowLTF        = true;
       ExecTime          = ExecutionTime_DuringTheBar;
       IsSeparateChart   = false;
       IsDiscreteValues  = false;
       IsDefaultGroupAll = false;
      }
-
-   virtual void Calculate(DataSet &dataSet);
-  };
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -58,16 +59,13 @@ void ExitHour::Calculate(DataSet &dataSet)
   {
    Data=GetPointer(dataSet);
 
-// Reading the parameters
    int exitHour=(int) NumParam[0].Value;
 
-// Calculation
-   const int firstBar=1;
+   const int firstBar=2;
    double adBars[];
    ArrayResize(adBars,Data.Bars);
    ArrayInitialize(adBars,0);
 
-// Calculation of the logic
    for(int bar=firstBar; bar<Data.Bars; bar++)
      {
       MqlDateTime mqlTime1; TimeToStruct(Data.Time[bar-1],mqlTime1);
@@ -81,12 +79,10 @@ void ExitHour::Calculate(DataSet &dataSet)
          adBars[bar]=0;
      }
 
-// Check the last bar
    MqlDateTime mqlTime; TimeToStruct(Data.Time[Data.Bars-1],mqlTime);
    if(mqlTime.hour * 3600 + mqlTime.min * 60 + Data.Period * 60 == exitHour * 3600)
       adBars[Data.Bars-1]=Data.Close[Data.Bars-1];
 
-// Saving the components
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "Exit hour";
    Component[0].DataType = IndComponentType_ClosePrice;

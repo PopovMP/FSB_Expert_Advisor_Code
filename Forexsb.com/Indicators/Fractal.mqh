@@ -34,22 +34,23 @@
 class Fractal : public Indicator
   {
 public:
-                     Fractal(SlotTypes slotType)
-     {
-      SlotType=slotType;
-
-      IndicatorName="Fractal";
-
-      WarningMessage    = "";
-      IsAllowLTF        = true;
-      ExecTime          = ExecutionTime_DuringTheBar;
-      IsSeparateChart   = false;
-      IsDiscreteValues  = false;
-      IsDefaultGroupAll = false;
-     }
-
+                     Fractal(SlotTypes slotType);
    virtual void      Calculate(DataSet &dataSet);
   };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void Fractal::Fractal(SlotTypes slotType)
+  {
+   SlotType          = slotType;
+   IndicatorName     = "Fractal";
+   WarningMessage    = "";
+   IsAllowLTF        = true;
+   ExecTime          = ExecutionTime_DuringTheBar;
+   IsSeparateChart   = false;
+   IsDiscreteValues  = false;
+   IsDefaultGroupAll = false;
+  }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -58,7 +59,6 @@ void Fractal::Calculate(DataSet &dataSet)
    Data=GetPointer(dataSet);
    double epsiolon=Epsilon();
 
-// Reading the parameters
    bool isVisible=ListParam[1].Text=="Visible";
    double shift=NumParam[0].Value*Data.Point;
    const int firstBar=8;
@@ -182,7 +182,6 @@ void Fractal::Calculate(DataSet &dataSet)
         }
      }
 
-// Saving the components
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "Up Fractal";
    Component[0].DataType = IndComponentType_IndicatorValue;

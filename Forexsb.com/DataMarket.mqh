@@ -27,56 +27,56 @@
 #property strict
 
 #include <Forexsb.com\Enumerations.mqh>
-
 //## Import Start
 
 class DataMarket
-{
+  {
 public:
-    string     Symbol;
-    DataPeriod Period;
+   string            Symbol;
+   DataPeriod        Period;
 
-    bool IsNewBid;
+   bool              IsNewBid;
 
-    double OldBid;
-    double OldAsk;
-    double OldClose;
-    double Bid;
-    double Ask;
-    double Close;
-    long   Volume;
+   double            OldBid;
+   double            OldAsk;
+   double            OldClose;
+   double            Bid;
+   double            Ask;
+   double            Close;
+   long              Volume;
 
-    datetime TickLocalTime;
-    datetime TickServerTime;
-    datetime BarTime;
+   datetime          TickLocalTime;
+   datetime          TickServerTime;
+   datetime          BarTime;
 
-    double AccountBalance;
-    double AccountEquity;
-    double AccountFreeMargin;
+   double            AccountBalance;
+   double            AccountEquity;
+   double            AccountFreeMargin;
 
-    double       PositionLots;
-    double       PositionOpenPrice;
-    datetime     PositionOpenTime;
-    double       PositionStopLoss;
-    double       PositionTakeProfit;
-    double       PositionProfit;
-    PosDirection PositionDirection;
+   double            PositionLots;
+   double            PositionOpenPrice;
+   datetime          PositionOpenTime;
+   double            PositionStopLoss;
+   double            PositionTakeProfit;
+   double            PositionProfit;
+   PosDirection      PositionDirection;
 
-    int  ConsecutiveLosses;
-    int  WrongStopLoss;
-    int  WrongTakeProf;
-    int  WrongStopsRetry;
-    bool IsFailedCloseOrder;
-    int  CloseOrderTickCounter;
-    bool IsSentCloseOrder;
+   int               ConsecutiveLosses;
+   int               WrongStopLoss;
+   int               WrongTakeProf;
+   int               WrongStopsRetry;
+   bool              IsFailedCloseOrder;
+   int               CloseOrderTickCounter;
+   bool              IsSentCloseOrder;
 
-    int    LotSize;
-    double Spread;
-    double Point;
-    int    StopLevel;
-    double TickValue;
-    double MinLot;
-    double MaxLot;
-    double LotStep;
-    double MarginRequired;
-};
+   int               LotSize;
+   double            Spread;
+   double            Point;
+   int               StopLevel;
+   double            TickValue;
+   double            MinLot;
+   double            MaxLot;
+   double            LotStep;
+   double            MarginRequired;
+  };
+//+------------------------------------------------------------------+

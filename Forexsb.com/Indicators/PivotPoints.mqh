@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -59,10 +59,10 @@ void PivotPoints::Calculate(DataSet &dataSet)
 
 // Reading the parameters
    double dShift=NumParam[0].Value*Data.Point;
-   int prvs=CheckParam[0].Checked ? 1 : 0;
+   int previous=CheckParam[0].Checked ? 1 : 0;
 
 // Calculation
-   int firstBar=1;
+   int firstBar=previous + 2;
    double adPp[];  ArrayResize(adPp,Data.Bars); ArrayInitialize(adPp,0);
    double adR1[];  ArrayResize(adR1,Data.Bars); ArrayInitialize(adR1,0);
    double adR2[];  ArrayResize(adR2,Data.Bars); ArrayInitialize(adR2,0);
@@ -83,7 +83,7 @@ void PivotPoints::Calculate(DataSet &dataSet)
      }
    else
      {
-      prvs=0;
+      previous=0;
       adH[0] = 0;
       adL[0] = 0;
       adC[0] = 0;
@@ -185,46 +185,46 @@ void PivotPoints::Calculate(DataSet &dataSet)
    if(ListParam[0].Text=="Enter long at R3 (short at S3)" || ListParam[0].Text=="Exit long at R3 (short at S3)")
       for(int bar=firstBar; bar<Data.Bars; bar++)
         {
-         Component[7].Value[bar] = adR3[bar - prvs] + dShift;
-         Component[8].Value[bar] = adS3[bar - prvs] - dShift;
+         Component[7].Value[bar] = adR3[bar - previous] + dShift;
+         Component[8].Value[bar] = adS3[bar - previous] - dShift;
         }
    if(ListParam[0].Text=="Enter long at R2 (short at S2)" || ListParam[0].Text=="Exit long at R2 (short at S2)")
       for(int bar=firstBar; bar<Data.Bars; bar++)
         {
-         Component[7].Value[bar] = adR2[bar - prvs] + dShift;
-         Component[8].Value[bar] = adS2[bar - prvs] - dShift;
+         Component[7].Value[bar] = adR2[bar - previous] + dShift;
+         Component[8].Value[bar] = adS2[bar - previous] - dShift;
         }
    if(ListParam[0].Text=="Enter long at R1 (short at S1)" || ListParam[0].Text=="Exit long at R1 (short at S1)")
       for(int bar=firstBar; bar<Data.Bars; bar++)
         {
-         Component[7].Value[bar] = adR1[bar - prvs] + dShift;
-         Component[8].Value[bar] = adS1[bar - prvs] - dShift;
+         Component[7].Value[bar] = adR1[bar - previous] + dShift;
+         Component[8].Value[bar] = adS1[bar - previous] - dShift;
         }
 //---------------------------------------------------------------------
    if(ListParam[0].Text=="Enter the market at the Pivot Point" || ListParam[0].Text=="Exit the market at the Pivot Point")
       for(int bar=firstBar; bar<Data.Bars; bar++)
         {
-         Component[7].Value[bar] = adPp[bar - prvs] + dShift;
-         Component[8].Value[bar] = adPp[bar - prvs] - dShift;
+         Component[7].Value[bar] = adPp[bar - previous] + dShift;
+         Component[8].Value[bar] = adPp[bar - previous] - dShift;
         }
 //---------------------------------------------------------------------
    if(ListParam[0].Text=="Enter long at S1 (short at R1)" || ListParam[0].Text=="Exit long at S1 (short at R1)")
       for(int bar=firstBar; bar<Data.Bars; bar++)
         {
-         Component[7].Value[bar] = adS1[bar - prvs] - dShift;
-         Component[8].Value[bar] = adR1[bar - prvs] + dShift;
+         Component[7].Value[bar] = adS1[bar - previous] - dShift;
+         Component[8].Value[bar] = adR1[bar - previous] + dShift;
         }
    if(ListParam[0].Text=="Enter long at S2 (short at R2)" || ListParam[0].Text=="Exit long at S2 (short at R2)")
       for(int bar=firstBar; bar<Data.Bars; bar++)
         {
-         Component[7].Value[bar] = adS2[bar - prvs] - dShift;
-         Component[8].Value[bar] = adR2[bar - prvs] + dShift;
+         Component[7].Value[bar] = adS2[bar - previous] - dShift;
+         Component[8].Value[bar] = adR2[bar - previous] + dShift;
         }
    if(ListParam[0].Text=="Enter long at S3 (short at R3)" || ListParam[0].Text=="Exit long at S3 (short at R3)")
       for(int bar=firstBar; bar<Data.Bars; bar++)
         {
-         Component[7].Value[bar] = adS3[bar - prvs] - dShift;
-         Component[8].Value[bar] = adR3[bar - prvs] + dShift;
+         Component[7].Value[bar] = adS3[bar - previous] - dShift;
+         Component[8].Value[bar] = adR3[bar - previous] + dShift;
         }
   }
 //+------------------------------------------------------------------+

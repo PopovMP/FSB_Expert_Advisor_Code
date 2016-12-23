@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -34,22 +34,23 @@
 class ChandeMomentumOscillator : public Indicator
   {
 public:
-   ChandeMomentumOscillator(SlotTypes slotType)
-     {
-      SlotType=slotType;
-
-      IndicatorName="Chande Momentum Oscillator";
-
-      WarningMessage    = "";
-      IsAllowLTF        = true;
-      ExecTime          = ExecutionTime_DuringTheBar;
-      IsSeparateChart   = true;
-      IsDiscreteValues  = false;
-      IsDefaultGroupAll = false;
-     }
-
-   virtual void Calculate(DataSet &dataSet);
+                     ChandeMomentumOscillator(SlotTypes slotType);
+   virtual void      Calculate(DataSet &dataSet);
   };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void ChandeMomentumOscillator::ChandeMomentumOscillator(SlotTypes slotType)
+  {
+   SlotType          = slotType;
+   IndicatorName     = "Chande Momentum Oscillator";
+   WarningMessage    = "";
+   IsAllowLTF        = true;
+   ExecTime          = ExecutionTime_DuringTheBar;
+   IsSeparateChart   = true;
+   IsDiscreteValues  = false;
+   IsDefaultGroupAll = false;
+  }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -58,13 +59,13 @@ void ChandeMomentumOscillator::Calculate(DataSet &dataSet)
    Data=GetPointer(dataSet);
 
 // Reading parameters
-   BasePrice basePrice = (BasePrice)ListParam[2].Index;
-   int       iPeriod   = (int)NumParam[0].Value;
-   double    dLevel    = NumParam[1].Value;
-   int       iPrvs     = CheckParam[0].Checked ? 1 : 0;
+   BasePrice basePrice=(BasePrice)ListParam[2].Index;
+   int       period   = (int)NumParam[0].Value;
+   double    level    = NumParam[1].Value;
+   int       previous=CheckParam[0].Checked ? 1 : 0;
 
 // Calculation
-   int      iFirstBar=iPeriod+2;
+   int      firstBar=period+previous+2;
    double adBasePrice[];
    Price(basePrice,adBasePrice);
 
@@ -84,18 +85,18 @@ void ChandeMomentumOscillator::Calculate(DataSet &dataSet)
    double adCMO1Sum[]; ArrayResize(adCMO1Sum,Data.Bars); ArrayInitialize(adCMO1Sum,0);
    double adCMO2Sum[]; ArrayResize(adCMO2Sum,Data.Bars); ArrayInitialize(adCMO2Sum,0);
 
-   for(int iBar=0; iBar<iPeriod; iBar++)
+   for(int iBar=0; iBar<period; iBar++)
      {
-      adCMO1Sum[iPeriod - 1] += adCMO1[iBar];
-      adCMO2Sum[iPeriod - 1] += adCMO2[iBar];
+      adCMO1Sum[period - 1] += adCMO1[iBar];
+      adCMO2Sum[period - 1] += adCMO2[iBar];
      }
 
    double adCMO[]; ArrayResize(adCMO,Data.Bars); ArrayInitialize(adCMO,0);
 
-   for(int iBar=iPeriod; iBar<Data.Bars; iBar++)
+   for(int iBar=period; iBar<Data.Bars; iBar++)
      {
-      adCMO1Sum[iBar] = adCMO1Sum[iBar - 1] + adCMO1[iBar] - adCMO1[iBar - iPeriod];
-      adCMO2Sum[iBar] = adCMO2Sum[iBar - 1] + adCMO2[iBar] - adCMO2[iBar - iPeriod];
+      adCMO1Sum[iBar] = adCMO1Sum[iBar - 1] + adCMO1[iBar] - adCMO1[iBar - period];
+      adCMO2Sum[iBar] = adCMO2Sum[iBar - 1] + adCMO2[iBar] - adCMO2[iBar - period];
 
       if(adCMO1Sum[iBar]+adCMO2Sum[iBar]==0)
          adCMO[iBar]=100;
@@ -107,14 +108,14 @@ void ChandeMomentumOscillator::Calculate(DataSet &dataSet)
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "CMO";
    Component[0].DataType = IndComponentType_IndicatorValue;
-   Component[0].FirstBar = iFirstBar;
+   Component[0].FirstBar = firstBar;
    ArrayCopy(Component[0].Value,adCMO);
 
    ArrayResize(Component[1].Value,Data.Bars);
-   Component[1].FirstBar=iFirstBar;
+   Component[1].FirstBar=firstBar;
 
    ArrayResize(Component[2].Value,Data.Bars);
-   Component[2].FirstBar=iFirstBar;
+   Component[2].FirstBar=firstBar;
 
 // Sets Component's type
    if(SlotType==SlotTypes_OpenFilter)
@@ -152,6 +153,6 @@ void ChandeMomentumOscillator::Calculate(DataSet &dataSet)
    else if(ListParam[0].Text=="CMO changes its direction downward")
       indLogic=IndicatorLogic_The_indicator_changes_its_direction_downward;
 
-   OscillatorLogic(iFirstBar,iPrvs,adCMO,dLevel,-dLevel,Component[1],Component[2],indLogic);
+   OscillatorLogic(firstBar,previous,adCMO,level,-level,Component[1],Component[2],indLogic);
   }
 //+------------------------------------------------------------------+

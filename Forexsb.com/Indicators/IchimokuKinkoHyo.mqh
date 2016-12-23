@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -34,22 +34,23 @@
 class IchimokuKinkoHyo : public Indicator
   {
 public:
-    IchimokuKinkoHyo(SlotTypes slotType)
-     {
-      SlotType=slotType;
-
-      IndicatorName="Ichimoku Kinko Hyo";
-
-      WarningMessage    = "";
-      IsAllowLTF        = true;
-      ExecTime          = ExecutionTime_DuringTheBar;
-      IsSeparateChart   = false;
-      IsDiscreteValues  = false;
-      IsDefaultGroupAll = false;
-     }
-
-   virtual void Calculate(DataSet &dataSet);
+                     IchimokuKinkoHyo(SlotTypes slotType);
+   virtual void      Calculate(DataSet &dataSet);
   };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+IchimokuKinkoHyo::IchimokuKinkoHyo(SlotTypes slotType)
+  {
+   SlotType          = slotType;
+   IndicatorName     = "Ichimoku Kinko Hyo";
+   WarningMessage    = "";
+   IsAllowLTF        = true;
+   ExecTime          = ExecutionTime_DuringTheBar;
+   IsSeparateChart   = false;
+   IsDiscreteValues  = false;
+   IsDefaultGroupAll = false;
+  }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -57,22 +58,19 @@ void IchimokuKinkoHyo::Calculate(DataSet &dataSet)
   {
    Data=GetPointer(dataSet);
 
+   int tenkan   = (int) NumParam[0].Value;
+   int kijun    = (int) NumParam[2].Value;
+   int senkou   = (int) NumParam[4].Value;
+   int previous = CheckParam[0].Checked ? 1 : 0;
+   int firstBar = MathMax(MathMax(tenkan,kijun),senkou)+previous+2;
 
-// Reading the parameters
-   int tenkan=(int) NumParam[0].Value;
-   int kijun =(int) NumParam[2].Value;
-   int senkou=(int) NumParam[4].Value;
-   int previousBar=CheckParam[0].Checked ? 1 : 0;
+   double tenkanSen[];   ArrayResize(tenkanSen,Data.Bars);   ArrayInitialize(tenkanSen,0);
+   double kijunSen[];    ArrayResize(kijunSen,Data.Bars);    ArrayInitialize(kijunSen,0);
+   double chikouSpan[];  ArrayResize(chikouSpan,Data.Bars);  ArrayInitialize(chikouSpan,0);
+   double senkouSpanA[]; ArrayResize(senkouSpanA,Data.Bars); ArrayInitialize(senkouSpanA,0);
+   double senkouSpanB[]; ArrayResize(senkouSpanB,Data.Bars); ArrayInitialize(senkouSpanB,0);
 
-   int firstBar=1+kijun+senkou;
-
-   double adTenkanSen[];   ArrayResize(adTenkanSen,Data.Bars);   ArrayInitialize(adTenkanSen,0);
-   double adKijunSen[];    ArrayResize(adKijunSen,Data.Bars);    ArrayInitialize(adKijunSen,0);
-   double adChikouSpan[];  ArrayResize(adChikouSpan,Data.Bars);  ArrayInitialize(adChikouSpan,0);
-   double adSenkouSpanA[]; ArrayResize(adSenkouSpanA,Data.Bars); ArrayInitialize(adSenkouSpanA,0);
-   double adSenkouSpanB[]; ArrayResize(adSenkouSpanB,Data.Bars); ArrayInitialize(adSenkouSpanB,0);
-   
-   for(int bar=firstBar; bar<Data.Bars; bar++)
+   for(int bar=tenkan-1; bar<Data.Bars; bar++)
      {
       double highestHigh=DBL_MIN;
       double lowestLow=DBL_MAX;
@@ -83,73 +81,76 @@ void IchimokuKinkoHyo::Calculate(DataSet &dataSet)
          if(Data.Low[bar-i]<lowestLow)
             lowestLow=Data.Low[bar-i];
         }
-      adTenkanSen[bar]=(highestHigh+lowestLow)/2;
+      tenkanSen[bar]=(highestHigh+lowestLow)/2;
      }
 
-   for(int bar=firstBar; bar<Data.Bars; bar++)
+   for(int bar=kijun-1; bar<Data.Bars; bar++)
      {
-      double dHighestHigh=DBL_MIN;
-      double dLowestLow=DBL_MAX;
+      double highestHigh=DBL_MIN;
+      double lowestLow=DBL_MAX;
       for(int i=0; i<kijun; i++)
         {
-         if(Data.High[bar-i]>dHighestHigh)
-            dHighestHigh=Data.High[bar-i];
-         if(Data.Low[bar-i]<dLowestLow)
-            dLowestLow=Data.Low[bar-i];
+         if(Data.High[bar-i]>highestHigh)
+            highestHigh=Data.High[bar-i];
+         if(Data.Low[bar-i]<lowestLow)
+            lowestLow=Data.Low[bar-i];
         }
-      adKijunSen[bar]=(dHighestHigh+dLowestLow)/2;
+      kijunSen[bar]=(highestHigh+lowestLow)/2;
      }
 
    for(int bar=0; bar<Data.Bars-kijun; bar++)
-      adChikouSpan[bar]=Data.Close[bar+kijun];
-
-   for(int bar=firstBar; bar<Data.Bars-kijun; bar++)
-      adSenkouSpanA[bar+kijun]=(adTenkanSen[bar]+adKijunSen[bar])/2;
+     {
+      chikouSpan[bar]=Data.Close[bar+kijun];
+     }
 
    for(int bar=firstBar; bar<Data.Bars-kijun; bar++)
      {
-      double dHighestHigh=DBL_MIN;
-      double dLowestLow=DBL_MAX;
-      for(int i=0; i<senkou; i++)
-        {
-         if(Data.High[bar-i]>dHighestHigh)
-            dHighestHigh=Data.High[bar-i];
-         if(Data.Low[bar-i]<dLowestLow)
-            dLowestLow=Data.Low[bar-i];
-        }
-      adSenkouSpanB[bar+kijun]=(dHighestHigh+dLowestLow)/2;
+      senkouSpanA[bar+kijun]=(tenkanSen[bar]+kijunSen[bar])/2;
      }
 
-// Saving components
+   for(int bar=senkou-1; bar<Data.Bars-kijun; bar++)
+     {
+      double highestHigh=DBL_MIN;
+      double lowestLow=DBL_MAX;
+      for(int i=0; i<senkou; i++)
+        {
+         if(Data.High[bar-i]>highestHigh)
+            highestHigh=Data.High[bar-i];
+         if(Data.Low[bar-i]<lowestLow)
+            lowestLow=Data.Low[bar-i];
+        }
+      senkouSpanB[bar+kijun]=(highestHigh+lowestLow)/2;
+     }
+
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "Tenkan Sen";
    Component[0].DataType = IndComponentType_IndicatorValue;
    Component[0].FirstBar = firstBar;
-   ArrayCopy(Component[0].Value,adTenkanSen);
+   ArrayCopy(Component[0].Value,tenkanSen);
 
    ArrayResize(Component[1].Value,Data.Bars);
    Component[1].CompName = "Kijun Sen";
    Component[1].DataType = IndComponentType_IndicatorValue;
    Component[1].FirstBar = firstBar;
-   ArrayCopy(Component[1].Value,adKijunSen);
+   ArrayCopy(Component[1].Value,kijunSen);
 
    ArrayResize(Component[2].Value,Data.Bars);
    Component[2].CompName = "Chikou Span";
    Component[2].DataType = IndComponentType_IndicatorValue;
    Component[2].FirstBar = firstBar;
-   ArrayCopy(Component[2].Value,adChikouSpan);
+   ArrayCopy(Component[2].Value,chikouSpan);
 
    ArrayResize(Component[3].Value,Data.Bars);
    Component[3].CompName = "Senkou Span A";
    Component[3].DataType = IndComponentType_IndicatorValue;
    Component[3].FirstBar = firstBar;
-   ArrayCopy(Component[3].Value,adSenkouSpanA);
+   ArrayCopy(Component[3].Value,senkouSpanA);
 
    ArrayResize(Component[4].Value,Data.Bars);
    Component[4].CompName = "Senkou Span B";
    Component[4].DataType = IndComponentType_IndicatorValue;
    Component[4].FirstBar = firstBar;
-   ArrayCopy(Component[4].Value,adSenkouSpanB);
+   ArrayCopy(Component[4].Value,senkouSpanB);
 
    ArrayResize(Component[5].Value,Data.Bars);
    Component[5].FirstBar = firstBar;
@@ -166,117 +167,151 @@ void IchimokuKinkoHyo::Calculate(DataSet &dataSet)
       Component[6].DataType = IndComponentType_AllowOpenShort;
      }
 
-   if(ListParam[0].Text=="Enter the market at Tenkan Sen") 
+   if(ListParam[0].Text=="Enter the market at Tenkan Sen")
      {
       Component[5].CompName = "Tenkan Sen entry price";
       Component[5].DataType = IndComponentType_OpenPrice;
-      for(int bar=firstBar+previousBar; bar<Data.Bars; bar++)
-         Component[5].Value[bar]=adTenkanSen[bar-previousBar];
+      for(int bar=firstBar+previous; bar<Data.Bars; bar++)
+        {
+         Component[5].Value[bar]=tenkanSen[bar-previous];
+        }
      }
-   else if(ListParam[0].Text=="Enter the market at Kijun Sen") 
+   else if(ListParam[0].Text=="Enter the market at Kijun Sen")
      {
       Component[5].CompName = "Kijun Sen entry price";
       Component[5].DataType = IndComponentType_OpenPrice;
-      for(int bar=firstBar+previousBar; bar<Data.Bars; bar++)
-         Component[5].Value[bar]=adKijunSen[bar-previousBar];
+      for(int bar=firstBar+previous; bar<Data.Bars; bar++)
+        {
+         Component[5].Value[bar]=kijunSen[bar-previous];
+        }
      }
-   else if(ListParam[0].Text=="Exit the market at Tenkan Sen") 
+   else if(ListParam[0].Text=="Exit the market at Tenkan Sen")
      {
       Component[5].CompName = "Tenkan Sen exit price";
       Component[5].DataType = IndComponentType_ClosePrice;
-      for(int bar=firstBar+previousBar; bar<Data.Bars; bar++)
-         Component[5].Value[bar]=adTenkanSen[bar-previousBar];
+      for(int bar=firstBar+previous; bar<Data.Bars; bar++)
+        {
+         Component[5].Value[bar]=tenkanSen[bar-previous];
+        }
      }
-   else if(ListParam[0].Text=="Exit the market at Kijun Sen") 
+   else if(ListParam[0].Text=="Exit the market at Kijun Sen")
      {
       Component[5].CompName = "Kijun Sen exit price";
       Component[5].DataType = IndComponentType_ClosePrice;
-      for(int bar=firstBar+previousBar; bar<Data.Bars; bar++)
-         Component[5].Value[bar]=adKijunSen[bar-previousBar];
+      for(int bar=firstBar+previous; bar<Data.Bars; bar++)
+        {
+         Component[5].Value[bar]=kijunSen[bar-previous];
+        }
      }
-   else if(ListParam[0].Text=="Tenkan Sen rises") 
-      for(int bar = firstBar+previousBar; bar<Data.Bars; bar++)
-        {
-         Component[5].Value[bar]=adTenkanSen[bar-previousBar]>adTenkanSen[bar-previousBar-1]+Sigma()? 1: 0;
-         Component[6].Value[bar]=adTenkanSen[bar-previousBar]<adTenkanSen[bar-previousBar-1]-Sigma()? 1: 0;
-        }
-   else if(ListParam[0].Text=="Kijun Sen rises") 
-      for(int bar = firstBar+previousBar; bar<Data.Bars; bar++)
-        {
-         Component[5].Value[bar]=adKijunSen[bar-previousBar]>adKijunSen[bar-previousBar-1]+Sigma() ? 1 : 0;
-         Component[6].Value[bar]=adKijunSen[bar-previousBar]< adKijunSen[bar-previousBar-1]-Sigma() ? 1 : 0;
-        }
-   else if(ListParam[0].Text=="Tenkan Sen is higher than Kijun Sen") 
-      IndicatorIsHigherThanAnotherIndicatorLogic(firstBar,previousBar,adTenkanSen,adKijunSen,Component[5],Component[6]);
-   else if(ListParam[0].Text=="Tenkan Sen crosses Kijun Sen upward") 
-      IndicatorCrossesAnotherIndicatorUpwardLogic(firstBar,previousBar,adTenkanSen,adKijunSen,Component[5],Component[6]);
-   else if(ListParam[0].Text=="The bar opens above Tenkan Sen") 
-      BarOpensAboveIndicatorLogic(firstBar,previousBar,adTenkanSen,Component[5],Component[6]);
-   else if(ListParam[0].Text=="The bar opens above Kijun Sen") 
-      BarOpensAboveIndicatorLogic(firstBar,previousBar,adKijunSen,Component[5],Component[6]);
-   else if(ListParam[0].Text=="Chikou Span is above closing price") 
-      for(int bar = firstBar+previousBar; bar<Data.Bars; bar++)
-        {
-         Component[5].Value[bar]=adChikouSpan[bar-kijun-previousBar]>Data.Close[bar-kijun-previousBar]+Sigma()? 1: 0;
-         Component[6].Value[bar]=adChikouSpan[bar-kijun-previousBar]<Data.Close[bar-kijun-previousBar]-Sigma()? 1: 0;
-        }
-   else if(ListParam[0].Text=="The position opens above Kumo") 
+   else if(ListParam[0].Text=="Tenkan Sen rises")
      {
-      for(int bar = firstBar; bar<Data.Bars; bar++)
+      for(int bar=firstBar+previous; bar<Data.Bars; bar++)
         {
-         Component[5].Value[bar] = MathMax(adSenkouSpanA[bar], adSenkouSpanB[bar]);
-         Component[6].Value[bar] = MathMin(adSenkouSpanA[bar], adSenkouSpanB[bar]);
+         Component[5].Value[bar]=tenkanSen[bar-previous]>tenkanSen[bar-previous-1]+Sigma()? 1: 0;
+         Component[6].Value[bar]=tenkanSen[bar-previous]<tenkanSen[bar-previous-1]-Sigma()? 1: 0;
+        }
+     }
+   else if(ListParam[0].Text=="Kijun Sen rises")
+     {
+      for(int bar=firstBar+previous; bar<Data.Bars; bar++)
+        {
+         Component[5].Value[bar]=kijunSen[bar-previous]>kijunSen[bar-previous-1]+Sigma() ? 1 : 0;
+         Component[6].Value[bar]=kijunSen[bar-previous]<kijunSen[bar-previous-1]-Sigma() ? 1 : 0;
+        }
+     }
+   else if(ListParam[0].Text=="Tenkan Sen is higher than Kijun Sen")
+     {
+      IndicatorIsHigherThanAnotherIndicatorLogic(firstBar,previous,tenkanSen,kijunSen,Component[5],Component[6]);
+     }
+   else if(ListParam[0].Text=="Tenkan Sen crosses Kijun Sen upward")
+     {
+      IndicatorCrossesAnotherIndicatorUpwardLogic(firstBar,previous,tenkanSen,kijunSen,Component[5],Component[6]);
+     }
+   else if(ListParam[0].Text=="The bar opens above Tenkan Sen")
+     {
+      BarOpensAboveIndicatorLogic(firstBar,previous,tenkanSen,Component[5],Component[6]);
+     }
+   else if(ListParam[0].Text=="The bar opens above Kijun Sen")
+     {
+      BarOpensAboveIndicatorLogic(firstBar,previous,kijunSen,Component[5],Component[6]);
+     }
+   else if(ListParam[0].Text=="Chikou Span is above closing price")
+     {
+      for(int bar=firstBar+previous; bar<Data.Bars; bar++)
+        {
+         Component[5].Value[bar]=chikouSpan[bar-kijun-previous]>Data.Close[bar-kijun-previous]+Sigma()? 1: 0;
+         Component[6].Value[bar]=chikouSpan[bar-kijun-previous]<Data.Close[bar-kijun-previous]-Sigma()? 1: 0;
+        }
+     }
+   else if(ListParam[0].Text=="The position opens above Kumo")
+     {
+      for(int bar=firstBar; bar<Data.Bars; bar++)
+        {
+         Component[5].Value[bar] = MathMax(senkouSpanA[bar], senkouSpanB[bar]);
+         Component[6].Value[bar] = MathMin(senkouSpanA[bar], senkouSpanB[bar]);
         }
       Component[5].PosPriceDependence=PositionPriceDependence_PriceBuyHigher;
       Component[5].DataType=IndComponentType_Other;
-      Component[5].ShowInDynInfo = false;
+      Component[5].ShowInDynInfo=false;
 
       Component[6].PosPriceDependence=PositionPriceDependence_PriceSellLower;
       Component[6].DataType=IndComponentType_Other;
-      Component[6].ShowInDynInfo = false;
+      Component[6].ShowInDynInfo=false;
      }
-   else if(ListParam[0].Text=="The position opens inside or above Kumo") 
+   else if(ListParam[0].Text=="The position opens inside or above Kumo")
      {
-      for(int bar = firstBar; bar<Data.Bars; bar++)
+      for(int bar=firstBar; bar<Data.Bars; bar++)
         {
-         Component[5].Value[bar] = MathMin(adSenkouSpanA[bar], adSenkouSpanB[bar]);
-         Component[6].Value[bar] = MathMax(adSenkouSpanA[bar], adSenkouSpanB[bar]);
+         Component[5].Value[bar] = MathMin(senkouSpanA[bar], senkouSpanB[bar]);
+         Component[6].Value[bar] = MathMax(senkouSpanA[bar], senkouSpanB[bar]);
         }
       Component[5].PosPriceDependence=PositionPriceDependence_PriceBuyHigher;
       Component[5].DataType=IndComponentType_Other;
-      Component[5].ShowInDynInfo = false;
+      Component[5].ShowInDynInfo=false;
 
       Component[6].PosPriceDependence=PositionPriceDependence_PriceSellLower;
       Component[6].DataType=IndComponentType_Other;
-      Component[6].ShowInDynInfo = false;
+      Component[6].ShowInDynInfo=false;
      }
-   else if(ListParam[0].Text=="Tenkan Sen is above Kumo") 
-      for(int bar = firstBar+previousBar; bar<Data.Bars; bar++)
+   else if(ListParam[0].Text=="Tenkan Sen is above Kumo")
+     {
+      for(int bar=firstBar+previous; bar<Data.Bars; bar++)
         {
-         Component[5].Value[bar]=adTenkanSen[bar-previousBar]>MathMax(adSenkouSpanA[bar-previousBar],adSenkouSpanB[bar-previousBar])+Sigma()? 1: 0;
-         Component[6].Value[bar]=adTenkanSen[bar-previousBar]<MathMin(adSenkouSpanA[bar-previousBar],adSenkouSpanB[bar-previousBar])-Sigma()? 1: 0;
+         Component[5].Value[bar]=tenkanSen[bar-previous]>MathMax(senkouSpanA[bar-previous],senkouSpanB[bar-previous])+Sigma()? 1: 0;
+         Component[6].Value[bar]=tenkanSen[bar-previous]<MathMin(senkouSpanA[bar-previous],senkouSpanB[bar-previous])-Sigma()? 1: 0;
         }
-   else if(ListParam[0].Text=="Tenkan Sen is inside or above Kumo") 
-      for(int bar = firstBar+previousBar; bar<Data.Bars; bar++)
+     }
+   else if(ListParam[0].Text=="Tenkan Sen is inside or above Kumo")
+     {
+      for(int bar=firstBar+previous; bar<Data.Bars; bar++)
         {
-         Component[5].Value[bar]=adTenkanSen[bar-previousBar]>MathMin(adSenkouSpanA[bar-previousBar],adSenkouSpanB[bar-previousBar])+Sigma()? 1: 0;
-         Component[6].Value[bar]=adTenkanSen[bar-previousBar]<MathMax(adSenkouSpanA[bar-previousBar],adSenkouSpanB[bar-previousBar])-Sigma()? 1: 0;
+         Component[5].Value[bar]=tenkanSen[bar-previous]>MathMin(senkouSpanA[bar-previous],senkouSpanB[bar-previous])+Sigma()? 1: 0;
+         Component[6].Value[bar]=tenkanSen[bar-previous]<MathMax(senkouSpanA[bar-previous],senkouSpanB[bar-previous])-Sigma()? 1: 0;
         }
-   else if(ListParam[0].Text=="Kijun Sen is above Kumo") 
-      for(int bar = firstBar+previousBar; bar<Data.Bars; bar++)
+     }
+   else if(ListParam[0].Text=="Kijun Sen is above Kumo")
+     {
+      for(int bar=firstBar+previous; bar<Data.Bars; bar++)
         {
-         Component[5].Value[bar]=adKijunSen[bar-previousBar]>MathMax(adSenkouSpanA[bar-previousBar],adSenkouSpanB[bar-previousBar])+Sigma()? 1: 0;
-         Component[6].Value[bar]=adKijunSen[bar-previousBar]<MathMin(adSenkouSpanA[bar-previousBar],adSenkouSpanB[bar-previousBar])-Sigma()? 1: 0;
+         Component[5].Value[bar]=kijunSen[bar-previous]>MathMax(senkouSpanA[bar-previous],senkouSpanB[bar-previous])+Sigma()? 1: 0;
+         Component[6].Value[bar]=kijunSen[bar-previous]<MathMin(senkouSpanA[bar-previous],senkouSpanB[bar-previous])-Sigma()? 1: 0;
         }
-   else if(ListParam[0].Text=="Kijun Sen is inside or above Kumo") 
-      for(int bar = firstBar+previousBar; bar<Data.Bars; bar++)
+     }
+   else if(ListParam[0].Text=="Kijun Sen is inside or above Kumo")
+     {
+      for(int bar=firstBar+previous; bar<Data.Bars; bar++)
         {
-         Component[5].Value[bar]=adKijunSen[bar-previousBar]>MathMin(adSenkouSpanA[bar-previousBar],adSenkouSpanB[bar-previousBar])+Sigma()? 1: 0;
-         Component[6].Value[bar]=adKijunSen[bar-previousBar]<MathMax(adSenkouSpanA[bar-previousBar],adSenkouSpanB[bar-previousBar])-Sigma()? 1: 0;
+         Component[5].Value[bar]=kijunSen[bar-previous]>MathMin(senkouSpanA[bar-previous],senkouSpanB[bar-previous])+Sigma()? 1: 0;
+         Component[6].Value[bar]=kijunSen[bar-previous]<MathMax(senkouSpanA[bar-previous],senkouSpanB[bar-previous])-Sigma()? 1: 0;
         }
-   else if(ListParam[0].Text=="Senkou Span A is higher than Senkou Span B") 
-      IndicatorIsHigherThanAnotherIndicatorLogic(firstBar,previousBar,adSenkouSpanA,adSenkouSpanB,Component[5],Component[6]);
-   else if(ListParam[0].Text=="Senkou Span A crosses Senkou Span B upward") 
-      IndicatorCrossesAnotherIndicatorUpwardLogic(firstBar,previousBar,adSenkouSpanA,adSenkouSpanB,Component[5],Component[6]);
+     }
+   else if(ListParam[0].Text=="Senkou Span A is higher than Senkou Span B")
+     {
+      IndicatorIsHigherThanAnotherIndicatorLogic(firstBar,previous,senkouSpanA,senkouSpanB,Component[5],Component[6]);
+     }
+   else if(ListParam[0].Text=="Senkou Span A crosses Senkou Span B upward")
+     {
+      IndicatorCrossesAnotherIndicatorUpwardLogic(firstBar,previous,senkouSpanA,senkouSpanB,Component[5],Component[6]);
+     }
   }
 //+------------------------------------------------------------------+

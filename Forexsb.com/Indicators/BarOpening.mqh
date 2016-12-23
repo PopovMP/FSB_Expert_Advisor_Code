@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -34,22 +34,23 @@
 class BarOpening : public Indicator
   {
 public:
-    BarOpening(SlotTypes slotType)
-     {
-      SlotType=slotType;
-
-      IndicatorName="Bar Opening";
-
-      WarningMessage    = "";
-      IsAllowLTF        = true;
-      ExecTime          = ExecutionTime_AtBarOpening;
-      IsSeparateChart   = false;
-      IsDiscreteValues  = false;
-      IsDefaultGroupAll = false;
-     }
-
+                     BarOpening(SlotTypes slotType);
    virtual void      Calculate(DataSet &dataSet);
   };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void BarOpening::BarOpening(SlotTypes slotType)
+  {
+   SlotType          = slotType;
+   IndicatorName     = "Bar Opening";
+   WarningMessage    = "";
+   IsAllowLTF        = true;
+   ExecTime          = ExecutionTime_AtBarOpening;
+   IsSeparateChart   = false;
+   IsDiscreteValues  = false;
+   IsDefaultGroupAll = false;
+  }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -57,7 +58,6 @@ void BarOpening::Calculate(DataSet &dataSet)
   {
    Data=GetPointer(dataSet);
 
-// Saving the components
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "Opening price of the bar";
    Component[0].DataType = IndComponentType_OpenPrice;

@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -34,7 +34,7 @@
 class RSI : public Indicator
   {
 public:
-   RSI(SlotTypes slotType)
+                     RSI(SlotTypes slotType)
      {
       SlotType=slotType;
 
@@ -48,7 +48,7 @@ public:
       IsDefaultGroupAll = false;
      }
 
-   virtual void Calculate(DataSet &dataSet);
+   virtual void      Calculate(DataSet &dataSet);
   };
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -65,7 +65,7 @@ void RSI::Calculate(DataSet &dataSet)
    int previous = CheckParam[0].Checked ? 1 : 0;
 
 // Calculation
-   int firstBar=period+2;
+   int firstBar=period + previous + 2;
    double price[]; Price(basePrice,price);
    double pos[];   ArrayResize(pos,Data.Bars); ArrayInitialize(pos,0);
    double neg[];   ArrayResize(neg,Data.Bars); ArrayInitialize(neg,0);

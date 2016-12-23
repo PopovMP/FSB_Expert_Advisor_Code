@@ -34,22 +34,23 @@
 class CommodityChannelIndex : public Indicator
   {
 public:
-    CommodityChannelIndex(SlotTypes slotType)
-     {
-      SlotType=slotType;
-
-      IndicatorName="Commodity Channel Index";
-
-      WarningMessage    = "";
-      IsAllowLTF        = true;
-      ExecTime          = ExecutionTime_DuringTheBar;
-      IsSeparateChart   = true;
-      IsDiscreteValues  = false;
-      IsDefaultGroupAll = false;
-     }
-
-   virtual void Calculate(DataSet &dataSet);
+                     CommodityChannelIndex(SlotTypes slotType);
+   virtual void      Calculate(DataSet &dataSet);
   };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void CommodityChannelIndex::CommodityChannelIndex(SlotTypes slotType)
+  {
+   SlotType          = slotType;
+   IndicatorName     = "Commodity Channel Index";
+   WarningMessage    = "";
+   IsAllowLTF        = true;
+   ExecTime          = ExecutionTime_DuringTheBar;
+   IsSeparateChart   = true;
+   IsDiscreteValues  = false;
+   IsDefaultGroupAll = false;
+  }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -57,35 +58,36 @@ void CommodityChannelIndex::Calculate(DataSet &dataSet)
   {
    Data=GetPointer(dataSet);
 
-// Reading the parameters
-   MAMethod  maMethod   =(MAMethod) ListParam[1].Index;
-   BasePrice basePrice  =(BasePrice) ListParam[2].Index;
-   int       period     =(int) NumParam[0].Value;
-   double    level      =NumParam[1].Value;
-   double    multiplier =NumParam[2].Value;
-   int       previous   =CheckParam[0].Checked ? 1 : 0;
+   MAMethod  maMethod   = (MAMethod) ListParam[1].Index;
+   BasePrice basePrice  = (BasePrice) ListParam[2].Index;
+   int       period     = (int) NumParam[0].Value;
+   double    level      = NumParam[1].Value;
+   double    multiplier = NumParam[2].Value;
+   int       previous   = CheckParam[0].Checked ? 1 : 0;
 
-// Calculation
-   int firstBar=period+3;
-   double adBasePrice[]; Price(basePrice,adBasePrice);
-   double smaBasePrice[]; MovingAverage(period,0,maMethod,adBasePrice,smaBasePrice);
+   int firstBar=period+previous+2;
+   double price[]; Price(basePrice,price);
+   double smaBasePrice[]; MovingAverage(period,0,maMethod,price,smaBasePrice);
 
    double meanDev[]; ArrayResize(meanDev,Data.Bars); ArrayInitialize(meanDev,0);
    for(int bar=period; bar<Data.Bars; bar++)
      {
       double sum= 0;
       for(int i = 0; i<period; i++)
-         sum+=MathAbs(adBasePrice[bar-i]-smaBasePrice[bar]);
+        {
+         sum+=MathAbs(price[bar-i]-smaBasePrice[bar]);
+        }
       meanDev[bar]=multiplier*sum/period;
      }
 
-   double cci[]; ArrayResize(cci,Data.Bars); ArrayInitialize(cci, 0);
+   double cci[]; ArrayResize(cci,Data.Bars); ArrayInitialize(cci,0);
 
    for(int bar=firstBar; bar<Data.Bars; bar++)
+     {
       if(MathAbs(meanDev[bar]-0)>Epsilon())
-         cci[bar]=(adBasePrice[bar]-smaBasePrice[bar])/meanDev[bar];
+         cci[bar]=(price[bar]-smaBasePrice[bar])/meanDev[bar];
+     }
 
-// Saving the components
    Component[0].CompName = "CCI";
    Component[0].DataType = IndComponentType_IndicatorValue;
    Component[0].FirstBar = firstBar;
@@ -98,7 +100,6 @@ void CommodityChannelIndex::Calculate(DataSet &dataSet)
    ArrayResize(Component[2].Value,Data.Bars);
    Component[2].FirstBar=firstBar;
 
-// Sets the Component's type.
    if(SlotType==SlotTypes_OpenFilter)
      {
       Component[1].DataType = IndComponentType_AllowOpenLong;
@@ -114,24 +115,23 @@ void CommodityChannelIndex::Calculate(DataSet &dataSet)
       Component[2].CompName = "Close out short position";
      }
 
-// Calculation of the logic
    IndicatorLogic indLogic=IndicatorLogic_It_does_not_act_as_a_filter;
 
-   if(ListParam[0].Text=="CCI rises") 
+   if(ListParam[0].Text=="CCI rises")
       indLogic=IndicatorLogic_The_indicator_rises;
-   else if(ListParam[0].Text=="CCI falls") 
+   else if(ListParam[0].Text=="CCI falls")
       indLogic=IndicatorLogic_The_indicator_falls;
-   else if(ListParam[0].Text=="CCI is higher than the Level line") 
+   else if(ListParam[0].Text=="CCI is higher than the Level line")
       indLogic=IndicatorLogic_The_indicator_is_higher_than_the_level_line;
-   else if(ListParam[0].Text=="CCI is lower than the Level line") 
+   else if(ListParam[0].Text=="CCI is lower than the Level line")
       indLogic=IndicatorLogic_The_indicator_is_lower_than_the_level_line;
-   else if(ListParam[0].Text=="CCI crosses the Level line upward") 
+   else if(ListParam[0].Text=="CCI crosses the Level line upward")
       indLogic=IndicatorLogic_The_indicator_crosses_the_level_line_upward;
-   else if(ListParam[0].Text=="CCI crosses the Level line downward") 
+   else if(ListParam[0].Text=="CCI crosses the Level line downward")
       indLogic=IndicatorLogic_The_indicator_crosses_the_level_line_downward;
-   else if(ListParam[0].Text=="CCI changes its direction upward") 
+   else if(ListParam[0].Text=="CCI changes its direction upward")
       indLogic=IndicatorLogic_The_indicator_changes_its_direction_upward;
-   else if(ListParam[0].Text=="CCI changes its direction downward") 
+   else if(ListParam[0].Text=="CCI changes its direction downward")
       indLogic=IndicatorLogic_The_indicator_changes_its_direction_downward;
 
    OscillatorLogic(firstBar,previous,cci,level,-level,Component[1],Component[2],indLogic);

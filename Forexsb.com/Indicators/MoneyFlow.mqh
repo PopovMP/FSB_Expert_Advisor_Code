@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -34,22 +34,23 @@
 class MoneyFlow : public Indicator
   {
 public:
-    MoneyFlow(SlotTypes slotType)
-     {
-      SlotType=slotType;
-
-      IndicatorName="Money Flow";
-
-      WarningMessage    = "";
-      IsAllowLTF        = true;
-      ExecTime          = ExecutionTime_DuringTheBar;
-      IsSeparateChart   = true;
-      IsDiscreteValues  = false;
-      IsDefaultGroupAll = false;
-     }
-
-   virtual void Calculate(DataSet &dataSet);
+                     MoneyFlow(SlotTypes slotType);
+   virtual void      Calculate(DataSet &dataSet);
   };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void MoneyFlow::MoneyFlow(SlotTypes slotType)
+  {
+   SlotType          = slotType;
+   IndicatorName     = "Money Flow";
+   WarningMessage    = "";
+   IsAllowLTF        = true;
+   ExecTime          = ExecutionTime_DuringTheBar;
+   IsSeparateChart   = true;
+   IsDiscreteValues  = false;
+   IsDefaultGroupAll = false;
+  }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -57,25 +58,22 @@ void MoneyFlow::Calculate(DataSet &dataSet)
   {
    Data=GetPointer(dataSet);
 
-// Reading the parameters
-   int iPrvs=CheckParam[0].Checked ? 1 : 0;
+   int previous=CheckParam[0].Checked ? 1 : 0;
 
-   const int firstBar=3;
+   const int firstBar=previous+2;
    double adMf[]; ArrayResize(adMf,Data.Bars);ArrayInitialize(adMf,0);
 
-   for(int iBar=1; iBar<Data.Bars; iBar++)
+   for(int bar=1; bar<Data.Bars; bar++)
      {
-      double dAvg=(Data.High[iBar]+Data.Low[iBar]+Data.Close[iBar])/3;
-      double dAvg1=(Data.High[iBar-1]+Data.Low[iBar-1]+Data.Close[iBar-1])/3;
+      double dAvg=(Data.High[bar]+Data.Low[bar]+Data.Close[bar])/3;
+      double dAvg1=(Data.High[bar-1]+Data.Low[bar-1]+Data.Close[bar-1])/3;
       if(dAvg>dAvg1)
-         adMf[iBar]=adMf[iBar-1]+dAvg*Data.Volume[iBar]/1000;
+         adMf[bar]=adMf[bar-1]+dAvg*Data.Volume[bar]/1000;
       else if(dAvg<dAvg1)
-         adMf[iBar]=adMf[iBar-1]-dAvg*Data.Volume[iBar]/1000;
+         adMf[bar]=adMf[bar-1]-dAvg*Data.Volume[bar]/1000;
       else
-         adMf[iBar]=adMf[iBar-1];
+         adMf[bar]=adMf[bar-1];
      }
-
-// Saving the components
 
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "Money Flow";
@@ -89,7 +87,6 @@ void MoneyFlow::Calculate(DataSet &dataSet)
    ArrayResize(Component[2].Value,Data.Bars);
    Component[2].FirstBar=firstBar;
 
-// Sets the Component's type
    if(SlotType==SlotTypes_OpenFilter)
      {
       Component[1].DataType = IndComponentType_AllowOpenLong;
@@ -105,7 +102,6 @@ void MoneyFlow::Calculate(DataSet &dataSet)
       Component[2].CompName = "Close out short position";
      }
 
-// Calculation of the logic
    IndicatorLogic indLogic=IndicatorLogic_It_does_not_act_as_a_filter;
 
    if(ListParam[0].Text=="Money Flow rises")
@@ -117,6 +113,6 @@ void MoneyFlow::Calculate(DataSet &dataSet)
    else if(ListParam[0].Text=="Money Flow changes its direction downward")
       indLogic=IndicatorLogic_The_indicator_changes_its_direction_downward;
 
-   OscillatorLogic(firstBar,iPrvs,adMf,0,0,Component[1],Component[2],indLogic);
+   OscillatorLogic(firstBar,previous,adMf,0,0,Component[1],Component[2],indLogic);
   }
 //+------------------------------------------------------------------+

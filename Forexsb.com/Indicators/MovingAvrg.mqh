@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -34,7 +34,7 @@
 class MovingAvrg : public Indicator
   {
 public:
-    MovingAvrg(SlotTypes slotType)
+                     MovingAvrg(SlotTypes slotType)
      {
       SlotType=slotType;
 
@@ -48,7 +48,7 @@ public:
       IsDefaultGroupAll = false;
      }
 
-   virtual void Calculate(DataSet &dataSet);
+   virtual void      Calculate(DataSet &dataSet);
   };
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -57,33 +57,31 @@ void MovingAvrg::Calculate(DataSet &dataSet)
   {
    Data=GetPointer(dataSet);
 
-// Reading the parameters
    MAMethod  maMethod =(MAMethod) ListParam[1].Index;
    BasePrice basePrice=(BasePrice) ListParam[2].Index;
    int period=(int) NumParam[0].Value;
    int shift =(int) NumParam[1].Value;
    int previous=CheckParam[0].Checked ? 1 : 0;
 
-// TimeExecution
    if(period==1 && shift==0)
      {
-      if(basePrice == BasePrice_Open)
+      if(basePrice== BasePrice_Open)
          ExecTime = ExecutionTime_AtBarOpening;
       else if(basePrice==BasePrice_Close)
-         ExecTime = ExecutionTime_AtBarClosing;
+         ExecTime=ExecutionTime_AtBarClosing;
      }
    else
-      ExecTime = ExecutionTime_DuringTheBar;
+     {
+	   ExecTime=ExecutionTime_DuringTheBar;
+     }
 
-// Calculation
-   double basePrc[];        Price(basePrice,basePrc);
-   double movingAverage[];  MovingAverage(period,shift,maMethod,basePrc,movingAverage);
-   int firstBar=period+shift+1+previous;
+   double price[];        Price(basePrice,price);
+   double movingAverage[];  MovingAverage(period,shift,maMethod,price,movingAverage);
+   int firstBar=period+shift+previous+2;
 
-// Saving the components
    if(SlotType==SlotTypes_Open || SlotType==SlotTypes_Close)
      {
-      ArrayResize(Component[1].Value, Data.Bars);
+      ArrayResize(Component[1].Value,Data.Bars);
       ArrayInitialize(Component[1].Value,0);
       for(int bar=firstBar; bar<Data.Bars; bar++)
         {
@@ -94,7 +92,7 @@ void MovingAvrg::Calculate(DataSet &dataSet)
          if((value1 > Data.High[bar - 1] && value < Data.Open[bar]) || // The Data.Open price jumps above the indicator
             (value1 < Data.Low[bar - 1]  && value > Data.Open[bar]) || // The Data.Open price jumps below the indicator
             (Data.Close[bar-1]<value     && value < Data.Open[bar]) || // The Data.Open price is in a positive gap
-            (Data.Close[bar-1]>value     && value > Data.Open[bar])) // The Data.Open price is in a negative gap
+            (Data.Close[bar-1]>value && value>Data.Open[bar])) // The Data.Open price is in a negative gap
             tempVal=Data.Open[bar];
          Component[1].Value[bar]=tempVal; // Entry or exit value
         }
@@ -111,24 +109,24 @@ void MovingAvrg::Calculate(DataSet &dataSet)
    Component[0].FirstBar = firstBar;
    ArrayCopy(Component[0].Value,movingAverage);
 
-   if(SlotType==SlotTypes_Open) 
+   if(SlotType==SlotTypes_Open)
      {
       Component[1].CompName = "Position opening price";
       Component[1].DataType = IndComponentType_OpenPrice;
      }
-   if(SlotType==SlotTypes_OpenFilter) 
+   if(SlotType==SlotTypes_OpenFilter)
      {
       Component[1].DataType = IndComponentType_AllowOpenLong;
       Component[1].CompName = "Is long entry allowed";
       Component[2].DataType = IndComponentType_AllowOpenShort;
       Component[2].CompName = "Is short entry allowed";
      }
-   if(SlotType==SlotTypes_Close) 
+   if(SlotType==SlotTypes_Close)
      {
       Component[1].CompName = "Position closing price";
       Component[1].DataType = IndComponentType_ClosePrice;
      }
-   if(SlotType==SlotTypes_CloseFilter) 
+   if(SlotType==SlotTypes_CloseFilter)
      {
       Component[1].DataType = IndComponentType_ForceCloseLong;
       Component[1].CompName = "Close out long position";
@@ -138,19 +136,19 @@ void MovingAvrg::Calculate(DataSet &dataSet)
 
    if(SlotType==SlotTypes_OpenFilter || SlotType==SlotTypes_CloseFilter)
      {
-      if(ListParam[0].Text=="Moving Average rises") 
+      if(ListParam[0].Text=="Moving Average rises")
          IndicatorRisesLogic(firstBar,previous,movingAverage,Component[1],Component[2]);
-      else if(ListParam[0].Text=="Moving Average falls") 
+      else if(ListParam[0].Text=="Moving Average falls")
          IndicatorFallsLogic(firstBar,previous,movingAverage,Component[1],Component[2]);
-      else if(ListParam[0].Text=="The bar opens above Moving Average") 
+      else if(ListParam[0].Text=="The bar opens above Moving Average")
          BarOpensAboveIndicatorLogic(firstBar,previous,movingAverage,Component[1],Component[2]);
-      else if(ListParam[0].Text=="The bar opens below Moving Average") 
+      else if(ListParam[0].Text=="The bar opens below Moving Average")
          BarOpensBelowIndicatorLogic(firstBar,previous,movingAverage,Component[1],Component[2]);
-      else if(ListParam[0].Text=="The bar opens above Moving Average after opening below it") 
+      else if(ListParam[0].Text=="The bar opens above Moving Average after opening below it")
          BarOpensAboveIndicatorAfterOpeningBelowLogic(firstBar,previous,movingAverage,Component[1],Component[2]);
-      else if(ListParam[0].Text=="The bar opens below Moving Average after opening above it") 
+      else if(ListParam[0].Text=="The bar opens below Moving Average after opening above it")
          BarOpensBelowIndicatorAfterOpeningAboveLogic(firstBar,previous,movingAverage,Component[1],Component[2]);
-      else if(ListParam[0].Text=="The position opens above Moving Average") 
+      else if(ListParam[0].Text=="The position opens above Moving Average")
         {
          Component[0].PosPriceDependence=PositionPriceDependence_BuyHigherSellLower;
          Component[1].DataType=IndComponentType_Other;
@@ -158,7 +156,7 @@ void MovingAvrg::Calculate(DataSet &dataSet)
          Component[2].DataType=IndComponentType_Other;
          Component[2].ShowInDynInfo=false;
         }
-      else if(ListParam[0].Text=="The position opens below Moving Average") 
+      else if(ListParam[0].Text=="The position opens below Moving Average")
         {
          Component[0].PosPriceDependence=PositionPriceDependence_BuyLowerSellHigher;
          Component[1].DataType=IndComponentType_Other;
@@ -166,9 +164,9 @@ void MovingAvrg::Calculate(DataSet &dataSet)
          Component[2].DataType=IndComponentType_Other;
          Component[2].ShowInDynInfo=false;
         }
-      else if(ListParam[0].Text=="The bar closes below Moving Average") 
+      else if(ListParam[0].Text=="The bar closes below Moving Average")
          BarClosesBelowIndicatorLogic(firstBar,previous,movingAverage,Component[1],Component[2]);
-      else if(ListParam[0].Text=="The bar closes above Moving Average") 
+      else if(ListParam[0].Text=="The bar closes above Moving Average")
          BarClosesAboveIndicatorLogic(firstBar,previous,movingAverage,Component[1],Component[2]);
      }
   }

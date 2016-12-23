@@ -23,33 +23,39 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
 #include <Forexsb.com/Enumerations.mqh>
-
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
 class EnterOnce : public Indicator
-{
+  {
 public:
-    EnterOnce(SlotTypes slotType)
-    {
-        SlotType = slotType;
-        
-        IndicatorName     = "Enter Once";
-
-        WarningMessage    = "";
-        IsAllowLTF        = true;
-        ExecTime          = ExecutionTime_DuringTheBar;
-        IsSeparateChart   = false;
-        IsDiscreteValues  = false;
-        IsDefaultGroupAll = true;
-    }
-
-    virtual void Calculate(DataSet &dataSet);
-};
-
+                     EnterOnce(SlotTypes slotType);
+   virtual void      Calculate(DataSet &dataSet);
+  };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void EnterOnce::EnterOnce(SlotTypes slotType)
+  {
+   SlotType          = slotType;
+   IndicatorName     = "Enter Once";
+   WarningMessage    = "";
+   IsAllowLTF        = true;
+   ExecTime          = ExecutionTime_DuringTheBar;
+   IsSeparateChart   = false;
+   IsDiscreteValues  = false;
+   IsDefaultGroupAll = true;
+  }
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
 void EnterOnce::Calculate(DataSet &dataSet)
-{
-    Data = GetPointer(dataSet);
-}
+  {
+   Data=GetPointer(dataSet);
+  }
+//+------------------------------------------------------------------+

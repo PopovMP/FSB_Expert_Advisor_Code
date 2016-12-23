@@ -34,22 +34,23 @@
 class InsideBar : public Indicator
   {
 public:
-    InsideBar(SlotTypes slotType)
-     {
-      SlotType=slotType;
-
-      IndicatorName="Inside Bar";
-
-      WarningMessage    = "";
-      IsAllowLTF        = true;
-      ExecTime          = ExecutionTime_DuringTheBar;
-      IsSeparateChart   = false;
-      IsDiscreteValues  = false;
-      IsDefaultGroupAll = false;
-     }
-
-   virtual void Calculate(DataSet &dataSet);
+                     InsideBar(SlotTypes slotType);
+   virtual void      Calculate(DataSet &dataSet);
   };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void InsideBar::InsideBar(SlotTypes slotType)
+  {
+   SlotType          = slotType;
+   IndicatorName     = "Inside Bar";
+   WarningMessage    = "";
+   IsAllowLTF        = true;
+   ExecTime          = ExecutionTime_DuringTheBar;
+   IsSeparateChart   = false;
+   IsDiscreteValues  = false;
+   IsDefaultGroupAll = false;
+  }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -57,24 +58,24 @@ void InsideBar::Calculate(DataSet &dataSet)
   {
    Data=GetPointer(dataSet);
 
-// Calculation
    const int firstBar=2;
-   double adIb[]; ArrayResize(adIb,Data.Bars); ArrayInitialize(adIb,0);
+   double insideBar[]; ArrayResize(insideBar,Data.Bars); ArrayInitialize(insideBar,0);
 
-   for(int iBar=2; iBar<Data.Bars; iBar++)
-      adIb[iBar]=((Data.High[iBar-1]<Data.High[iBar-2]) && (Data.Low[iBar-1]>Data.Low[iBar-2])) ? 1 : 0;
+   for(int bar=2; bar<Data.Bars; bar++)
+     {
+      insideBar[bar]=((Data.High[bar-1]<Data.High[bar-2]) && (Data.Low[bar-1]>Data.Low[bar-2])) ? 1 : 0;
+     }
 
-// Saving the components
-   ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "Allow long entry";
    Component[0].DataType = IndComponentType_AllowOpenLong;
    Component[0].FirstBar = firstBar;
-   ArrayCopy(Component[0].Value,adIb);
+   ArrayResize(Component[0].Value,Data.Bars);
+   ArrayCopy(Component[0].Value,insideBar);
 
-   ArrayResize(Component[1].Value,Data.Bars);
    Component[1].CompName = "Allow short entry";
    Component[1].DataType = IndComponentType_AllowOpenShort;
    Component[1].FirstBar = firstBar;
-   ArrayCopy(Component[1].Value,adIb);
+   ArrayResize(Component[1].Value,Data.Bars);
+   ArrayCopy(Component[1].Value,insideBar);
   }
 //+------------------------------------------------------------------+

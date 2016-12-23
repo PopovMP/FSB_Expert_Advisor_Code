@@ -34,22 +34,23 @@
 class Volumes : public Indicator
   {
 public:
-   Volumes(SlotTypes slotType)
-     {
-      SlotType=slotType;
-
-      IndicatorName="Volumes";
-
-      WarningMessage    = "";
-      IsAllowLTF        = true;
-      ExecTime          = ExecutionTime_DuringTheBar;
-      IsSeparateChart   = true;
-      IsDiscreteValues  = false;
-      IsDefaultGroupAll = false;
-     }
-
-   virtual void Calculate(DataSet &dataSet);
+                     Volumes(SlotTypes slotType);
+   virtual void      Calculate(DataSet &dataSet);
   };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void Volumes::Volumes(SlotTypes slotType)
+  {
+   SlotType          = slotType;
+   IndicatorName     = "Volumes";
+   WarningMessage    = "";
+   IsAllowLTF        = true;
+   ExecTime          = ExecutionTime_DuringTheBar;
+   IsSeparateChart   = true;
+   IsDiscreteValues  = false;
+   IsDefaultGroupAll = false;
+  }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -57,34 +58,29 @@ void Volumes::Calculate(DataSet &dataSet)
   {
    Data=GetPointer(dataSet);
 
-// Reading the parameters
-   double dLevel = NumParam[0].Value;
-   int    iPrvs  = CheckParam[0].Checked ? 1 : 0;
+   double level   =NumParam[0].Value;
+   int    previous=CheckParam[0].Checked ? 1 : 0;
 
-// Calculation
-   double adVolumes[];
-   ArrayResize(adVolumes,Data.Bars);
-   ArrayInitialize(adVolumes,0);
+   double volumes[]; ArrayResize(volumes,Data.Bars); ArrayInitialize(volumes,0);
+   int firstBar=previous+2;
 
-   int iFirstBar=iPrvs+1;
+   for(int bar=0; bar<Data.Bars; bar++)
+     {
+      volumes[bar]=(int)Data.Volume[bar];
+     }
 
-   for(int iBar=0; iBar<Data.Bars; iBar++)
-      adVolumes[iBar]=(int)Data.Volume[iBar];
-
-// Saving the components
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName  = "Volumes";
    Component[0].DataType  = IndComponentType_IndicatorValue;
-   Component[0].FirstBar  = iFirstBar;
-   ArrayCopy(Component[0].Value,adVolumes);
+   Component[0].FirstBar  = firstBar;
+   ArrayCopy(Component[0].Value,volumes);
 
    ArrayResize(Component[1].Value,Data.Bars);
-   Component[1].FirstBar=iFirstBar;
+   Component[1].FirstBar=firstBar;
 
    ArrayResize(Component[2].Value,Data.Bars);
-   Component[2].FirstBar=iFirstBar;
+   Component[2].FirstBar=firstBar;
 
-// Sets the Component's type
    if(SlotType==SlotTypes_OpenFilter)
      {
       Component[1].DataType = IndComponentType_AllowOpenLong;
@@ -100,37 +96,36 @@ void Volumes::Calculate(DataSet &dataSet)
       Component[2].CompName = "Close out short position";
      }
 
-// Calculation of the logic
    if(ListParam[0].Text=="Volume rises")
      {
-      for(int iBar=iPrvs+1; iBar<Data.Bars; iBar++)
+      for(int bar=previous+1; bar<Data.Bars; bar++)
         {
-         Component[1].Value[iBar] = adVolumes[iBar - iPrvs] > adVolumes[iBar - iPrvs - 1] + Sigma() ? 1 : 0;
-         Component[2].Value[iBar] = adVolumes[iBar - iPrvs] > adVolumes[iBar - iPrvs - 1] + Sigma() ? 1 : 0;
+         Component[1].Value[bar] = volumes[bar - previous] > volumes[bar - previous - 1] + Sigma() ? 1 : 0;
+         Component[2].Value[bar] = volumes[bar - previous] > volumes[bar - previous - 1] + Sigma() ? 1 : 0;
         }
      }
    else if(ListParam[0].Text=="Volume falls")
      {
-      for(int iBar=iPrvs+1; iBar<Data.Bars; iBar++)
+      for(int bar=previous+1; bar<Data.Bars; bar++)
         {
-         Component[1].Value[iBar] = adVolumes[iBar - iPrvs] < adVolumes[iBar - iPrvs - 1] - Sigma() ? 1 : 0;
-         Component[2].Value[iBar] = adVolumes[iBar - iPrvs] < adVolumes[iBar - iPrvs - 1] - Sigma() ? 1 : 0;
+         Component[1].Value[bar] = volumes[bar - previous] < volumes[bar - previous - 1] - Sigma() ? 1 : 0;
+         Component[2].Value[bar] = volumes[bar - previous] < volumes[bar - previous - 1] - Sigma() ? 1 : 0;
         }
      }
    else if(ListParam[0].Text=="Volume is higher than the Level line")
      {
-      for(int iBar=iPrvs; iBar<Data.Bars; iBar++)
+      for(int bar=previous; bar<Data.Bars; bar++)
         {
-         Component[1].Value[iBar] = adVolumes[iBar - iPrvs] > dLevel + Sigma() ? 1 : 0;
-         Component[2].Value[iBar] = adVolumes[iBar - iPrvs] > dLevel + Sigma() ? 1 : 0;
+         Component[1].Value[bar] = volumes[bar - previous] > level + Sigma() ? 1 : 0;
+         Component[2].Value[bar] = volumes[bar - previous] > level + Sigma() ? 1 : 0;
         }
      }
    else if(ListParam[0].Text=="Volume is lower than the Level line")
      {
-      for(int iBar=iPrvs; iBar<Data.Bars; iBar++)
+      for(int bar=previous; bar<Data.Bars; bar++)
         {
-         Component[1].Value[iBar] = adVolumes[iBar - iPrvs] < dLevel - Sigma() ? 1 : 0;
-         Component[2].Value[iBar] = adVolumes[iBar - iPrvs] < dLevel - Sigma() ? 1 : 0;
+         Component[1].Value[bar] = volumes[bar - previous] < level - Sigma() ? 1 : 0;
+         Component[2].Value[bar] = volumes[bar - previous] < level - Sigma() ? 1 : 0;
         }
      }
   }

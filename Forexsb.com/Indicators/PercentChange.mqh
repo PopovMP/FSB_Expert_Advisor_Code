@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -59,24 +59,24 @@ void PercentChange::Calculate(DataSet &dataSet)
 
 // Reading the parameters
    BasePrice basePrice=(BasePrice) ListParam[1].Index;
-   int iPeriod=(int) NumParam[0].Value;
-   double dLevel=NumParam[1].Value;
-   int prvs=CheckParam[0].Checked ? 1 : 0;
+   int period=(int) NumParam[0].Value;
+   double level=NumParam[1].Value;
+   int previous=CheckParam[0].Checked ? 1 : 0;
 
 // Calculation
-   int firstBar=iPeriod+2;
-   double adBasePrice[];  Price(basePrice,adBasePrice);
-   double adPc[];  ArrayResize(adPc,Data.Bars);  ArrayInitialize(adPc,0);
+   int firstBar=period + previous + 2;
+   double price[];  Price(basePrice,price);
+   double percentChange[];  ArrayResize(percentChange,Data.Bars);  ArrayInitialize(percentChange,0);
 
-   for(int i=iPeriod; i<Data.Bars; i++)
-      adPc[i]=100*(adBasePrice[i]-adBasePrice[i-iPeriod])/adBasePrice[i-iPeriod];
+   for(int i=period; i<Data.Bars; i++)
+      percentChange[i]=100*(price[i]-price[i-period])/price[i-period];
 
 // Saving the components
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "Percent Change";
    Component[0].DataType = IndComponentType_IndicatorValue;
    Component[0].FirstBar = firstBar;
-   ArrayCopy(Component[0].Value,adPc);
+   ArrayCopy(Component[0].Value,percentChange);
 
    ArrayResize(Component[1].Value,Data.Bars);
    Component[1].FirstBar=firstBar;
@@ -120,6 +120,6 @@ void PercentChange::Calculate(DataSet &dataSet)
    else if(ListParam[0].Text=="Percent Change changes its direction downward") 
       indLogic=IndicatorLogic_The_indicator_changes_its_direction_downward;
 
-   OscillatorLogic(firstBar,prvs,adPc,dLevel,-dLevel,Component[1],Component[2],indLogic);
+   OscillatorLogic(firstBar,previous,percentChange,level,-level,Component[1],Component[2],indLogic);
   }
 //+------------------------------------------------------------------+

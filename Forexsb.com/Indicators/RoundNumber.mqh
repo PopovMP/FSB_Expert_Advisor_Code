@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -65,27 +65,27 @@ void RoundNumber::Calculate(DataSet &dataSet)
    double upperRn[]; ArrayResize(upperRn,Data.Bars); ArrayInitialize(upperRn,0);
    double lowerRn[]; ArrayResize(lowerRn,Data.Bars); ArrayInitialize(lowerRn,0);
 
-   const int firstBar=1;
+   const int firstBar=2;
 
-   for(int iBar=1; iBar<Data.Bars; iBar++)
+   for(int bar=1; bar<Data.Bars; bar++)
      {
       double dNearestRound;
 
       int iCutDigids = Data.Digits - digids;
       if(iCutDigids >= 0)
-         dNearestRound=NormalizeDouble(Data.Open[iBar],iCutDigids);
+         dNearestRound=NormalizeDouble(Data.Open[bar],iCutDigids);
       else
-         dNearestRound=MathRound(Data.Open[iBar]*MathPow(10,iCutDigids))/MathPow(10,iCutDigids);
+         dNearestRound=MathRound(Data.Open[bar]*MathPow(10,iCutDigids))/MathPow(10,iCutDigids);
 
-      if(dNearestRound<Data.Open[iBar])
+      if(dNearestRound<Data.Open[bar])
         {
-         upperRn[iBar] = dNearestRound + (Data.Point*MathPow(10, digids));
-         lowerRn[iBar] = dNearestRound;
+         upperRn[bar] = dNearestRound + (Data.Point*MathPow(10, digids));
+         lowerRn[bar] = dNearestRound;
         }
       else
         {
-         upperRn[iBar] = dNearestRound;
-         lowerRn[iBar] = dNearestRound - (Data.Point*MathPow(10, digids));
+         upperRn[bar] = dNearestRound;
+         lowerRn[bar] = dNearestRound - (Data.Point*MathPow(10, digids));
         }
      }
 
@@ -124,16 +124,16 @@ void RoundNumber::Calculate(DataSet &dataSet)
      }
 
    if(ListParam[0].Text=="Enter long at the higher round number" || ListParam[0].Text=="Exit long at the higher round number")
-      for(int iBar=firstBar; iBar<Data.Bars; iBar++)
+      for(int bar=firstBar; bar<Data.Bars; bar++)
         {
-         Component[2].Value[iBar] = upperRn[iBar] + shift;
-         Component[3].Value[iBar] = lowerRn[iBar] - shift;
+         Component[2].Value[bar] = upperRn[bar] + shift;
+         Component[3].Value[bar] = lowerRn[bar] - shift;
         }
    if(ListParam[0].Text=="Enter long at the lower round number" || ListParam[0].Text=="Exit long at the lower round number")
-      for(int iBar=firstBar; iBar<Data.Bars; iBar++)
+      for(int bar=firstBar; bar<Data.Bars; bar++)
         {
-         Component[2].Value[iBar] = lowerRn[iBar] - shift;
-         Component[3].Value[iBar] = upperRn[iBar] + shift;
+         Component[2].Value[bar] = lowerRn[bar] - shift;
+         Component[3].Value[bar] = upperRn[bar] + shift;
         }
   }
 //+------------------------------------------------------------------+

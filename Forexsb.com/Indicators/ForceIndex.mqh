@@ -34,22 +34,23 @@
 class ForceIndex : public Indicator
   {
 public:
-    ForceIndex(SlotTypes slotType)
-     {
-      SlotType=slotType;
-
-      IndicatorName="Force Index";
-
-      WarningMessage    = "";
-      IsAllowLTF        = true;
-      ExecTime          = ExecutionTime_DuringTheBar;
-      IsSeparateChart   = true;
-      IsDiscreteValues  = false;
-      IsDefaultGroupAll = false;
-     }
-
-   virtual void Calculate(DataSet &dataSet);
+                     ForceIndex(SlotTypes slotType);
+   virtual void      Calculate(DataSet &dataSet);
   };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void ForceIndex::ForceIndex(SlotTypes slotType)
+  {
+   SlotType          = slotType;
+   IndicatorName     = "Force Index";
+   WarningMessage    = "";
+   IsAllowLTF        = true;
+   ExecTime          = ExecutionTime_DuringTheBar;
+   IsSeparateChart   = true;
+   IsDiscreteValues  = false;
+   IsDefaultGroupAll = false;
+  }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -57,36 +58,34 @@ void ForceIndex::Calculate(DataSet &dataSet)
   {
    Data=GetPointer(dataSet);
 
-// Reading the parameters
    MAMethod maMethod=(MAMethod) ListParam[1].Index;
    BasePrice basePrice=(BasePrice) ListParam[2].Index;
-   int iPeriod=(int) NumParam[0].Value;
-   int iPrvs=CheckParam[0].Checked ? 1 : 0;
+   int period=(int) NumParam[0].Value;
+   int previous=CheckParam[0].Checked ? 1 : 0;
 
-// Calculation
-   int iFirstBar=iPeriod+2;
+   int firstBar=period+previous+2;
 
    double price[];Price(basePrice,price);
-   double adMA[]; MovingAverage(iPeriod,0,maMethod,price,adMA);
+   double ma[]; MovingAverage(period,0,maMethod,price,ma);
    double adFi[]; ArrayResize(adFi,Data.Bars); ArrayInitialize(adFi,0);
 
-   for(int iBar=iFirstBar; iBar<Data.Bars; iBar++)
-      adFi[iBar]=Data.Volume[iBar]*(adMA[iBar]-adMA[iBar-1]);
+   for(int bar=firstBar; bar<Data.Bars; bar++)
+     {
+      adFi[bar]=Data.Volume[bar]*(ma[bar]-ma[bar-1]);
+     }
 
-// Saving the components
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "Force Index";
    Component[0].DataType = IndComponentType_IndicatorValue;
-   Component[0].FirstBar = iFirstBar;
+   Component[0].FirstBar = firstBar;
    ArrayCopy(Component[0].Value,adFi);
 
    ArrayResize(Component[1].Value,Data.Bars);
-   Component[1].FirstBar=iFirstBar;
+   Component[1].FirstBar=firstBar;
 
    ArrayResize(Component[2].Value,Data.Bars);
-   Component[2].FirstBar=iFirstBar;
+   Component[2].FirstBar=firstBar;
 
-// Sets the Component's type
    if(SlotType==SlotTypes_OpenFilter)
      {
       Component[1].DataType = IndComponentType_AllowOpenLong;
@@ -102,26 +101,25 @@ void ForceIndex::Calculate(DataSet &dataSet)
       Component[2].CompName = "Close out short position";
      }
 
-// Calculation of the logic
    IndicatorLogic indLogic=IndicatorLogic_It_does_not_act_as_a_filter;
 
-   if(ListParam[0].Text=="Force Index rises") 
+   if(ListParam[0].Text=="Force Index rises")
       indLogic=IndicatorLogic_The_indicator_rises;
-   else if(ListParam[0].Text=="Force Index falls") 
+   else if(ListParam[0].Text=="Force Index falls")
       indLogic=IndicatorLogic_The_indicator_falls;
-   else if(ListParam[0].Text=="Force Index is higher than the zero line") 
+   else if(ListParam[0].Text=="Force Index is higher than the zero line")
       indLogic=IndicatorLogic_The_indicator_is_higher_than_the_level_line;
-   else if(ListParam[0].Text=="Force Index is lower than the zero line") 
+   else if(ListParam[0].Text=="Force Index is lower than the zero line")
       indLogic=IndicatorLogic_The_indicator_is_lower_than_the_level_line;
-   else if(ListParam[0].Text=="Force Index crosses the zero line upward") 
+   else if(ListParam[0].Text=="Force Index crosses the zero line upward")
       indLogic=IndicatorLogic_The_indicator_crosses_the_level_line_upward;
-   else if(ListParam[0].Text=="Force Index crosses the zero line downward") 
+   else if(ListParam[0].Text=="Force Index crosses the zero line downward")
       indLogic=IndicatorLogic_The_indicator_crosses_the_level_line_downward;
-   else if(ListParam[0].Text=="Force Index changes its direction upward") 
+   else if(ListParam[0].Text=="Force Index changes its direction upward")
       indLogic=IndicatorLogic_The_indicator_changes_its_direction_upward;
-   else if(ListParam[0].Text=="Force Index changes its direction downward") 
+   else if(ListParam[0].Text=="Force Index changes its direction downward")
       indLogic=IndicatorLogic_The_indicator_changes_its_direction_downward;
 
-   OscillatorLogic(iFirstBar,iPrvs,adFi,0,0,Component[1],Component[2],indLogic);
+   OscillatorLogic(firstBar,previous,adFi,0,0,Component[1],Component[2],indLogic);
   }
 //+------------------------------------------------------------------+

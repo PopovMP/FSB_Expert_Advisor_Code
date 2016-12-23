@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -57,17 +57,15 @@ void TrixIndex::Calculate(DataSet &dataSet)
   {
    Data=GetPointer(dataSet);
 
-// Reading the parameters
    MAMethod maMethod=(MAMethod) ListParam[1].Index;
    BasePrice basePrice=(BasePrice) ListParam[2].Index;
    int nPeriod=(int) NumParam[0].Value;
-   int iPrvs=CheckParam[0].Checked ? 1 : 0;
+   int previous=CheckParam[0].Checked ? 1 : 0;
 
-// Calculation
-   int firstBar=2*nPeriod+2;
+   int firstBar=nPeriod+previous+2;
 
-   double basePrc[]; Price(basePrice,basePrc);
-   double ma1[];     MovingAverage(nPeriod,0,maMethod,basePrc,ma1);
+   double price[]; Price(basePrice,price);
+   double ma1[];     MovingAverage(nPeriod,0,maMethod,price,ma1);
    double ma2[];     MovingAverage(nPeriod,0,maMethod,ma1,ma2);
    double ma3[];     MovingAverage(nPeriod,0,maMethod,ma2,ma3);
    double adTrix[];  ArrayResize(adTrix,Data.Bars); ArrayInitialize(adTrix,0);
@@ -75,27 +73,24 @@ void TrixIndex::Calculate(DataSet &dataSet)
    for(int bar=firstBar; bar<Data.Bars; bar++)
       adTrix[bar]=100*(ma3[bar]-ma3[bar-1])/ma3[bar-1];
 
-   double adSignal[];
-   MovingAverage(nPeriod,0,maMethod,adTrix,adSignal);
+   double signal[];
+   MovingAverage(nPeriod,0,maMethod,adTrix,signal);
 
-// adHistogram represents Trix Index oscillator
-   double adHistogram[]; ArrayResize(adHistogram,Data.Bars); ArrayInitialize(adHistogram,0);
+   double histogram[]; ArrayResize(histogram,Data.Bars); ArrayInitialize(histogram,0);
    for(int bar=firstBar; bar<Data.Bars; bar++)
-      adHistogram[bar]=adTrix[bar]-adSignal[bar];
-
-// Saving the components
+      histogram[bar]=adTrix[bar]-signal[bar];
 
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "Histogram";
    Component[0].DataType = IndComponentType_IndicatorValue;
    Component[0].FirstBar = firstBar;
-   ArrayCopy(Component[0].Value,adHistogram);
+   ArrayCopy(Component[0].Value,histogram);
 
    ArrayResize(Component[1].Value,Data.Bars);
    Component[1].CompName = "Signal";
    Component[1].DataType = IndComponentType_IndicatorValue;
    Component[1].FirstBar = firstBar;
-   ArrayCopy(Component[1].Value,adSignal);
+   ArrayCopy(Component[1].Value,signal);
 
    ArrayResize(Component[2].Value,Data.Bars);
    Component[2].CompName = "Trix Line";
@@ -109,7 +104,6 @@ void TrixIndex::Calculate(DataSet &dataSet)
    ArrayResize(Component[4].Value,Data.Bars);
    Component[4].FirstBar=firstBar;
 
-// Sets the Component's type
    if(SlotType==SlotTypes_OpenFilter)
      {
       Component[3].DataType = IndComponentType_AllowOpenLong;
@@ -126,29 +120,29 @@ void TrixIndex::Calculate(DataSet &dataSet)
      }
 
    if(ListParam[0].Text=="Trix Index line rises")
-      OscillatorLogic(firstBar,iPrvs,adTrix,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_rises);
+      OscillatorLogic(firstBar,previous,adTrix,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_rises);
    else if(ListParam[0].Text=="Trix Index line falls")
-      OscillatorLogic(firstBar,iPrvs,adTrix,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_falls);
+      OscillatorLogic(firstBar,previous,adTrix,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_falls);
    else if(ListParam[0].Text=="Trix Index line is higher than zero")
-      OscillatorLogic(firstBar,iPrvs,adTrix,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_is_higher_than_the_level_line);
+      OscillatorLogic(firstBar,previous,adTrix,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_is_higher_than_the_level_line);
    else if(ListParam[0].Text=="Trix Index line is lower than zero")
-      OscillatorLogic(firstBar,iPrvs,adTrix,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_is_lower_than_the_level_line);
+      OscillatorLogic(firstBar,previous,adTrix,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_is_lower_than_the_level_line);
    else if(ListParam[0].Text=="Trix Index line crosses the zero line upward")
-      OscillatorLogic(firstBar,iPrvs,adTrix,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_crosses_the_level_line_upward);
+      OscillatorLogic(firstBar,previous,adTrix,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_crosses_the_level_line_upward);
    else if(ListParam[0].Text=="Trix Index line crosses the zero line downward")
-      OscillatorLogic(firstBar,iPrvs,adTrix,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_crosses_the_level_line_downward);
+      OscillatorLogic(firstBar,previous,adTrix,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_crosses_the_level_line_downward);
    else if(ListParam[0].Text=="Trix Index line changes its direction upward")
-      OscillatorLogic(firstBar,iPrvs,adTrix,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_changes_its_direction_upward);
+      OscillatorLogic(firstBar,previous,adTrix,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_changes_its_direction_upward);
    else if(ListParam[0].Text=="Trix Index line changes its direction downward")
-      OscillatorLogic(firstBar,iPrvs,adTrix,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_changes_its_direction_downward);
+      OscillatorLogic(firstBar,previous,adTrix,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_changes_its_direction_downward);
    else if(ListParam[0].Text=="Trix Index line crosses the Signal line upward")
-      OscillatorLogic(firstBar,iPrvs,adHistogram,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_crosses_the_level_line_upward);
+      OscillatorLogic(firstBar,previous,histogram,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_crosses_the_level_line_upward);
    else if(ListParam[0].Text=="Trix Index line crosses the Signal line downward")
-      OscillatorLogic(firstBar,iPrvs,adHistogram,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_crosses_the_level_line_downward);
+      OscillatorLogic(firstBar,previous,histogram,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_crosses_the_level_line_downward);
    else if(ListParam[0].Text=="Trix Index line is higher than the Signal line")
-      OscillatorLogic(firstBar,iPrvs,adHistogram,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_is_higher_than_the_level_line);
+      OscillatorLogic(firstBar,previous,histogram,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_is_higher_than_the_level_line);
    else if(ListParam[0].Text=="Trix Index line is lower than the Signal line")
-      OscillatorLogic(firstBar,iPrvs,adHistogram,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_is_lower_than_the_level_line);
+      OscillatorLogic(firstBar,previous,histogram,0,0,Component[3],Component[4],IndicatorLogic_The_indicator_is_lower_than_the_level_line);
      
   }
 //+------------------------------------------------------------------+

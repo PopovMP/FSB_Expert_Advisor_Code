@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -60,10 +60,10 @@ void OverboughtOversoldIndex::Calculate(DataSet &dataSet)
 // Reading the parameters
    int period=(int) NumParam[0].Value;
    int level =(int) NumParam[1].Value;
-   int prvs=CheckParam[0].Checked ? 1 : 0;
+   int previous=CheckParam[0].Checked ? 1 : 0;
 
 // Calculation
-   int firstBar=period+2;
+   int firstBar=period + previous + 2;
 
    double obos[];
    ArrayResize(obos,Data.Bars);
@@ -134,6 +134,6 @@ void OverboughtOversoldIndex::Calculate(DataSet &dataSet)
    else if(ListParam[0].Text=="Overbought Oversold Index changes its direction downward") 
       indLogic=IndicatorLogic_The_indicator_changes_its_direction_downward;
 
-   OscillatorLogic(firstBar,prvs,obos,level,100-level,Component[1],Component[2],indLogic);
+   OscillatorLogic(firstBar,previous,obos,level,100-level,Component[1],Component[2],indLogic);
   }
 //+------------------------------------------------------------------+

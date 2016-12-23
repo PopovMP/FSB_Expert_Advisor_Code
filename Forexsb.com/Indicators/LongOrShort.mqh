@@ -36,10 +36,8 @@ class LongOrShort : public Indicator
 public:
     LongOrShort(SlotTypes slotType)
      {
-      SlotType=slotType;
-
-      IndicatorName="Long or Short";
-
+      SlotType          = slotType;
+      IndicatorName     = "Long or Short";
       WarningMessage    = "";
       IsAllowLTF        = true;
       ExecTime          = ExecutionTime_DuringTheBar;
@@ -57,7 +55,6 @@ void LongOrShort::Calculate(DataSet &dataSet)
   {
    Data=GetPointer(dataSet);
 
-// Saving the components
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "Is long entry allowed";
    Component[0].DataType = IndComponentType_AllowOpenLong;
@@ -68,7 +65,6 @@ void LongOrShort::Calculate(DataSet &dataSet)
    Component[1].DataType = IndComponentType_AllowOpenShort;
    Component[1].FirstBar = 0;
 
-// Calculation of the logic
    if(ListParam[0].Text=="Open long positions only")
      {
       ArrayInitialize(Component[0].Value, 1);

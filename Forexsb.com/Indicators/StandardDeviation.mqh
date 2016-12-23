@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -34,7 +34,7 @@
 class StandardDeviation : public Indicator
   {
 public:
-    StandardDeviation(SlotTypes slotType)
+                     StandardDeviation(SlotTypes slotType)
      {
       SlotType=slotType;
 
@@ -48,7 +48,7 @@ public:
       IsDefaultGroupAll = false;
      }
 
-   virtual void Calculate(DataSet &dataSet);
+   virtual void      Calculate(DataSet &dataSet);
   };
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -62,24 +62,24 @@ void StandardDeviation::Calculate(DataSet &dataSet)
    BasePrice price=(BasePrice) ListParam[2].Index;
    int period=(int) NumParam[0].Value;
    double level=NumParam[1].Value;
-   int prvs=CheckParam[0].Checked ? 1 : 0;
+   int previous=CheckParam[0].Checked ? 1 : 0;
 
 // Calculation
    double adPrice[];  Price(price,adPrice);
-   double adMA[];     MovingAverage(period,0,maMethod,adPrice,adMA);
+   double ma[];     MovingAverage(period,0,maMethod,adPrice,ma);
    double stdv[];     ArrayResize(stdv,Data.Bars);  ArrayInitialize(stdv,0);
 
-   int iFirstBar=period+1;
+   int firstBar=period+previous+2;
 
-   for(int iBar=period; iBar<Data.Bars; iBar++)
+   for(int bar=period; bar<Data.Bars; bar++)
      {
       double dSum=0;
       for(int index=0; index<period; index++)
         {
-         double fDelta=(adPrice[iBar-index]-adMA[iBar]);
+         double fDelta=(adPrice[bar-index]-ma[bar]);
          dSum+=fDelta*fDelta;
         }
-      stdv[iBar]=MathSqrt(dSum/period);
+      stdv[bar]=MathSqrt(dSum/period);
      }
 
 // Saving the components
@@ -87,14 +87,14 @@ void StandardDeviation::Calculate(DataSet &dataSet)
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "Standard Deviation";
    Component[0].DataType = IndComponentType_IndicatorValue;
-   Component[0].FirstBar = iFirstBar;
+   Component[0].FirstBar = firstBar;
    ArrayCopy(Component[0].Value,stdv);
 
    ArrayResize(Component[1].Value,Data.Bars);
-   Component[1].FirstBar=iFirstBar;
+   Component[1].FirstBar=firstBar;
 
    ArrayResize(Component[2].Value,Data.Bars);
-   Component[1].FirstBar=iFirstBar;
+   Component[1].FirstBar=firstBar;
 
 // Sets the Component's type
    if(SlotType==SlotTypes_OpenFilter)
@@ -115,24 +115,24 @@ void StandardDeviation::Calculate(DataSet &dataSet)
 // Calculation of the logic
    IndicatorLogic indLogic=IndicatorLogic_It_does_not_act_as_a_filter;
 
-   if(ListParam[0].Text=="Standard Deviation rises") 
+   if(ListParam[0].Text=="Standard Deviation rises")
       indLogic=IndicatorLogic_The_indicator_rises;
-   else if(ListParam[0].Text=="Standard Deviation falls") 
+   else if(ListParam[0].Text=="Standard Deviation falls")
       indLogic=IndicatorLogic_The_indicator_falls;
-   else if(ListParam[0].Text=="Standard Deviation is higher than the Level line") 
+   else if(ListParam[0].Text=="Standard Deviation is higher than the Level line")
       indLogic=IndicatorLogic_The_indicator_is_higher_than_the_level_line;
-   else if(ListParam[0].Text=="Standard Deviation is lower than the Level line") 
+   else if(ListParam[0].Text=="Standard Deviation is lower than the Level line")
       indLogic=IndicatorLogic_The_indicator_is_lower_than_the_level_line;
-   else if(ListParam[0].Text=="Standard Deviation crosses the Level line upward") 
+   else if(ListParam[0].Text=="Standard Deviation crosses the Level line upward")
       indLogic=IndicatorLogic_The_indicator_crosses_the_level_line_upward;
-   else if(ListParam[0].Text=="Standard Deviation crosses the Level line downward") 
+   else if(ListParam[0].Text=="Standard Deviation crosses the Level line downward")
       indLogic=IndicatorLogic_The_indicator_crosses_the_level_line_downward;
-   else if(ListParam[0].Text=="Standard Deviation changes its direction upward") 
+   else if(ListParam[0].Text=="Standard Deviation changes its direction upward")
       indLogic=IndicatorLogic_The_indicator_changes_its_direction_upward;
-   else if(ListParam[0].Text=="Standard Deviation changes its direction downward") 
+   else if(ListParam[0].Text=="Standard Deviation changes its direction downward")
       indLogic=IndicatorLogic_The_indicator_changes_its_direction_downward;
 
-   NoDirectionOscillatorLogic(iFirstBar,prvs,stdv,level,Component[1],indLogic);
+   NoDirectionOscillatorLogic(firstBar,previous,stdv,level,Component[1],indLogic);
    ArrayCopy(Component[2].Value,Component[1].Value);
   }
 //+------------------------------------------------------------------+

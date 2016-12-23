@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -60,29 +60,29 @@ void PriceOscillator::Calculate(DataSet &dataSet)
 // Reading the parameters
    MAMethod maMethod=(MAMethod) ListParam[1].Index;
    BasePrice basePrice=(BasePrice) ListParam[2].Index;
-   int iPeriod = (int) NumParam[0].Value;
+   int period = (int) NumParam[0].Value;
    int iSmooth = (int) NumParam[1].Value;
    double dLevel=NumParam[2].Value;
-   int iPrvs=CheckParam[0].Checked ? 1 : 0;
+   int previous=CheckParam[0].Checked ? 1 : 0;
 
 // Calculation
-   int iFirstBar=iPeriod+iSmooth+2;
+   int firstBar=period+iSmooth+previous+2;
 
-   double adBasePrice[]; Price(basePrice,adBasePrice);
+   double price[]; Price(basePrice,price);
    double adCumulSum[];  ArrayResize(adCumulSum,Data.Bars); ArrayInitialize(adCumulSum,0);
    double adPriceOsc[];  ArrayResize(adPriceOsc,Data.Bars); ArrayInitialize(adPriceOsc,0);
 
-   adCumulSum[iPeriod-1]=0;
+   adCumulSum[period-1]=0;
 
-   for(int iBar=0; iBar<iPeriod; iBar++)
-      adCumulSum[iPeriod-1]+=adBasePrice[iBar];
+   for(int bar=0; bar<period; bar++)
+      adCumulSum[period-1]+=price[bar];
 
-   adPriceOsc[iPeriod-1]=adCumulSum[iPeriod-1]/adBasePrice[iPeriod-1]-iPeriod;
+   adPriceOsc[period-1]=adCumulSum[period-1]/price[period-1]-period;
 
-   for(int iBar=iPeriod; iBar<Data.Bars; iBar++)
+   for(int bar=period; bar<Data.Bars; bar++)
      {
-      adCumulSum[iBar] = adCumulSum[iBar - 1] - adBasePrice[iBar - iPeriod] + adBasePrice[iBar];
-      adPriceOsc[iBar] = iPeriod - adCumulSum[iBar]/adBasePrice[iBar];
+      adCumulSum[bar] = adCumulSum[bar - 1] - price[bar - period] + price[bar];
+      adPriceOsc[bar] = period - adCumulSum[bar]/price[bar];
      }
 
    double maOsc[];
@@ -92,14 +92,14 @@ void PriceOscillator::Calculate(DataSet &dataSet)
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "Price Oscillator";
    Component[0].DataType = IndComponentType_IndicatorValue;
-   Component[0].FirstBar = iFirstBar;
+   Component[0].FirstBar = firstBar;
    ArrayCopy(Component[0].Value,maOsc);
 
    ArrayResize(Component[1].Value,Data.Bars);
-   Component[1].FirstBar=iFirstBar;
+   Component[1].FirstBar=firstBar;
 
    ArrayResize(Component[2].Value,Data.Bars);
-   Component[2].FirstBar=iFirstBar;
+   Component[2].FirstBar=firstBar;
 
 // Sets the Component's type
    if(SlotType==SlotTypes_OpenFilter)
@@ -137,6 +137,6 @@ void PriceOscillator::Calculate(DataSet &dataSet)
    else if(ListParam[0].Text=="Price Oscillator changes its direction downward") 
       indLogic=IndicatorLogic_The_indicator_changes_its_direction_downward;
 
-   OscillatorLogic(iFirstBar,iPrvs,maOsc,dLevel,-dLevel,Component[1],Component[2],indLogic);
+   OscillatorLogic(firstBar,previous,maOsc,dLevel,-dLevel,Component[1],Component[2],indLogic);
   }
 //+------------------------------------------------------------------+

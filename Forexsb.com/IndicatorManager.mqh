@@ -126,17 +126,18 @@
 #include <Forexsb.com\Indicators\WeekClosing.mqh>
 #include <Forexsb.com\Indicators\WeekClosing2.mqh>
 #include <Forexsb.com\Indicators\WilliamsPercentRange.mqh>
-
 //## Import Start
 
 class IndicatorManager
-{
+  {
 public:
    Indicator        *CreateIndicator(string indicatorName,SlotTypes slotType);
-};
-
+  };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
 Indicator *IndicatorManager::CreateIndicator(string indicatorName,SlotTypes slotType)
-{
+  {
    if(indicatorName == "Accelerator Oscillator")    return new AcceleratorOscillator(slotType);
    if(indicatorName == "Account Percent Stop")      return new AccountPercentStop(slotType);
    if(indicatorName == "Accumulation Distribution") return new AccumulationDistribution(slotType);
@@ -239,5 +240,5 @@ Indicator *IndicatorManager::CreateIndicator(string indicatorName,SlotTypes slot
    if(indicatorName == "Williams' Percent Range")   return new WilliamsPercentRange(slotType);
    //## Add Custom
    return NULL;
-}
-
+  }
+//+------------------------------------------------------------------+

@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -57,15 +57,13 @@ void OnBalanceVolume::Calculate(DataSet &dataSet)
   {
    Data=GetPointer(dataSet);
 
-// Reading the parameters
-   int iPrvs=CheckParam[0].Checked ? 1 : 0;
+   int previous=CheckParam[0].Checked ? 1 : 0;
 
-// Calculation
    double adOBV[];
    ArrayResize(adOBV,Data.Bars);
    ArrayInitialize(adOBV,0);
 
-   const int iFirstBar=5;
+   const int firstBar=5;
 
    adOBV[0]=(int)Data.Volume[0];
 
@@ -79,20 +77,18 @@ void OnBalanceVolume::Calculate(DataSet &dataSet)
          adOBV[bar]=adOBV[bar-1];
      }
 
-// Saving the components
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "On Balance Volume";
    Component[0].DataType = IndComponentType_IndicatorValue;
-   Component[0].FirstBar = iFirstBar;
+   Component[0].FirstBar = firstBar;
    ArrayCopy(Component[0].Value,adOBV);
 
    ArrayResize(Component[1].Value,Data.Bars);
-   Component[1].FirstBar=iFirstBar;
+   Component[1].FirstBar=firstBar;
 
    ArrayResize(Component[2].Value,Data.Bars);
-   Component[2].FirstBar=iFirstBar;
+   Component[2].FirstBar=firstBar;
 
-// Sets the Component's type
    if(SlotType==SlotTypes_OpenFilter)
      {
       Component[1].DataType = IndComponentType_AllowOpenLong;
@@ -108,7 +104,6 @@ void OnBalanceVolume::Calculate(DataSet &dataSet)
       Component[2].CompName = "Close out short position";
      }
 
-// Calculation of the logic
    IndicatorLogic indLogic=IndicatorLogic_It_does_not_act_as_a_filter;
 
    if(ListParam[0].Text=="On Balance Volume rises") 
@@ -120,6 +115,6 @@ void OnBalanceVolume::Calculate(DataSet &dataSet)
    else if(ListParam[0].Text=="On Balance Volume changes its direction downward") 
       indLogic=IndicatorLogic_The_indicator_changes_its_direction_downward;
 
-   OscillatorLogic(iFirstBar,iPrvs,adOBV,0,0,Component[1],Component[2],indLogic);
+   OscillatorLogic(firstBar,previous,adOBV,0,0,Component[1],Component[2],indLogic);
   }
 //+------------------------------------------------------------------+

@@ -57,10 +57,8 @@ void HeikenAshi::Calculate(DataSet &dataSet)
   {
    Data=GetPointer(dataSet);
 
-// Reading the parameters
-   int iPrvs=CheckParam[0].Checked ? 1 : 0;
+   int previous=CheckParam[0].Checked ? 1 : 0;
 
-// Calculation
    double adHaOpen[];  ArrayResize(adHaOpen,Data.Bars);  ArrayInitialize(adHaOpen,0);
    double adHaHigh[];  ArrayResize(adHaHigh,Data.Bars);  ArrayInitialize(adHaHigh,0);
    double adHaLow[];   ArrayResize(adHaLow,Data.Bars);   ArrayInitialize(adHaLow,0);
@@ -71,7 +69,7 @@ void HeikenAshi::Calculate(DataSet &dataSet)
    adHaLow[0]  = Data.Low[0];
    adHaClose[0]= Data.Close[0];
 
-   int iFirstBar=1+iPrvs;
+   int firstBar=previous+1;
 
    for(int bar=1; bar<Data.Bars; bar++)
      {
@@ -83,39 +81,36 @@ void HeikenAshi::Calculate(DataSet &dataSet)
       adHaLow[bar]  = adHaClose[bar] < adHaLow[bar]  ? adHaClose[bar] : adHaLow[bar];
      }
 
-// Saving the components
-
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "H.A. Open";
    Component[0].DataType = IndComponentType_IndicatorValue;
-   Component[0].FirstBar = iFirstBar;
+   Component[0].FirstBar = firstBar;
    ArrayCopy(Component[0].Value,adHaOpen);
 
    ArrayResize(Component[1].Value,Data.Bars);
    Component[1].CompName = "H.A. High";
    Component[1].DataType = IndComponentType_IndicatorValue;
-   Component[1].FirstBar = iFirstBar;
+   Component[1].FirstBar = firstBar;
    ArrayCopy(Component[1].Value,adHaHigh);
 
    ArrayResize(Component[2].Value,Data.Bars);
    Component[2].CompName = "H.A. Low";
    Component[2].DataType = IndComponentType_IndicatorValue;
-   Component[2].FirstBar = iFirstBar;
+   Component[2].FirstBar = firstBar;
    ArrayCopy(Component[2].Value,adHaLow);
 
    ArrayResize(Component[3].Value,Data.Bars);
    Component[3].CompName = "H.A. Close";
    Component[3].DataType = IndComponentType_IndicatorValue;
-   Component[3].FirstBar = iFirstBar;
+   Component[3].FirstBar = firstBar;
    ArrayCopy(Component[3].Value,adHaClose);
 
    ArrayResize(Component[4].Value,Data.Bars);
-   Component[4].FirstBar=iFirstBar;
+   Component[4].FirstBar=firstBar;
 
    ArrayResize(Component[5].Value,Data.Bars);
-   Component[5].FirstBar=iFirstBar;
+   Component[5].FirstBar=firstBar;
 
-// Sets the Component's type
    if(SlotType==SlotTypes_Open)
      {
       Component[4].DataType = IndComponentType_OpenLongPrice;
@@ -147,45 +142,45 @@ void HeikenAshi::Calculate(DataSet &dataSet)
 
    if(SlotType==SlotTypes_Open || SlotType==SlotTypes_Close)
      {
-      for(int iBar=2; iBar<Data.Bars; iBar++)
+      for(int bar=2; bar<Data.Bars; bar++)
         {
          if(ListParam[0].Text=="Enter long at the H.A. High" || ListParam[0].Text=="Exit long at the H.A. High")
            {
-            Component[4].Value[iBar] = adHaHigh[iBar - iPrvs];
-            Component[5].Value[iBar] = adHaLow[iBar - iPrvs];
+            Component[4].Value[bar] = adHaHigh[bar - previous];
+            Component[5].Value[bar] = adHaLow[bar - previous];
            }
          else
            {
-            Component[4].Value[iBar] = adHaLow[iBar - iPrvs];
-            Component[5].Value[iBar] = adHaHigh[iBar - iPrvs];
+            Component[4].Value[bar] = adHaLow[bar - previous];
+            Component[5].Value[bar] = adHaHigh[bar - previous];
            }
         }
      }
    else
      {
       if(ListParam[0].Text=="White H.A. bar without lower shadow")
-         for(int iBar=iFirstBar; iBar<Data.Bars; iBar++)
+         for(int bar=firstBar; bar<Data.Bars; bar++)
            {
-            Component[4].Value[iBar]=adHaClose[iBar-iPrvs]>adHaOpen[iBar-iPrvs] && MathAbs(adHaLow[iBar-iPrvs]-adHaOpen[iBar-iPrvs])< Epsilon() ? 1 : 0;
-            Component[5].Value[iBar]=adHaClose[iBar-iPrvs]<adHaOpen[iBar-iPrvs] && MathAbs(adHaHigh[iBar-iPrvs]-adHaOpen[iBar-iPrvs])< Epsilon() ? 1 : 0;
+            Component[4].Value[bar]=adHaClose[bar-previous]>adHaOpen[bar-previous] && MathAbs(adHaLow[bar-previous]-adHaOpen[bar-previous])< Epsilon() ? 1 : 0;
+            Component[5].Value[bar]=adHaClose[bar-previous]<adHaOpen[bar-previous] && MathAbs(adHaHigh[bar-previous]-adHaOpen[bar-previous])< Epsilon() ? 1 : 0;
            }
       else if(ListParam[0].Text=="White H.A. bar")
-         for(int iBar=iFirstBar; iBar<Data.Bars; iBar++)
+         for(int bar=firstBar; bar<Data.Bars; bar++)
            {
-            Component[4].Value[iBar] = adHaClose[iBar - iPrvs] > adHaOpen[iBar - iPrvs] ? 1 : 0;
-            Component[5].Value[iBar] = adHaClose[iBar - iPrvs] < adHaOpen[iBar - iPrvs] ? 1 : 0;
+            Component[4].Value[bar] = adHaClose[bar - previous] > adHaOpen[bar - previous] ? 1 : 0;
+            Component[5].Value[bar] = adHaClose[bar - previous] < adHaOpen[bar - previous] ? 1 : 0;
            }
       else if(ListParam[0].Text=="Black H.A. bar")
-         for(int iBar=iFirstBar; iBar<Data.Bars; iBar++)
+         for(int bar=firstBar; bar<Data.Bars; bar++)
            {
-            Component[4].Value[iBar] = adHaClose[iBar - iPrvs] < adHaOpen[iBar - iPrvs] ? 1 : 0;
-            Component[5].Value[iBar] = adHaClose[iBar - iPrvs] > adHaOpen[iBar - iPrvs] ? 1 : 0;
+            Component[4].Value[bar] = adHaClose[bar - previous] < adHaOpen[bar - previous] ? 1 : 0;
+            Component[5].Value[bar] = adHaClose[bar - previous] > adHaOpen[bar - previous] ? 1 : 0;
            }
       else if(ListParam[0].Text=="Black H.A. bar without upper shadow")
-         for(int iBar=iFirstBar; iBar<Data.Bars; iBar++)
+         for(int bar=firstBar; bar<Data.Bars; bar++)
            {
-            Component[4].Value[iBar]=adHaClose[iBar-iPrvs]<adHaOpen[iBar-iPrvs] && MathAbs(adHaHigh[iBar-iPrvs]-adHaOpen[iBar-iPrvs])< Epsilon() ? 1 : 0;
-            Component[5].Value[iBar]=adHaClose[iBar-iPrvs]>adHaOpen[iBar-iPrvs] && MathAbs(adHaLow[iBar-iPrvs]-adHaOpen[iBar-iPrvs])< Epsilon() ? 1 : 0;
+            Component[4].Value[bar]=adHaClose[bar-previous]<adHaOpen[bar-previous] && MathAbs(adHaHigh[bar-previous]-adHaOpen[bar-previous])< Epsilon() ? 1 : 0;
+            Component[5].Value[bar]=adHaClose[bar-previous]>adHaOpen[bar-previous] && MathAbs(adHaLow[bar-previous]-adHaOpen[bar-previous])< Epsilon() ? 1 : 0;
            }
      }
   }

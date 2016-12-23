@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -60,7 +60,7 @@ void PriceMove::Calculate(DataSet &dataSet)
 // Reading the parameters
    BasePrice price=(BasePrice) ListParam[1].Index;
    double margin=NumParam[0].Value*Data.Point;
-   int prvs=CheckParam[0].Checked ? 1 : 0;
+   int previous=CheckParam[0].Checked ? 1 : 0;
 
 // TimeExecution
    if(price==BasePrice_Open && MathAbs(margin-0)<Epsilon())
@@ -72,27 +72,27 @@ void PriceMove::Calculate(DataSet &dataSet)
 
 // Calculation
    double adBasePr[];  Price(price,adBasePr);
-   double adUpBand[];  ArrayResize(adUpBand,Data.Bars); ArrayInitialize(adUpBand,0);
-   double adDnBand[];  ArrayResize(adDnBand,Data.Bars); ArrayInitialize(adDnBand,0);
+   double upperBand[];  ArrayResize(upperBand,Data.Bars); ArrayInitialize(upperBand,0);
+   double lowerBand[];  ArrayResize(lowerBand,Data.Bars); ArrayInitialize(lowerBand,0);
 
-   int firstBar=1+prvs;
+   int firstBar=previous+2;
 
-   for(int iBar=firstBar; iBar<Data.Bars; iBar++)
+   for(int bar=firstBar; bar<Data.Bars; bar++)
      {
-      adUpBand[iBar] = adBasePr[iBar - prvs] + margin;
-      adDnBand[iBar] = adBasePr[iBar - prvs] - margin;
+      upperBand[bar] = adBasePr[bar - previous] + margin;
+      lowerBand[bar] = adBasePr[bar - previous] - margin;
      }
 
 // Saving the components
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "Up Price";
    Component[0].FirstBar = firstBar;
-   ArrayCopy(Component[0].Value,adUpBand);
+   ArrayCopy(Component[0].Value,upperBand);
 
    ArrayResize(Component[1].Value,Data.Bars);
    Component[1].CompName = "Down Price";
    Component[1].FirstBar = firstBar;
-   ArrayCopy(Component[1].Value,adDnBand);
+   ArrayCopy(Component[1].Value,lowerBand);
 
    if(ListParam[0].Text=="Enter long after an upward move") 
      {

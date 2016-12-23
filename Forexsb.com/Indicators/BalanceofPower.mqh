@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -34,22 +34,23 @@
 class BalanceofPower : public Indicator
   {
 public:
-   BalanceofPower(SlotTypes slotType)
-     {
-      SlotType=slotType;
-
-      IndicatorName="Balance of Power";
-
-      WarningMessage    = "";
-      IsAllowLTF        = true;
-      ExecTime          = ExecutionTime_DuringTheBar;
-      IsSeparateChart   = true;
-      IsDiscreteValues  = false;
-      IsDefaultGroupAll = false;
-     }
-
-   virtual void Calculate(DataSet &dataSet);
+                     BalanceofPower(SlotTypes slotType);
+   virtual void      Calculate(DataSet &dataSet);
   };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void BalanceofPower::BalanceofPower(SlotTypes slotType)
+  {
+   SlotType          = slotType;
+   IndicatorName     = "Balance of Power";
+   WarningMessage    = "";
+   IsAllowLTF        = true;
+   ExecTime          = ExecutionTime_DuringTheBar;
+   IsSeparateChart   = true;
+   IsDiscreteValues  = false;
+   IsDefaultGroupAll = false;
+  }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -57,37 +58,34 @@ void BalanceofPower::Calculate(DataSet &dataSet)
   {
    Data=GetPointer(dataSet);
 
-// Reading the parameters
    MAMethod maMethod=(MAMethod) ListParam[1].Index;
-   int iPeriod=(int) NumParam[0].Value;
-   int iPrvs=CheckParam[0].Checked ? 1 : 0;
+   int period=(int) NumParam[0].Value;
+   int previous=CheckParam[0].Checked ? 1 : 0;
 
-// Calculation
-   int iFirstBar=iPeriod+2;
+   int firstBar=period+previous+2;
 
-   double adBop1[]; ArrayResize(adBop1,Data.Bars); ArrayInitialize(adBop1, 0);
+   double bop[]; ArrayResize(bop,Data.Bars); ArrayInitialize(bop,0);
 
-   for(int iBar=1; iBar<Data.Bars; iBar++)
-      if(Data.High[iBar]-Data.Low[iBar]>Data.Point)
-         adBop1[iBar]=(Data.Close[iBar]-Data.Open[iBar])/(Data.High[iBar]-Data.Low[iBar]);
+   for(int bar=1; bar<Data.Bars; bar++)
+     {
+      if(Data.High[bar]-Data.Low[bar]>Data.Point)
+         bop[bar]=(Data.Close[bar]-Data.Open[bar])/(Data.High[bar]-Data.Low[bar]);
+     }
 
-   double adBop[];
-   MovingAverage(iPeriod,0,maMethod,adBop1,adBop);
+   double balanceOfPower[]; MovingAverage(period,0,maMethod,bop,balanceOfPower);
 
-// Saving the components
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "Balance of Power";
    Component[0].DataType = IndComponentType_IndicatorValue;
-   Component[0].FirstBar = iFirstBar;
-   ArrayCopy(Component[0].Value,adBop);
+   Component[0].FirstBar = firstBar;
+   ArrayCopy(Component[0].Value,balanceOfPower);
 
    ArrayResize(Component[1].Value,Data.Bars);
-   Component[1].FirstBar=iFirstBar;
+   Component[1].FirstBar=firstBar;
 
    ArrayResize(Component[2].Value,Data.Bars);
-   Component[2].FirstBar=iFirstBar;
+   Component[2].FirstBar=firstBar;
 
-// Sets the Component's type
    if(SlotType==SlotTypes_OpenFilter)
      {
       Component[1].DataType = IndComponentType_AllowOpenLong;
@@ -103,7 +101,6 @@ void BalanceofPower::Calculate(DataSet &dataSet)
       Component[2].CompName = "Close out short position";
      }
 
-// Calculation of the logic
    IndicatorLogic indLogic=IndicatorLogic_It_does_not_act_as_a_filter;
 
    if(ListParam[0].Text=="Balance of Power rises")
@@ -123,6 +120,6 @@ void BalanceofPower::Calculate(DataSet &dataSet)
    else if(ListParam[0].Text=="Balance of Power changes its direction downward")
       indLogic=IndicatorLogic_The_indicator_changes_its_direction_downward;
 
-   OscillatorLogic(iFirstBar,iPrvs,adBop,0,0,Component[1],Component[2],indLogic);
+   OscillatorLogic(firstBar,previous,balanceOfPower,0,0,Component[1],Component[2],indLogic);
   }
 //+------------------------------------------------------------------+

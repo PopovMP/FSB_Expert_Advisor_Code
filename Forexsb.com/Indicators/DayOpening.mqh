@@ -34,22 +34,23 @@
 class DayOpening : public Indicator
   {
 public:
-    DayOpening(SlotTypes slotType)
-     {
-      SlotType=slotType;
-
-      IndicatorName="Day Opening";
-
-      WarningMessage    = "";
-      IsAllowLTF        = true;
-      ExecTime          = ExecutionTime_AtBarOpening;
-      IsSeparateChart   = false;
-      IsDiscreteValues  = false;
-      IsDefaultGroupAll = false;
-     }
-
-   virtual void Calculate(DataSet &dataSet);
+                     DayOpening(SlotTypes slotType);
+   virtual void      Calculate(DataSet &dataSet);
   };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void DayOpening::DayOpening(SlotTypes slotType)
+  {
+   SlotType          = slotType;
+   IndicatorName     = "Day Opening";
+   WarningMessage    = "";
+   IsAllowLTF        = true;
+   ExecTime          = ExecutionTime_AtBarOpening;
+   IsSeparateChart   = false;
+   IsDiscreteValues  = false;
+   IsDefaultGroupAll = false;
+  }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -57,8 +58,7 @@ void DayOpening::Calculate(DataSet &dataSet)
   {
    Data=GetPointer(dataSet);
 
-// Calculation
-   double openPrice[]; ArrayResize(openPrice,Data.Bars); ArrayInitialize(openPrice, 0);
+   double openPrice[]; ArrayResize(openPrice,Data.Bars); ArrayInitialize(openPrice,0);
 
    for(int bar=1; bar<Data.Bars; bar++)
      {
@@ -68,11 +68,10 @@ void DayOpening::Calculate(DataSet &dataSet)
          openPrice[bar]=Data.Open[bar];
      }
 
-// Saving the components
-   ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "Opening price of the day";
    Component[0].DataType = IndComponentType_OpenPrice;
    Component[0].FirstBar = 2;
+   ArrayResize(Component[0].Value,Data.Bars);
    ArrayCopy(Component[0].Value,openPrice);
   }
 //+------------------------------------------------------------------+

@@ -34,22 +34,23 @@
 class AccountPercentStop : public Indicator
   {
 public:
-   AccountPercentStop(SlotTypes slotType)
-     {
-      SlotType=slotType;
-
-      IndicatorName="Account Percent Stop";
-
-      WarningMessage    = "";
-      IsAllowLTF        = true;
-      ExecTime          = ExecutionTime_DuringTheBar;
-      IsSeparateChart   = false;
-      IsDiscreteValues  = false;
-      IsDefaultGroupAll = false;
-     }
-
-   virtual void Calculate(DataSet &dataSet);
+                     AccountPercentStop(SlotTypes slotType);
+   virtual void      Calculate(DataSet &dataSet);
   };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void AccountPercentStop::AccountPercentStop(SlotTypes slotType)
+  {
+   SlotType          = slotType;
+   IndicatorName     = "Account Percent Stop";
+   WarningMessage    = "";
+   IsAllowLTF        = true;
+   ExecTime          = ExecutionTime_DuringTheBar;
+   IsSeparateChart   = false;
+   IsDiscreteValues  = false;
+   IsDefaultGroupAll = false;
+  }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -57,15 +58,11 @@ void AccountPercentStop::Calculate(DataSet &dataSet)
   {
    Data=GetPointer(dataSet);
 
-// Calculation
-   const int firstBar=1;
-
-// Saving the components
-   ArrayResize(Component[0].Value,Data.Bars);
-   ArrayInitialize(Component[0].Value,Data.Bars);
-   Component[0].CompName = "Stop to a transferred position";
-   Component[0].DataType = IndComponentType_Other;
+   Component[0].CompName      = "Stop to a transferred position";
+   Component[0].DataType      = IndComponentType_Other;
    Component[0].ShowInDynInfo = false;
-   Component[0].FirstBar = firstBar;
+   Component[0].FirstBar      = 2;
+   ArrayResize(Component[0].Value,Data.Bars);
+   ArrayInitialize(Component[0].Value,0);
   }
 //+------------------------------------------------------------------+

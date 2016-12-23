@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -34,22 +34,23 @@
 class AcceleratorOscillator : public Indicator
   {
 public:
-   AcceleratorOscillator(SlotTypes slotType)
-     {
-      SlotType=slotType;
-
-      IndicatorName="Accelerator Oscillator";
-
-      WarningMessage    = "";
-      IsAllowLTF        = true;
-      ExecTime          = ExecutionTime_DuringTheBar;
-      IsSeparateChart   = true;
-      IsDiscreteValues  = false;
-      IsDefaultGroupAll = false;
-     }
-
-   virtual void Calculate(DataSet &dataSet);
+                     AcceleratorOscillator(SlotTypes slotType);
+   virtual void      Calculate(DataSet &dataSet);
   };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void AcceleratorOscillator::AcceleratorOscillator(SlotTypes slotType)
+  {
+   SlotType          = slotType;
+   IndicatorName     = "Accelerator Oscillator";
+   WarningMessage    = "";
+   IsAllowLTF        = true;
+   ExecTime          = ExecutionTime_DuringTheBar;
+   IsSeparateChart   = true;
+   IsDiscreteValues  = false;
+   IsDefaultGroupAll = false;
+  }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -57,38 +58,45 @@ void AcceleratorOscillator::Calculate(DataSet &dataSet)
   {
    Data=GetPointer(dataSet);
 
-// Reading the parameters
    MAMethod maMethod=(MAMethod) ListParam[1].Index;
    BasePrice basePrice=(BasePrice) ListParam[2].Index;
-   int slow = (int) NumParam[0].Value;
-   int fast = (int) NumParam[1].Value;
-   int accelerator=(int) NumParam[2].Value;
+   int periodSlow = (int) NumParam[0].Value;
+   int periodFast = (int) NumParam[1].Value;
+   int periodAcc=(int) NumParam[2].Value;
    double level=NumParam[3].Value;
-   int prvs=CheckParam[0].Checked ? 1 : 0;
+   int previous=CheckParam[0].Checked ? 1 : 0;
 
-// Calculation
-   int firstBar=slow+accelerator+2;
-   double basePrc[]; Price(basePrice,basePrc);
-   double maSlow[]; MovingAverage(slow,0,maMethod,basePrc,maSlow);
-   double maFast[]; MovingAverage(fast,0,maMethod,basePrc,maFast);
-   double ao[]; ArrayResize(ao,Data.Bars); ArrayInitialize(ao, 0);
-   double ac[]; ArrayResize(ac,Data.Bars); ArrayInitialize(ac, 0);
+   int firstBar=MathMax(MathMax(periodSlow,periodFast),periodAcc)+previous+2;
+   double price[]; Price(basePrice,price);
+   double maSlow[]; MovingAverage(periodSlow,0,maMethod,price,maSlow);
+   double maFast[]; MovingAverage(periodFast,0,maMethod,price,maFast);
 
-   for(int bar=slow-1; bar<Data.Bars; bar++)
-      ao[bar]=maFast[bar]-maSlow[bar];
+   double awesomeOscillator[];
+   ArrayResize(awesomeOscillator,Data.Bars);
+   ArrayInitialize(awesomeOscillator,0);
+
+   double acceleratorOscillator[];
+   ArrayResize(acceleratorOscillator,Data.Bars);
+   ArrayInitialize(acceleratorOscillator,0);
+
+   for(int bar=0; bar<Data.Bars; bar++)
+     {
+      awesomeOscillator[bar]=maFast[bar]-maSlow[bar];
+     }
 
    double movingAverage[];
-   MovingAverage(accelerator,0,maMethod,ao,movingAverage);
-   
-   for(int bar=firstBar; bar<Data.Bars; bar++)
-      ac[bar]=ao[bar]-movingAverage[bar];
+   MovingAverage(periodAcc,0,maMethod,awesomeOscillator,movingAverage);
 
-// Saving the components
+   for(int bar=0; bar<Data.Bars; bar++)
+     {
+      acceleratorOscillator[bar]=awesomeOscillator[bar]-movingAverage[bar];
+     }
+
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "AC";
    Component[0].DataType = IndComponentType_IndicatorValue;
    Component[0].FirstBar = firstBar;
-   ArrayCopy(Component[0].Value,ac);
+   ArrayCopy(Component[0].Value,acceleratorOscillator);
 
    ArrayResize(Component[1].Value,Data.Bars);
    Component[1].FirstBar=firstBar;
@@ -96,7 +104,6 @@ void AcceleratorOscillator::Calculate(DataSet &dataSet)
    ArrayResize(Component[2].Value,Data.Bars);
    Component[2].FirstBar=firstBar;
 
-// Sets the Component's type
    if(SlotType==SlotTypes_OpenFilter)
      {
       Component[1].DataType = IndComponentType_AllowOpenLong;
@@ -113,7 +120,6 @@ void AcceleratorOscillator::Calculate(DataSet &dataSet)
       Component[2].CompName = "Close out short position";
      }
 
-// Calculation of the signals
    IndicatorLogic indicatorLogic=IndicatorLogic_It_does_not_act_as_a_filter;
 
    if(ListParam[0].Text=="AC rises")
@@ -133,6 +139,6 @@ void AcceleratorOscillator::Calculate(DataSet &dataSet)
    else if(ListParam[0].Text=="AC changes its direction downward")
       indicatorLogic=IndicatorLogic_The_indicator_changes_its_direction_downward;
 
-   OscillatorLogic(firstBar,prvs,ac,level,-level,Component[1],Component[2],indicatorLogic);
+   OscillatorLogic(firstBar,previous,acceleratorOscillator,level,-level,Component[1],Component[2],indicatorLogic);
   }
 //+------------------------------------------------------------------+

@@ -34,22 +34,23 @@
 class EntryHour : public Indicator
   {
 public:
-    EntryHour(SlotTypes slotType)
-     {
-      SlotType=slotType;
-
-      IndicatorName="Entry Hour";
-
-      WarningMessage    = "";
-      IsAllowLTF        = true;
-      ExecTime          = ExecutionTime_DuringTheBar;
-      IsSeparateChart   = false;
-      IsDiscreteValues  = false;
-      IsDefaultGroupAll = true;
-     }
-
-   virtual void Calculate(DataSet &dataSet);
+                     EntryHour(SlotTypes slotType);
+   virtual void      Calculate(DataSet &dataSet);
   };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void EntryHour::EntryHour(SlotTypes slotType)
+  {
+   SlotType          = slotType;
+   IndicatorName     = "Entry Hour";
+   WarningMessage    = "";
+   IsAllowLTF        = true;
+   ExecTime          = ExecutionTime_DuringTheBar;
+   IsSeparateChart   = false;
+   IsDiscreteValues  = false;
+   IsDefaultGroupAll = true;
+  }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -57,14 +58,12 @@ void EntryHour::Calculate(DataSet &dataSet)
   {
    Data=GetPointer(dataSet);
 
-// Reading the parameters
    int entryHour   = (int) NumParam[0].Value;
    int entryMinute = (int) NumParam[1].Value;
-// Calculation
-   const int firstBar=1;
+
+   const int firstBar=2;
    double adBars[]; ArrayResize(adBars,Data.Bars);ArrayInitialize(adBars,0);
 
-// Calculation of the logic
    for(int bar=firstBar; bar<Data.Bars; bar++)
      {
       MqlDateTime mqlTime; TimeToStruct(Data.Time[bar],mqlTime);
@@ -72,7 +71,6 @@ void EntryHour::Calculate(DataSet &dataSet)
       adBars[bar] = isTime ? Data.Open[bar] : 0;
      }
 
-// Saving the components
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "Entry hour";
    Component[0].DataType = IndComponentType_OpenPrice;

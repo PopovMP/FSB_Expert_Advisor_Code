@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -34,22 +34,23 @@
 class BarRange : public Indicator
   {
 public:
-   BarRange(SlotTypes slotType)
-     {
-      SlotType=slotType;
-
-      IndicatorName="Bar Range";
-
-      WarningMessage    = "";
-      IsAllowLTF        = true;
-      ExecTime          = ExecutionTime_DuringTheBar;
-      IsSeparateChart   = true;
-      IsDiscreteValues  = false;
-      IsDefaultGroupAll = false;
-     }
-
-   virtual void Calculate(DataSet &dataSet);
+                     BarRange(SlotTypes slotType);
+   virtual void      Calculate(DataSet &dataSet);
   };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void BarRange::BarRange(SlotTypes slotType)
+  {
+   SlotType          = slotType;
+   IndicatorName     = "Bar Range";
+   WarningMessage    = "";
+   IsAllowLTF        = true;
+   ExecTime          = ExecutionTime_DuringTheBar;
+   IsSeparateChart   = true;
+   IsDiscreteValues  = false;
+   IsDefaultGroupAll = false;
+  }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -57,46 +58,42 @@ void BarRange::Calculate(DataSet &dataSet)
   {
    Data=GetPointer(dataSet);
 
-// Reading the parameters
-   int nBars=(int) NumParam[0].Value;
-   double dLevel=NumParam[1].Value;
-   int iPrvs=CheckParam[0].Checked ? 1 : 0;
+   int period=(int) NumParam[0].Value;
+   double level=NumParam[1].Value;
+   int previous=CheckParam[0].Checked ? 1 : 0;
+   int firstBar=period + previous + 2;
 
-// Calculation
-   int iFirstBar=nBars+1;
+   double range[]; ArrayResize(range,Data.Bars); ArrayInitialize(range,0);
 
-   double adRange[]; ArrayResize(adRange,Data.Bars); ArrayInitialize(adRange,0);
-
-   for(int iBar=iFirstBar; iBar<Data.Bars; iBar++)
+   for(int bar=firstBar; bar<Data.Bars; bar++)
      {
       double maxHigh= DBL_MIN;
       double minLow = DBL_MAX;
-      for(int i=0; i<nBars; i++)
+      for(int i=0; i<period; i++)
         {
-         if(Data.High[iBar-i]>maxHigh)
-            maxHigh=Data.High[iBar-i];
-         if(Data.Low[iBar-i]<minLow)
-            minLow=Data.Low[iBar-i];
+         if(Data.High[bar-i]>maxHigh)
+            maxHigh=Data.High[bar-i];
+         if(Data.Low[bar-i]<minLow)
+            minLow=Data.Low[bar-i];
         }
-      adRange[iBar]=maxHigh-minLow;
+      range[bar]=maxHigh-minLow;
      }
-
-// Saving the components
 
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "Bar Range";
    Component[0].DataType = IndComponentType_IndicatorValue;
-   Component[0].FirstBar = iFirstBar;
+   Component[0].FirstBar = firstBar;
    for(int i=0; i<Data.Bars; i++)
-      Component[0].Value[i]=MathRound(adRange[i]/Data.Point);
+     {
+      Component[0].Value[i]=MathRound(range[i]/Data.Point);
+     }
 
    ArrayResize(Component[1].Value,Data.Bars);
-   Component[1].FirstBar=iFirstBar;
+   Component[1].FirstBar=firstBar;
 
    ArrayResize(Component[2].Value,Data.Bars);
-   Component[2].FirstBar=iFirstBar;
+   Component[2].FirstBar=firstBar;
 
-// Sets the Component's type
    if(SlotType==SlotTypes_OpenFilter)
      {
       Component[1].DataType = IndComponentType_AllowOpenLong;
@@ -112,7 +109,6 @@ void BarRange::Calculate(DataSet &dataSet)
       Component[2].CompName = "Close out short position";
      }
 
-// Calculation of the logic
    IndicatorLogic indLogic=IndicatorLogic_It_does_not_act_as_a_filter;
 
    if(ListParam[0].Text=="Bar Range rises")
@@ -124,7 +120,7 @@ void BarRange::Calculate(DataSet &dataSet)
    else if(ListParam[0].Text=="Bar Range is lower than the Level line")
       indLogic=IndicatorLogic_The_indicator_is_lower_than_the_level_line;
 
-   NoDirectionOscillatorLogic(iFirstBar,iPrvs,adRange,dLevel*Data.Point,Component[1],indLogic);
+   NoDirectionOscillatorLogic(firstBar,previous,range,level*Data.Point,Component[1],indLogic);
    ArrayCopy(Component[2].Value,Component[1].Value);
   }
 //+------------------------------------------------------------------+

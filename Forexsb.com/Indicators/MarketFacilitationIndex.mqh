@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -34,22 +34,23 @@
 class MarketFacilitationIndex : public Indicator
   {
 public:
-    MarketFacilitationIndex(SlotTypes slotType)
-     {
-      SlotType=slotType;
-
-      IndicatorName="Market Facilitation Index";
-
-      WarningMessage    = "";
-      IsAllowLTF        = true;
-      ExecTime          = ExecutionTime_DuringTheBar;
-      IsSeparateChart   = true;
-      IsDiscreteValues  = false;
-      IsDefaultGroupAll = false;
-     }
-
-   virtual void Calculate(DataSet &dataSet);
+                     MarketFacilitationIndex(SlotTypes slotType);
+   virtual void      Calculate(DataSet &dataSet);
   };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void MarketFacilitationIndex::MarketFacilitationIndex(SlotTypes slotType)
+  {
+   SlotType          = slotType;
+   IndicatorName     = "Market Facilitation Index";
+   WarningMessage    = "";
+   IsAllowLTF        = true;
+   ExecTime          = ExecutionTime_DuringTheBar;
+   IsSeparateChart   = true;
+   IsDiscreteValues  = false;
+   IsDefaultGroupAll = false;
+  }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -57,28 +58,23 @@ void MarketFacilitationIndex::Calculate(DataSet &dataSet)
   {
    Data=GetPointer(dataSet);
 
-// Reading the parameters
-   int iPrvs=CheckParam[0].Checked ? 1 : 0;
-
-// Calculation
-   double adMfi[]; ArrayResize(adMfi,Data.Bars);ArrayInitialize(adMfi,0);
-
+   int previous=CheckParam[0].Checked ? 1 : 0;
+   double mfi[]; ArrayResize(mfi,Data.Bars) ;ArrayInitialize(mfi,0);
    const int firstBar=5;
 
-   for(int iBar=0; iBar<Data.Bars; iBar++)
+   for(int bar=0; bar<Data.Bars; bar++)
      {
-      if(Data.Volume[iBar]>0)
-         adMfi[iBar]=10000*(Data.High[iBar]-Data.Low[iBar])/Data.Volume[iBar];
+      if(Data.Volume[bar]>0)
+         mfi[bar]=10000*(Data.High[bar]-Data.Low[bar])/Data.Volume[bar];
       else
-         adMfi[iBar]=10000*(Data.High[iBar]-Data.Low[iBar]);
+         mfi[bar]=10000*(Data.High[bar]-Data.Low[bar]);
      }
 
-// Saving the components
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "Market Facilitation Index";
    Component[0].DataType = IndComponentType_IndicatorValue;
    Component[0].FirstBar = firstBar;
-   ArrayCopy(Component[0].Value,adMfi);
+   ArrayCopy(Component[0].Value,mfi);
 
    ArrayResize(Component[1].Value,Data.Bars);
    Component[1].FirstBar=firstBar;
@@ -86,7 +82,6 @@ void MarketFacilitationIndex::Calculate(DataSet &dataSet)
    ArrayResize(Component[2].Value,Data.Bars);
    Component[2].FirstBar=firstBar;
 
-// Sets the Component's type
    if(SlotType==SlotTypes_OpenFilter)
      {
       Component[1].DataType = IndComponentType_AllowOpenLong;
@@ -102,7 +97,6 @@ void MarketFacilitationIndex::Calculate(DataSet &dataSet)
       Component[2].CompName = "Close out short position";
      }
 
-// Calculation of the logic
    IndicatorLogic indLogic=IndicatorLogic_It_does_not_act_as_a_filter;
 
    if(ListParam[0].Text=="Market Facilitation Index rises")
@@ -114,7 +108,7 @@ void MarketFacilitationIndex::Calculate(DataSet &dataSet)
    else if(ListParam[0].Text=="Market Facilitation Index changes its direction downward")
       indLogic=IndicatorLogic_The_indicator_changes_its_direction_downward;
 
-   NoDirectionOscillatorLogic(firstBar,iPrvs,adMfi,0,Component[1],indLogic);
+   NoDirectionOscillatorLogic(firstBar,previous,mfi,0,Component[1],indLogic);
    ArrayCopy(Component[2].Value,Component[1].Value);
   }
 //+------------------------------------------------------------------+

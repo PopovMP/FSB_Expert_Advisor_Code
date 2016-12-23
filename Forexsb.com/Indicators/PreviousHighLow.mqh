@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -34,7 +34,7 @@
 class PreviousHighLow : public Indicator
   {
 public:
-    PreviousHighLow(SlotTypes slotType)
+                     PreviousHighLow(SlotTypes slotType)
      {
       SlotType=slotType;
 
@@ -48,18 +48,18 @@ public:
       IsDefaultGroupAll = false;
      }
 
-   virtual void Calculate(DataSet &dataSet);
+   virtual void      Calculate(DataSet &dataSet);
   };
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
 void PreviousHighLow::Calculate(DataSet &dataSet)
   {
-   Data = GetPointer(dataSet);
+   Data=GetPointer(dataSet);
 
-   double verticalShift = NumParam[0].Value * Data.Point;
+   double verticalShift=NumParam[0].Value*Data.Point;
    int    previous = CheckParam[0].Checked ? 1 : 0;
-   int    firstBar = previous;
+   int    firstBar = previous+2;
 
 // Calculation
    double high[]; ArrayResize(high,Data.Bars); ArrayInitialize(high,0);

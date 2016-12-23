@@ -27,38 +27,45 @@
 #property strict
 
 #include <Forexsb.com\Enumerations.mqh>
-
 //## Import Start
 
 class IndicatorComp
-{
+  {
 public:
-    // Constructors
-    IndicatorComp()
-    {
-        CompName           = "Not defined";
-        DataType           = IndComponentType_NotDefined;
-        FirstBar           = 0;
-        UsePreviousBar     = 0;
-        ShowInDynInfo      = true;
-        PosPriceDependence = PositionPriceDependence_None;
-    }
+   // Constructors
+                     IndicatorComp();
 
-    // Properties
-    string                  CompName;
-    int                     FirstBar;
-    int                     UsePreviousBar; // Deprecated
-    IndComponentType        DataType;
-    PositionPriceDependence PosPriceDependence;
-    bool                    ShowInDynInfo;
-    double                  Value[];
+   // Properties
+   string            CompName;
+   int               FirstBar;
+   int               UsePreviousBar; // Deprecated
+   IndComponentType  DataType;
+   PositionPriceDependence PosPriceDependence;
+   bool              ShowInDynInfo;
+   double            Value[];
 
-    // Methods
-    double                  GetLastValue(int indexFromEnd);
-};
-
-double IndicatorComp::GetLastValue(int indexFromEnd = 0)
-{
-    int bars = ArraySize(Value);
-    return (bars > indexFromEnd ? Value[bars - indexFromEnd - 1]: 0);
-}
+   // Methods
+   double            GetLastValue(int indexFromEnd);
+  };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void IndicatorComp::IndicatorComp()
+  {
+   CompName           = "Not defined";
+   DataType           = IndComponentType_NotDefined;
+   FirstBar           = 0;
+   UsePreviousBar     = 0;
+   ShowInDynInfo      = true;
+   PosPriceDependence = PositionPriceDependence_None;
+  }
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+double IndicatorComp::GetLastValue(int indexFromEnd=0)
+  {
+   int bars=ArraySize(Value);
+   double lastValue=(bars>indexFromEnd) ? Value[bars-indexFromEnd-1]: 0;
+   return (lastValue);
+  }
+//+------------------------------------------------------------------+

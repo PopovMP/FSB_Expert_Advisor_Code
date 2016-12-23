@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -34,7 +34,7 @@
 class SteadyBands : public Indicator
   {
 public:
-   SteadyBands(SlotTypes slotType)
+                     SteadyBands(SlotTypes slotType)
      {
       SlotType=slotType;
 
@@ -59,23 +59,23 @@ void SteadyBands::Calculate(DataSet &dataSet)
 
 // Reading the parameters
    MAMethod maMethod=(MAMethod) ListParam[1].Index;
-   BasePrice price=(BasePrice) ListParam[2].Index;
-   int nMA=(int) NumParam[0].Value;
-   double dMargin=NumParam[1].Value*Data.Point;
-   int prvs=CheckParam[0].Checked ? 1 : 0;
+   BasePrice basePrice=(BasePrice) ListParam[2].Index;
+   int period=(int) NumParam[0].Value;
+   double margin=NumParam[1].Value*Data.Point;
+   int previous=CheckParam[0].Checked ? 1 : 0;
 
 // Calculation
-   double adBasePrice[]; Price(price,adBasePrice);
-   double adMA[];        MovingAverage(nMA,0,maMethod,adBasePrice,adMA);
-   double adUpBand[];    ArrayResize(adUpBand,Data.Bars); ArrayInitialize(adUpBand,0);
-   double adDnBand[];    ArrayResize(adDnBand,Data.Bars); ArrayInitialize(adDnBand,0);
+   double price[]; Price(basePrice,price);
+   double ma[]; MovingAverage(period,0,maMethod,price,ma);
+   double upperBand[]; ArrayResize(upperBand,Data.Bars); ArrayInitialize(upperBand,0);
+   double lowerBand[]; ArrayResize(lowerBand,Data.Bars); ArrayInitialize(lowerBand,0);
 
-   int firstBar=nMA+prvs+2;
+   int firstBar=period+previous+2;
 
-   for(int bar=nMA; bar<Data.Bars; bar++)
+   for(int bar=period; bar<Data.Bars; bar++)
      {
-      adUpBand[bar] = adMA[bar] + dMargin;
-      adDnBand[bar] = adMA[bar] - dMargin;
+      upperBand[bar] = ma[bar] + margin;
+      lowerBand[bar] = ma[bar] - margin;
      }
 
 // Saving the components
@@ -84,19 +84,19 @@ void SteadyBands::Calculate(DataSet &dataSet)
    Component[0].CompName = "Upper Band";
    Component[0].DataType = IndComponentType_IndicatorValue;
    Component[0].FirstBar = firstBar;
-   ArrayCopy(Component[0].Value,adUpBand);
+   ArrayCopy(Component[0].Value,upperBand);
 
    ArrayResize(Component[1].Value,Data.Bars);
    Component[1].CompName = "Moving Average";
    Component[1].DataType = IndComponentType_IndicatorValue;
    Component[1].FirstBar = firstBar;
-   ArrayCopy(Component[1].Value,adMA);
+   ArrayCopy(Component[1].Value,ma);
 
    ArrayResize(Component[2].Value,Data.Bars);
    Component[2].CompName = "Lower Band";
    Component[2].DataType = IndComponentType_IndicatorValue;
    Component[2].FirstBar = firstBar;
-   ArrayCopy(Component[2].Value,adDnBand);
+   ArrayCopy(Component[2].Value,lowerBand);
 
    ArrayResize(Component[3].Value,Data.Bars);
    Component[3].FirstBar=firstBar;
@@ -136,16 +136,16 @@ void SteadyBands::Calculate(DataSet &dataSet)
 
    if(SlotType==SlotTypes_Open || SlotType==SlotTypes_Close)
      {
-      if(nMA>1)
+      if(period>1)
         {
          for(int bar=firstBar; bar<Data.Bars; bar++)
            {
             // Covers the cases when the price can pass through the band without a signal.
             double open=Data.Open[bar]; // Current open price
 
-            // Upper band
-            double valueUp=adUpBand[bar-prvs]; // Current value
-            double valueUp1=adUpBand[bar-prvs-1]; // Previous value
+                                        // Upper band
+            double valueUp=upperBand[bar-previous]; // Current value
+            double valueUp1=upperBand[bar-previous-1]; // Previous value
             double tempValUp=valueUp;
 
             if((valueUp1>Data.High[bar-1] && valueUp<open) || // The Data.Open price jumps above the indicator
@@ -155,14 +155,14 @@ void SteadyBands::Calculate(DataSet &dataSet)
                tempValUp=open; // The entry/exit level is moved to Data.Open price
 
             // Lower band
-            double valueDown=adDnBand[bar-prvs]; // Current value
-            double valueDown1=adDnBand[bar-prvs-1]; // Previous value
+            double valueDown=lowerBand[bar-previous]; // Current value
+            double valueDown1=lowerBand[bar-previous-1]; // Previous value
             double tempValDown=valueDown;
 
             if((valueDown1>Data.High[bar-1] && valueDown<open) ||  // The Data.Open price jumps above the indicator
                (valueDown1<Data.Low[bar-1]  && valueDown>open) ||  // The Data.Open price jumps below the indicator
                (Data.Close[bar-1]<valueDown && valueDown<open) || // The Data.Open price is in a positive gap
-               (Data.Close[bar-1]>valueDown && valueDown>open)) // The Data.Open price is in a negative gap
+               (Data.Close[bar-1]>valueDown  &&  valueDown>open)) // The Data.Open price is in a negative gap
                tempValDown=open; // The entry/exit level is moved to Data.Open price
 
             if(ListParam[0].Text=="Enter long at Upper Band" || ListParam[0].Text=="Exit long at Upper Band")
@@ -184,13 +184,13 @@ void SteadyBands::Calculate(DataSet &dataSet)
             if(ListParam[0].Text=="Enter long at Upper Band" ||
                ListParam[0].Text=="Exit long at Upper Band")
               {
-               Component[3].Value[bar] = adUpBand[bar - prvs];
-               Component[4].Value[bar] = adDnBand[bar - prvs];
+               Component[3].Value[bar] = upperBand[bar - previous];
+               Component[4].Value[bar] = lowerBand[bar - previous];
               }
             else
               {
-               Component[3].Value[bar] = adDnBand[bar - prvs];
-               Component[4].Value[bar] = adUpBand[bar - prvs];
+               Component[3].Value[bar] = lowerBand[bar - previous];
+               Component[4].Value[bar] = upperBand[bar - previous];
               }
            }
         }
@@ -198,27 +198,27 @@ void SteadyBands::Calculate(DataSet &dataSet)
    else
      {
       if(ListParam[0].Text=="The bar opens below Upper Band")
-         BandIndicatorLogic(firstBar,prvs,adUpBand,adDnBand,Component[3],Component[4],BandIndLogic_The_bar_opens_below_the_Upper_Band);
+         BandIndicatorLogic(firstBar,previous,upperBand,lowerBand,Component[3],Component[4],BandIndLogic_The_bar_opens_below_the_Upper_Band);
       else if(ListParam[0].Text=="The bar opens above Upper Band")
-         BandIndicatorLogic(firstBar,prvs,adUpBand,adDnBand,Component[3],Component[4],BandIndLogic_The_bar_opens_above_the_Upper_Band);
+         BandIndicatorLogic(firstBar,previous,upperBand,lowerBand,Component[3],Component[4],BandIndLogic_The_bar_opens_above_the_Upper_Band);
       else if(ListParam[0].Text=="The bar opens below Lower Band")
-         BandIndicatorLogic(firstBar,prvs,adUpBand,adDnBand,Component[3],Component[4],BandIndLogic_The_bar_opens_below_the_Lower_Band);
+         BandIndicatorLogic(firstBar,previous,upperBand,lowerBand,Component[3],Component[4],BandIndLogic_The_bar_opens_below_the_Lower_Band);
       else if(ListParam[0].Text=="The bar opens above Lower Band")
-         BandIndicatorLogic(firstBar,prvs,adUpBand,adDnBand,Component[3],Component[4],BandIndLogic_The_bar_opens_above_the_Lower_Band);
+         BandIndicatorLogic(firstBar,previous,upperBand,lowerBand,Component[3],Component[4],BandIndLogic_The_bar_opens_above_the_Lower_Band);
       else if(ListParam[0].Text=="The bar opens below Upper Band after opening above it")
-         BandIndicatorLogic(firstBar,prvs,adUpBand,adDnBand,Component[3],Component[4],BandIndLogic_The_bar_opens_below_Upper_Band_after_above);
+         BandIndicatorLogic(firstBar,previous,upperBand,lowerBand,Component[3],Component[4],BandIndLogic_The_bar_opens_below_Upper_Band_after_above);
       else if(ListParam[0].Text=="The bar opens above Upper Band after opening below it")
-         BandIndicatorLogic(firstBar,prvs,adUpBand,adDnBand,Component[3],Component[4],BandIndLogic_The_bar_opens_above_Upper_Band_after_below);
+         BandIndicatorLogic(firstBar,previous,upperBand,lowerBand,Component[3],Component[4],BandIndLogic_The_bar_opens_above_Upper_Band_after_below);
       else if(ListParam[0].Text=="The bar opens below Lower Band after opening above it")
-         BandIndicatorLogic(firstBar,prvs,adUpBand,adDnBand,Component[3],Component[4],BandIndLogic_The_bar_opens_below_Lower_Band_after_above);
+         BandIndicatorLogic(firstBar,previous,upperBand,lowerBand,Component[3],Component[4],BandIndLogic_The_bar_opens_below_Lower_Band_after_above);
       else if(ListParam[0].Text=="The bar opens above Lower Band after opening below it")
-         BandIndicatorLogic(firstBar,prvs,adUpBand,adDnBand,Component[3],Component[4],BandIndLogic_The_bar_opens_above_Lower_Band_after_below);
+         BandIndicatorLogic(firstBar,previous,upperBand,lowerBand,Component[3],Component[4],BandIndLogic_The_bar_opens_above_Lower_Band_after_below);
       else if(ListParam[0].Text=="The position opens above Upper Band")
         {
          Component[0].PosPriceDependence = PositionPriceDependence_PriceBuyHigher;
          Component[2].PosPriceDependence = PositionPriceDependence_PriceSellLower;
-         Component[0].UsePreviousBar = prvs;
-         Component[2].UsePreviousBar = prvs;
+         Component[0].UsePreviousBar = previous;
+         Component[2].UsePreviousBar = previous;
          Component[3].DataType = IndComponentType_Other;
          Component[4].DataType = IndComponentType_Other;
          Component[3].ShowInDynInfo = false;
@@ -228,8 +228,8 @@ void SteadyBands::Calculate(DataSet &dataSet)
         {
          Component[0].PosPriceDependence = PositionPriceDependence_PriceBuyLower;
          Component[2].PosPriceDependence = PositionPriceDependence_PriceSellHigher;
-         Component[0].UsePreviousBar = prvs;
-         Component[2].UsePreviousBar = prvs;
+         Component[0].UsePreviousBar = previous;
+         Component[2].UsePreviousBar = previous;
          Component[3].DataType = IndComponentType_Other;
          Component[4].DataType = IndComponentType_Other;
          Component[3].ShowInDynInfo = false;
@@ -239,8 +239,8 @@ void SteadyBands::Calculate(DataSet &dataSet)
         {
          Component[0].PosPriceDependence = PositionPriceDependence_PriceSellLower;
          Component[2].PosPriceDependence = PositionPriceDependence_PriceBuyHigher;
-         Component[0].UsePreviousBar = prvs;
-         Component[2].UsePreviousBar = prvs;
+         Component[0].UsePreviousBar = previous;
+         Component[2].UsePreviousBar = previous;
          Component[3].DataType = IndComponentType_Other;
          Component[4].DataType = IndComponentType_Other;
          Component[3].ShowInDynInfo = false;
@@ -250,21 +250,21 @@ void SteadyBands::Calculate(DataSet &dataSet)
         {
          Component[0].PosPriceDependence = PositionPriceDependence_PriceSellHigher;
          Component[2].PosPriceDependence = PositionPriceDependence_PriceBuyLower;
-         Component[0].UsePreviousBar = prvs;
-         Component[2].UsePreviousBar = prvs;
+         Component[0].UsePreviousBar = previous;
+         Component[2].UsePreviousBar = previous;
          Component[3].DataType = IndComponentType_Other;
          Component[4].DataType = IndComponentType_Other;
          Component[3].ShowInDynInfo = false;
          Component[4].ShowInDynInfo = false;
         }
       else if(ListParam[0].Text=="The bar closes below Upper Band")
-         BandIndicatorLogic(firstBar,prvs,adUpBand,adDnBand,Component[3],Component[4],BandIndLogic_The_bar_closes_below_the_Upper_Band);
+         BandIndicatorLogic(firstBar,previous,upperBand,lowerBand,Component[3],Component[4],BandIndLogic_The_bar_closes_below_the_Upper_Band);
       else if(ListParam[0].Text=="The bar closes above Upper Band")
-         BandIndicatorLogic(firstBar,prvs,adUpBand,adDnBand,Component[3],Component[4],BandIndLogic_The_bar_closes_above_the_Upper_Band);
+         BandIndicatorLogic(firstBar,previous,upperBand,lowerBand,Component[3],Component[4],BandIndLogic_The_bar_closes_above_the_Upper_Band);
       else if(ListParam[0].Text=="The bar closes below Lower Band")
-         BandIndicatorLogic(firstBar,prvs,adUpBand,adDnBand,Component[3],Component[4],BandIndLogic_The_bar_closes_below_the_Lower_Band);
+         BandIndicatorLogic(firstBar,previous,upperBand,lowerBand,Component[3],Component[4],BandIndLogic_The_bar_closes_below_the_Lower_Band);
       else if(ListParam[0].Text=="The bar closes above Lower Band")
-         BandIndicatorLogic(firstBar,prvs,adUpBand,adDnBand,Component[3],Component[4],BandIndLogic_The_bar_closes_above_the_Lower_Band);
+         BandIndicatorLogic(firstBar,previous,upperBand,lowerBand,Component[3],Component[4],BandIndLogic_The_bar_closes_above_the_Lower_Band);
      }
   }
 //+------------------------------------------------------------------+

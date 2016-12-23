@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -58,12 +58,12 @@ void OscillatorofMomentum::Calculate(DataSet &dataSet)
    Data=GetPointer(dataSet);
 
 // Reading the parameters
-   int prvs=CheckParam[0].Checked ? 1 : 0;
+   int previous=CheckParam[0].Checked ? 1 : 0;
 
 // Calculation
-   double adOscillator[];
-   ArrayResize(adOscillator,Data.Bars);
-   ArrayInitialize(adOscillator,0);
+   double oscillator[];
+   ArrayResize(oscillator,Data.Bars);
+   ArrayInitialize(oscillator,0);
 
 // ----------------------------------------------------
    Momentum *momentum1=new Momentum(SlotType);
@@ -80,12 +80,12 @@ void OscillatorofMomentum::Calculate(DataSet &dataSet)
    momentum2.CheckParam[0].Checked=CheckParam[0].Checked;
    momentum2.Calculate(dataSet);
 
-   double adIndicator1[];
-   ArrayResize(adIndicator1,Data.Bars);
-   ArrayCopy(adIndicator1,momentum1.Component[0].Value);
-   double adIndicator2[];
-   ArrayResize(adIndicator2,Data.Bars);
-   ArrayCopy(adIndicator2,momentum2.Component[0].Value);
+   double indicator1[];
+   ArrayResize(indicator1,Data.Bars);
+   ArrayCopy(indicator1,momentum1.Component[0].Value);
+   double indicator2[];
+   ArrayResize(indicator2,Data.Bars);
+   ArrayCopy(indicator2,momentum2.Component[0].Value);
 // -----------------------------------------------------
 
    int firstBar=0;
@@ -99,7 +99,9 @@ void OscillatorofMomentum::Calculate(DataSet &dataSet)
    firstBar+=3;
 
    for(int bar=firstBar; bar<Data.Bars; bar++)
-      adOscillator[bar]=adIndicator1[bar]-adIndicator2[bar];
+   {
+	  oscillator[bar]=indicator1[bar]-indicator2[bar];
+   }
 
    delete momentum1;
    delete momentum2;
@@ -109,7 +111,7 @@ void OscillatorofMomentum::Calculate(DataSet &dataSet)
    Component[0].CompName = "Histogram";
    Component[0].DataType = IndComponentType_IndicatorValue;
    Component[0].FirstBar = firstBar;
-   ArrayCopy(Component[0].Value,adOscillator);
+   ArrayCopy(Component[0].Value,oscillator);
 
    ArrayResize(Component[1].Value,Data.Bars);
    Component[1].FirstBar=firstBar;
@@ -153,6 +155,6 @@ void OscillatorofMomentum::Calculate(DataSet &dataSet)
    else if(ListParam[0].Text=="Oscillator changes its direction downward")
       indLogic=IndicatorLogic_The_indicator_changes_its_direction_downward;
 
-   OscillatorLogic(firstBar,prvs,adOscillator,0,0,Component[1],Component[2],indLogic);
+   OscillatorLogic(firstBar,previous,oscillator,0,0,Component[1],Component[2],indLogic);
   }
 //+------------------------------------------------------------------+

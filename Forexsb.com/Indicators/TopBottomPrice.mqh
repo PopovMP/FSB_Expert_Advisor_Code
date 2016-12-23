@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -87,7 +87,7 @@ void TopBottomPrice::Calculate(DataSet &dataSet)
 
 // Reading the parameters
    double shift=NumParam[0].Value*Data.Point;
-   const int firstBar=1;
+   const int firstBar=2;
 
 // Calculation
    double topPrice[];    ArrayResize(topPrice,Data.Bars);    ArrayInitialize(topPrice,0);

@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -34,7 +34,7 @@
 class MovingAveragesCrossover : public Indicator
   {
 public:
-    MovingAveragesCrossover(SlotTypes slotType)
+                     MovingAveragesCrossover(SlotTypes slotType)
      {
       SlotType=slotType;
 
@@ -48,7 +48,7 @@ public:
       IsDefaultGroupAll = false;
      }
 
-   virtual void Calculate(DataSet &dataSet);
+   virtual void      Calculate(DataSet &dataSet);
   };
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -57,7 +57,6 @@ void MovingAveragesCrossover::Calculate(DataSet &dataSet)
   {
    Data=GetPointer(dataSet);
 
-// Reading the parameters
    BasePrice basePrice=(BasePrice) ListParam[1].Index;
    MAMethod fastMAMethod = (MAMethod) ListParam[3].Index;
    MAMethod slowMAMethod = (MAMethod) ListParam[4].Index;
@@ -65,37 +64,37 @@ void MovingAveragesCrossover::Calculate(DataSet &dataSet)
    int iNSlowMA = (int) NumParam[1].Value;
    int iSFastMA = (int) NumParam[2].Value;
    int iSSlowMA = (int) NumParam[3].Value;
-   int iPrvs=CheckParam[0].Checked ? 1 : 0;
+   int previous=CheckParam[0].Checked ? 1 : 0;
 
-   int iFirstBar=MathMax(iNFastMA+iSFastMA,iNSlowMA+iSSlowMA)+2;
-   double basePrc[];  Price(basePrice,basePrc);
-   double adMAFast[]; MovingAverage(iNFastMA,iSFastMA,fastMAMethod,basePrc,adMAFast);
-   double adMASlow[]; MovingAverage(iNSlowMA,iSSlowMA,slowMAMethod,basePrc,adMASlow);
-   double adMAOscillator[]; ArrayResize(adMAOscillator,Data.Bars); ArrayInitialize(adMAOscillator,0);
+   int firstBar=MathMax(iNFastMA+iSFastMA,iNSlowMA+iSSlowMA)+previous+2;
+   double price[];  Price(basePrice,price);
+   double maFast[]; MovingAverage(iNFastMA,iSFastMA,fastMAMethod,price,maFast);
+   double maSlow[]; MovingAverage(iNSlowMA,iSSlowMA,slowMAMethod,price,maSlow);
+   double oscillator[]; ArrayResize(oscillator,Data.Bars); ArrayInitialize(oscillator,0);
 
-   for(int iBar=iFirstBar; iBar<Data.Bars; iBar++)
-      adMAOscillator[iBar]=adMAFast[iBar]-adMASlow[iBar];
+   for(int bar=firstBar; bar<Data.Bars; bar++)
+     {
+      oscillator[bar]=maFast[bar]-maSlow[bar];
+     }
 
-// Saving the components
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "Fast Moving Average";
    Component[0].DataType = IndComponentType_IndicatorValue;
-   Component[0].FirstBar = iFirstBar;
-   ArrayCopy(Component[0].Value,adMAFast);
+   Component[0].FirstBar = firstBar;
+   ArrayCopy(Component[0].Value,maFast);
 
    ArrayResize(Component[1].Value,Data.Bars);
    Component[1].CompName = "Slow Moving Average";
    Component[1].DataType = IndComponentType_IndicatorValue;
-   Component[1].FirstBar = iFirstBar;
-   ArrayCopy(Component[1].Value,adMASlow);
+   Component[1].FirstBar = firstBar;
+   ArrayCopy(Component[1].Value,maSlow);
 
    ArrayResize(Component[2].Value,Data.Bars);
-   Component[2].FirstBar=iFirstBar;
+   Component[2].FirstBar=firstBar;
 
    ArrayResize(Component[3].Value,Data.Bars);
-   Component[3].FirstBar=iFirstBar;
+   Component[3].FirstBar=firstBar;
 
-// Sets the Component's type
    if(SlotType==SlotTypes_OpenFilter)
      {
       Component[2].DataType = IndComponentType_AllowOpenLong;
@@ -111,18 +110,17 @@ void MovingAveragesCrossover::Calculate(DataSet &dataSet)
       Component[3].CompName = "Close out short position";
      }
 
-// Calculation of the logic
    IndicatorLogic indLogic=IndicatorLogic_It_does_not_act_as_a_filter;
 
-   if(ListParam[0].Text=="Fast MA crosses Slow MA upward") 
+   if(ListParam[0].Text=="Fast MA crosses Slow MA upward")
       indLogic=IndicatorLogic_The_indicator_crosses_the_level_line_upward;
-   else if(ListParam[0].Text=="Fast MA crosses Slow MA downward") 
+   else if(ListParam[0].Text=="Fast MA crosses Slow MA downward")
       indLogic=IndicatorLogic_The_indicator_crosses_the_level_line_downward;
-   else if(ListParam[0].Text=="Fast MA is higher than Slow MA") 
+   else if(ListParam[0].Text=="Fast MA is higher than Slow MA")
       indLogic=IndicatorLogic_The_indicator_is_higher_than_the_level_line;
-   else if(ListParam[0].Text=="Fast MA is lower than Slow MA") 
+   else if(ListParam[0].Text=="Fast MA is lower than Slow MA")
       indLogic=IndicatorLogic_The_indicator_is_lower_than_the_level_line;
 
-   OscillatorLogic(iFirstBar,iPrvs,adMAOscillator,0,0,Component[2],Component[3],indLogic);
+   OscillatorLogic(firstBar,previous,oscillator,0,0,Component[2],Component[3],indLogic);
   }
 //+------------------------------------------------------------------+

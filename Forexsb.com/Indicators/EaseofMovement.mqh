@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -34,22 +34,23 @@
 class EaseofMovement : public Indicator
   {
 public:
-   EaseofMovement(SlotTypes slotType)
-     {
-      SlotType=slotType;
-
-      IndicatorName="Ease of Movement";
-
-      WarningMessage    = "";
-      IsAllowLTF        = true;
-      ExecTime          = ExecutionTime_DuringTheBar;
-      IsSeparateChart   = true;
-      IsDiscreteValues  = false;
-      IsDefaultGroupAll = false;
-     }
-
+                     EaseofMovement(SlotTypes slotType);
    virtual void      Calculate(DataSet &dataSet);
   };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void EaseofMovement::EaseofMovement(SlotTypes slotType)
+  {
+   SlotType          = slotType;
+   IndicatorName     = "Ease of Movement";
+   WarningMessage    = "";
+   IsAllowLTF        = true;
+   ExecTime          = ExecutionTime_DuringTheBar;
+   IsSeparateChart   = true;
+   IsDiscreteValues  = false;
+   IsDefaultGroupAll = false;
+  }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -57,13 +58,11 @@ void EaseofMovement::Calculate(DataSet &dataSet)
   {
    Data=GetPointer(dataSet);
 
-// Reading the parameters
    MAMethod maMethod=(MAMethod) ListParam[1].Index;
    int period=(int) NumParam[0].Value;
    int previous=CheckParam[0].Checked ? 1 : 0;
 
-// Calculation
-   int firstBar=period+2;
+   int firstBar=period+previous+2;
 
    double avEom1[]; ArrayResize(avEom1,Data.Bars); ArrayInitialize(avEom1,0);
 
@@ -97,7 +96,6 @@ void EaseofMovement::Calculate(DataSet &dataSet)
    ArrayResize(Component[2].Value,Data.Bars);
    Component[2].FirstBar=firstBar;
 
-// Sets the Component's type
    if(SlotType==SlotTypes_OpenFilter)
      {
       Component[1].DataType = IndComponentType_AllowOpenLong;
@@ -113,7 +111,6 @@ void EaseofMovement::Calculate(DataSet &dataSet)
       Component[2].CompName = "Close out short position";
      }
 
-// Calculation of the logic
    IndicatorLogic indLogic=IndicatorLogic_It_does_not_act_as_a_filter;
 
    if(ListParam[0].Text=="Ease of Movement rises")

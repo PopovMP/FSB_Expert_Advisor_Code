@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -57,13 +57,11 @@ void OscillatorofCCI::Calculate(DataSet &dataSet)
   {
    Data=GetPointer(dataSet);
 
-// Reading the parameters
-   int prvs=CheckParam[0].Checked ? 1 : 0;
+   int previous=CheckParam[0].Checked ? 1 : 0;
 
-// Calculation
-   double adOscillator[];
-   ArrayResize(adOscillator,Data.Bars);
-   ArrayInitialize(adOscillator,0);
+   double oscillator[];
+   ArrayResize(oscillator,Data.Bars);
+   ArrayInitialize(oscillator,0);
 
 // ----------------------------------------------------
    CommodityChannelIndex *cci1=new CommodityChannelIndex(SlotType);
@@ -84,12 +82,12 @@ void OscillatorofCCI::Calculate(DataSet &dataSet)
    cci2.CheckParam[0].Checked=CheckParam[0].Checked;
    cci2.Calculate(dataSet);
 
-   double adIndicator1[];
-   ArrayResize(adIndicator1,Data.Bars);
-   ArrayCopy(adIndicator1,cci1.Component[0].Value);
-   double adIndicator2[];
-   ArrayResize(adIndicator2,Data.Bars);
-   ArrayCopy(adIndicator2,cci2.Component[0].Value);
+   double indicator1[];
+   ArrayResize(indicator1,Data.Bars);
+   ArrayCopy(indicator1,cci1.Component[0].Value);
+   double indicator2[];
+   ArrayResize(indicator2,Data.Bars);
+   ArrayCopy(indicator2,cci2.Component[0].Value);
 // -----------------------------------------------------
 
    int firstBar=0;
@@ -103,18 +101,18 @@ void OscillatorofCCI::Calculate(DataSet &dataSet)
    firstBar+=3;
 
    for(int bar=firstBar; bar<Data.Bars; bar++)
-      adOscillator[bar]=adIndicator1[bar]-adIndicator2[bar];
+   {
+      oscillator[bar]=indicator1[bar]-indicator2[bar];
+   }
 
    delete cci1;
    delete cci2;
 
-
-// Saving the components
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "Histogram";
    Component[0].DataType = IndComponentType_IndicatorValue;
    Component[0].FirstBar = firstBar;
-   ArrayCopy(Component[0].Value,adOscillator);
+   ArrayCopy(Component[0].Value,oscillator);
 
    ArrayResize(Component[1].Value,Data.Bars);
    Component[1].FirstBar=firstBar;
@@ -122,7 +120,6 @@ void OscillatorofCCI::Calculate(DataSet &dataSet)
    ArrayResize(Component[2].Value,Data.Bars);
    Component[2].FirstBar=firstBar;
 
-// Sets the Component's type
    if(SlotType==SlotTypes_OpenFilter)
      {
       Component[1].DataType = IndComponentType_AllowOpenLong;
@@ -138,7 +135,6 @@ void OscillatorofCCI::Calculate(DataSet &dataSet)
       Component[2].CompName = "Close out short position";
      }
 
-// Calculation of the logic
    IndicatorLogic indLogic=IndicatorLogic_It_does_not_act_as_a_filter;
 
    if(ListParam[0].Text=="Oscillator rises")
@@ -158,6 +154,6 @@ void OscillatorofCCI::Calculate(DataSet &dataSet)
    else if(ListParam[0].Text=="Oscillator changes its direction downward")
       indLogic=IndicatorLogic_The_indicator_changes_its_direction_downward;
 
-   OscillatorLogic(firstBar,prvs,adOscillator,0,0,Component[1],Component[2],indLogic);
+   OscillatorLogic(firstBar,previous,oscillator,0,0,Component[1],Component[2],indLogic);
   }
 //+------------------------------------------------------------------+

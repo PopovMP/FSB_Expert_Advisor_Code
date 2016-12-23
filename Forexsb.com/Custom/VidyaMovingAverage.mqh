@@ -34,22 +34,23 @@
 class VidyaMovingAverage : public Indicator
   {
 public:
-   VidyaMovingAverage(SlotTypes slotType)
-     {
-      SlotType=slotType;
-
-      IndicatorName="Vidya Moving Average";
-
-      WarningMessage    = "";
-      IsAllowLTF        = true;
-      ExecTime          = ExecutionTime_DuringTheBar;
-      IsSeparateChart   = false;
-      IsDiscreteValues  = false;
-      IsDefaultGroupAll = false;
-     }
-
-   virtual void Calculate(DataSet &dataSet);
+                     VidyaMovingAverage(SlotTypes slotType);
+   virtual void      Calculate(DataSet &dataSet);
   };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void VidyaMovingAverage::VidyaMovingAverage(SlotTypes slotType)
+  {
+   SlotType          = slotType;
+   IndicatorName     = "Vidya Moving Average";
+   WarningMessage    = "";
+   IsAllowLTF        = true;
+   ExecTime          = ExecutionTime_DuringTheBar;
+   IsSeparateChart   = false;
+   IsDiscreteValues  = false;
+   IsDefaultGroupAll = false;
+  }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -57,98 +58,93 @@ void VidyaMovingAverage::Calculate(DataSet &dataSet)
   {
    Data=GetPointer(dataSet);
 
-// Reading the parameters
    BasePrice basePrice=(BasePrice)ListParam[2].Index;
-   int iPeriod  = (int)NumParam[0].Value;
-   int iSmooth  = (int)NumParam[1].Value;
-   int iPrvs    = CheckParam[0].Checked ? 1 : 0;
+   int period    = (int)NumParam[0].Value;
+   int smoothing = (int)NumParam[1].Value;
+   int previous  = CheckParam[0].Checked ? 1 : 0;
 
-// Calculation
-   int iFirstBar=iPeriod+iSmooth+1+iPrvs;
+   int firstBar=period+smoothing+previous+2;
 
-// Calculating Chande Momentum Oscillator
    double adBasePrice[];
    Price(basePrice,adBasePrice);
 
    double adCMO1[]; ArrayResize(adCMO1,Data.Bars); ArrayInitialize(adCMO1,0);
    double adCMO2[]; ArrayResize(adCMO2,Data.Bars); ArrayInitialize(adCMO2,0);
 
-   for(int iBar=1; iBar<Data.Bars; iBar++)
+   for(int bar=1; bar<Data.Bars; bar++)
      {
-      adCMO1[iBar] = 0;
-      adCMO1[iBar] = 0;
-      if(adBasePrice[iBar]>adBasePrice[iBar-1])
-         adCMO1[iBar]=adBasePrice[iBar]-adBasePrice[iBar-1];
-      if(adBasePrice[iBar]<adBasePrice[iBar-1])
-         adCMO2[iBar]=adBasePrice[iBar-1]-adBasePrice[iBar];
+      adCMO1[bar] = 0;
+      adCMO1[bar] = 0;
+      if(adBasePrice[bar]>adBasePrice[bar-1])
+         adCMO1[bar]=adBasePrice[bar]-adBasePrice[bar-1];
+      if(adBasePrice[bar]<adBasePrice[bar-1])
+         adCMO2[bar]=adBasePrice[bar-1]-adBasePrice[bar];
      }
 
    double adCMO1Sum[]; ArrayResize(adCMO1Sum,Data.Bars); ArrayInitialize(adCMO1Sum,0);
    double adCMO2Sum[]; ArrayResize(adCMO2Sum,Data.Bars); ArrayInitialize(adCMO2Sum,0);
 
-   for(int iBar=0; iBar<iPeriod; iBar++)
+   for(int bar=0; bar<period; bar++)
      {
-      adCMO1Sum[iPeriod - 1] += adCMO1[iBar];
-      adCMO2Sum[iPeriod - 1] += adCMO2[iBar];
+      adCMO1Sum[period - 1] += adCMO1[bar];
+      adCMO2Sum[period - 1] += adCMO2[bar];
      }
 
    double adCMO[]; ArrayResize(adCMO,Data.Bars); ArrayInitialize(adCMO,0);
 
-   for(int iBar=iPeriod; iBar<Data.Bars; iBar++)
+   for(int bar=period; bar<Data.Bars; bar++)
      {
-      adCMO1Sum[iBar] = adCMO1Sum[iBar - 1] + adCMO1[iBar] - adCMO1[iBar - iPeriod];
-      adCMO2Sum[iBar] = adCMO2Sum[iBar - 1] + adCMO2[iBar] - adCMO2[iBar - iPeriod];
+      adCMO1Sum[bar] = adCMO1Sum[bar - 1] + adCMO1[bar] - adCMO1[bar - period];
+      adCMO2Sum[bar] = adCMO2Sum[bar - 1] + adCMO2[bar] - adCMO2[bar - period];
 
-      if(adCMO1Sum[iBar]+adCMO2Sum[iBar]==0)
-         adCMO[iBar]=100;
+      if(adCMO1Sum[bar]+adCMO2Sum[bar]==0)
+         adCMO[bar]=100;
       else
-         adCMO[iBar]=100 *(adCMO1Sum[iBar]-adCMO2Sum[iBar])/(adCMO1Sum[iBar]+adCMO2Sum[iBar]);
+         adCMO[bar]=100 *(adCMO1Sum[bar]-adCMO2Sum[bar])/(adCMO1Sum[bar]+adCMO2Sum[bar]);
      }
 
    double adMA[]; ArrayResize(adMA,Data.Bars); ArrayInitialize(adMA,0);
-   double SC=2.0/(iSmooth+1);
+   double SC=2.0/(smoothing+1);
 
-   for(int iBar=0; iBar<iPeriod; iBar++)
-      adMA[iBar]=adBasePrice[iBar];
+   for(int bar=0; bar<period; bar++)
+      adMA[bar]=adBasePrice[bar];
 
-   for(int iBar=iPeriod; iBar<Data.Bars; iBar++)
+   for(int bar=period; bar<Data.Bars; bar++)
      {
-      double dAbsCMO=MathAbs(adCMO[iBar])/100;
-      adMA[iBar]=SC*dAbsCMO*adBasePrice[iBar]+(1-SC*dAbsCMO)*adMA[iBar-1];
+      double dAbsCMO=MathAbs(adCMO[bar])/100;
+      adMA[bar]=SC*dAbsCMO*adBasePrice[bar]+(1-SC*dAbsCMO)*adMA[bar-1];
      }
 
-// Saving the components
    if(SlotType==SlotTypes_Open || SlotType==SlotTypes_Close)
      {
-
       ArrayResize(Component[1].Value,Data.Bars);
 
-      for(int iBar=2; iBar<Data.Bars; iBar++)
+      for(int bar=2; bar<Data.Bars; bar++)
         {   // Covers the cases when the price can pass through the MA without a signal
-         double dValue   = adMA[iBar - iPrvs];     // Current value
-         double dValue1  = adMA[iBar - iPrvs - 1]; // Previous value
+         double dValue   = adMA[bar - previous];     // Current value
+         double dValue1  = adMA[bar - previous - 1]; // Previous value
          double dTempVal = dValue;
-         if((dValue1>Data.High[iBar-1] && dValue<Data.Open[iBar]) || // It jumps below the current bar
-            (dValue1<Data.Low[iBar-1] && dValue>Data.Open[iBar]) || // It jumps above the current bar
-            (Data.Close[iBar - 1] < dValue && dValue < Data.Open[iBar]) || // Positive gap
-            (Data.Close[iBar - 1] > dValue && dValue > Data.Open[iBar]))   // Negative gap
-            dTempVal=Data.Open[iBar];
-         Component[1].Value[iBar]=dTempVal;
+         if((dValue1>Data.High[bar-1] && dValue<Data.Open[bar]) || // It jumps below the current bar
+            (dValue1<Data.Low[bar-1] && dValue>Data.Open[bar]) || // It jumps above the current bar
+            (Data.Close[bar - 1] < dValue && dValue < Data.Open[bar]) || // Positive gap
+            (Data.Close[bar - 1] > dValue && dValue > Data.Open[bar]))   // Negative gap
+            dTempVal=Data.Open[bar];
+         Component[1].Value[bar]=dTempVal;
         }
      }
    else
      {
       ArrayResize(Component[1].Value,Data.Bars);
-      Component[1].FirstBar=iFirstBar;
+      Component[1].FirstBar=firstBar;
 
       ArrayResize(Component[2].Value,Data.Bars);
-      Component[2].FirstBar=iFirstBar;
+      Component[2].FirstBar=firstBar;
      }
 
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName   = "MA Value";
    Component[0].DataType   = IndComponentType_IndicatorValue;
-   Component[0].FirstBar   = iFirstBar;
+   Component[0].FirstBar   = firstBar;
    ArrayCopy(Component[0].Value,adMA);
 
    if(SlotType==SlotTypes_Open)
@@ -179,21 +175,21 @@ void VidyaMovingAverage::Calculate(DataSet &dataSet)
    if(SlotType==SlotTypes_OpenFilter || SlotType==SlotTypes_CloseFilter)
      {
       if(ListParam[0].Text=="The Vidya Moving Average rises")
-         IndicatorRisesLogic(iFirstBar,iPrvs,adMA,Component[1],Component[2]);
+         IndicatorRisesLogic(firstBar,previous,adMA,Component[1],Component[2]);
       else if(ListParam[0].Text=="The Vidya Moving Average falls")
-         IndicatorFallsLogic(iFirstBar,iPrvs,adMA,Component[1],Component[2]);
+         IndicatorFallsLogic(firstBar,previous,adMA,Component[1],Component[2]);
       else if(ListParam[0].Text=="The bar opens above the Vidya Moving Average")
-         BarOpensAboveIndicatorLogic(iFirstBar,iPrvs,adMA,Component[1],Component[2]);
+         BarOpensAboveIndicatorLogic(firstBar,previous,adMA,Component[1],Component[2]);
       else if(ListParam[0].Text=="The bar opens below the Vidya Moving Average")
-         BarOpensBelowIndicatorLogic(iFirstBar,iPrvs,adMA,Component[1],Component[2]);
+         BarOpensBelowIndicatorLogic(firstBar,previous,adMA,Component[1],Component[2]);
       else if(ListParam[0].Text=="The bar opens above the Vidya Moving Average after opening below it")
-         BarOpensAboveIndicatorAfterOpeningBelowLogic(iFirstBar,iPrvs,adMA,Component[1],Component[2]);
+         BarOpensAboveIndicatorAfterOpeningBelowLogic(firstBar,previous,adMA,Component[1],Component[2]);
       else if(ListParam[0].Text=="The bar opens below the Vidya Moving Average after opening above it")
-         BarOpensBelowIndicatorAfterOpeningAboveLogic(iFirstBar,iPrvs,adMA,Component[1],Component[2]);
+         BarOpensBelowIndicatorAfterOpeningAboveLogic(firstBar,previous,adMA,Component[1],Component[2]);
       else if(ListParam[0].Text=="The position opens above the Vidya Moving Average")
         {
          Component[0].PosPriceDependence=PositionPriceDependence_BuyHigherSellLower;
-         Component[0].UsePreviousBar=iPrvs;
+         Component[0].UsePreviousBar=previous;
          Component[1].DataType=IndComponentType_Other;
          Component[1].ShowInDynInfo=false;
          Component[2].DataType=IndComponentType_Other;
@@ -202,16 +198,16 @@ void VidyaMovingAverage::Calculate(DataSet &dataSet)
       else if(ListParam[0].Text=="The position opens below the Vidya Moving Average")
         {
          Component[0].PosPriceDependence=PositionPriceDependence_BuyLowerSelHigher;
-         Component[0].UsePreviousBar=iPrvs;
+         Component[0].UsePreviousBar=previous;
          Component[1].DataType=IndComponentType_Other;
          Component[1].ShowInDynInfo=false;
          Component[2].DataType=IndComponentType_Other;
          Component[2].ShowInDynInfo=false;
         }
       else if(ListParam[0].Text=="The bar closes below the Vidya Moving Average")
-         BarClosesBelowIndicatorLogic(iFirstBar,iPrvs,adMA,Component[1],Component[2]);
+         BarClosesBelowIndicatorLogic(firstBar,previous,adMA,Component[1],Component[2]);
       else if(ListParam[0].Text=="The bar closes above the Vidya Moving Average")
-         BarClosesAboveIndicatorLogic(iFirstBar,iPrvs,adMA,Component[1],Component[2]);
+         BarClosesAboveIndicatorLogic(firstBar,previous,adMA,Component[1],Component[2]);
      }
   }
 //+------------------------------------------------------------------+

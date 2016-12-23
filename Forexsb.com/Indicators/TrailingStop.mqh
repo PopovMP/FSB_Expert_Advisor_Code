@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -62,6 +62,6 @@ void TrailingStop::Calculate(DataSet &dataSet)
    Component[0].CompName = "Trailing Stop for the transferred position";
    Component[0].DataType = IndComponentType_Other;
    Component[0].ShowInDynInfo=false;
-   Component[0].FirstBar=1;
+   Component[0].FirstBar=2;
   }
 //+------------------------------------------------------------------+

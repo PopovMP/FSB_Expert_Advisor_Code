@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -63,64 +63,64 @@ void Stochastics::Calculate(DataSet &dataSet)
    int iDFast = (int)NumParam[1].Value;
    int iDSlow = (int)NumParam[2].Value;
    int iLevel = (int)NumParam[3].Value;
-   int iPrvs  = CheckParam[0].Checked ? 1 : 0;
+   int previous  = CheckParam[0].Checked ? 1 : 0;
 
 // Calculation
-   int iFirstBar=iK+iDFast+iDSlow+3;
+   int firstBar=iK+iDFast+iDSlow+3;
 
    double adHighs[]; ArrayResize(adHighs,Data.Bars); ArrayInitialize(adHighs,0);
    double adLows[];  ArrayResize(adLows,Data.Bars);  ArrayInitialize(adLows,0);
-   for(int iBar=0; iBar<iK; iBar++)
+   for(int bar=0; bar<iK; bar++)
      {
-      double dMin = DBL_MAX;
-      double dMax = DBL_MIN;
-      for(int i=0; i<iBar; i++)
+      double min = DBL_MAX;
+      double max = DBL_MIN;
+      for(int i=0; i<bar; i++)
         {
-         if(Data.High[iBar - i] > dMax) dMax = Data.High[iBar - i];
-         if(Data.Low[iBar  - i] < dMin) dMin = Data.Low[iBar  - i];
+         if(Data.High[bar - i] > max) max = Data.High[bar - i];
+         if(Data.Low[bar  - i] < min) min = Data.Low[bar  - i];
         }
-      adHighs[iBar] = dMax;
-      adLows[iBar]  = dMin;
+      adHighs[bar] = max;
+      adLows[bar]  = min;
      }
    adHighs[0] = Data.High[0];
    adLows[0]  = Data.Low[0];
 
-   for(int iBar=iK; iBar<Data.Bars; iBar++)
+   for(int bar=iK; bar<Data.Bars; bar++)
      {
-      double dMin = DBL_MAX;
-      double dMax = DBL_MIN;
+      double min = DBL_MAX;
+      double max = DBL_MIN;
       for(int i=0; i<iK; i++)
         {
-         if(Data.High[iBar - i] > dMax) dMax = Data.High[iBar - i];
-         if(Data.Low[iBar  - i] < dMin) dMin = Data.Low[iBar  - i];
+         if(Data.High[bar - i] > max) max = Data.High[bar - i];
+         if(Data.Low[bar  - i] < min) min = Data.Low[bar  - i];
         }
-      adHighs[iBar] = dMax;
-      adLows[iBar]  = dMin;
+      adHighs[bar] = max;
+      adLows[bar]  = min;
      }
 
    double adK[];  ArrayResize(adK,Data.Bars);  ArrayInitialize(adK,0);
-   for(int iBar=iK; iBar<Data.Bars; iBar++)
+   for(int bar=iK; bar<Data.Bars; bar++)
      {
-      if(adHighs[iBar]==adLows[iBar])
-         adK[iBar]=50;
+      if(adHighs[bar]==adLows[bar])
+         adK[bar]=50;
       else
-         adK[iBar]=100 *(Data.Close[iBar]-adLows[iBar])/(adHighs[iBar]-adLows[iBar]);
+         adK[bar]=100 *(Data.Close[bar]-adLows[bar])/(adHighs[bar]-adLows[bar]);
      }
 
    double adDFast[]; ArrayResize(adDFast,Data.Bars);  ArrayInitialize(adDFast,0);
-   for(int iBar=iDFast; iBar<Data.Bars; iBar++)
+   for(int bar=iDFast; bar<Data.Bars; bar++)
      {
       double dSumHigh = 0;
       double dSumLow  = 0;
       for(int i=0; i<iDFast; i++)
         {
-         dSumLow  += Data.Close[iBar - i]   - adLows[iBar - i];
-         dSumHigh += adHighs[iBar - i] - adLows[iBar - i];
+         dSumLow  += Data.Close[bar - i]   - adLows[bar - i];
+         dSumHigh += adHighs[bar - i] - adLows[bar - i];
         }
       if(dSumHigh==0)
-         adDFast[iBar]=100;
+         adDFast[bar]=100;
       else
-         adDFast[iBar]=100*dSumLow/dSumHigh;
+         adDFast[bar]=100*dSumLow/dSumHigh;
      }
 
    double adDSlow[]; MovingAverage(iDSlow,0,maMethod,adDFast,adDSlow);
@@ -130,26 +130,26 @@ void Stochastics::Calculate(DataSet &dataSet)
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName   = "%K";
    Component[0].DataType   = IndComponentType_IndicatorValue;
-   Component[0].FirstBar   = iFirstBar;
+   Component[0].FirstBar   = firstBar;
    ArrayCopy(Component[0].Value,adK);
 
    ArrayResize(Component[1].Value,Data.Bars);
    Component[1].CompName   = "Fast %D";
    Component[1].DataType   = IndComponentType_IndicatorValue;
-   Component[1].FirstBar   = iFirstBar;
+   Component[1].FirstBar   = firstBar;
    ArrayCopy(Component[1].Value,adDFast);
 
    ArrayResize(Component[2].Value,Data.Bars);
    Component[2].CompName   = "Slow %D";
    Component[2].DataType   = IndComponentType_IndicatorValue;
-   Component[2].FirstBar   = iFirstBar;
+   Component[2].FirstBar   = firstBar;
    ArrayCopy(Component[2].Value,adDSlow);
 
    ArrayResize(Component[3].Value,Data.Bars);
-   Component[3].FirstBar=iFirstBar;
+   Component[3].FirstBar=firstBar;
 
    ArrayResize(Component[4].Value,Data.Bars);
-   Component[4].FirstBar=iFirstBar;
+   Component[4].FirstBar=firstBar;
 
 // Sets Component's type
    if(SlotType==SlotTypes_OpenFilter)
@@ -171,13 +171,13 @@ void Stochastics::Calculate(DataSet &dataSet)
    IndicatorLogic indLogic=IndicatorLogic_It_does_not_act_as_a_filter;
 
    if(ListParam[0].Text=="%K crosses Slow %D upward")
-      IndicatorCrossesAnotherIndicatorUpwardLogic(iFirstBar,iPrvs,adK,adDSlow,Component[3],Component[4]);
+      IndicatorCrossesAnotherIndicatorUpwardLogic(firstBar,previous,adK,adDSlow,Component[3],Component[4]);
    else if(ListParam[0].Text=="%K crosses Slow %D downward")
-      IndicatorCrossesAnotherIndicatorDownwardLogic(iFirstBar,iPrvs,adK,adDSlow,Component[3],Component[4]);
+      IndicatorCrossesAnotherIndicatorDownwardLogic(firstBar,previous,adK,adDSlow,Component[3],Component[4]);
    else if(ListParam[0].Text=="%K is higher than Slow %D")
-      IndicatorIsHigherThanAnotherIndicatorLogic(iFirstBar,iPrvs,adK,adDSlow,Component[3],Component[4]);
+      IndicatorIsHigherThanAnotherIndicatorLogic(firstBar,previous,adK,adDSlow,Component[3],Component[4]);
    else if(ListParam[0].Text=="%K is lower than Slow %D")
-      IndicatorIsLowerThanAnotherIndicatorLogic(iFirstBar,iPrvs,adK,adDSlow,Component[3],Component[4]);
+      IndicatorIsLowerThanAnotherIndicatorLogic(firstBar,previous,adK,adDSlow,Component[3],Component[4]);
    else
      {
       if(ListParam[0].Text=="Slow %D rises")
@@ -197,7 +197,7 @@ void Stochastics::Calculate(DataSet &dataSet)
       else if(ListParam[0].Text=="Slow %D changes its direction downward")
          indLogic=IndicatorLogic_The_indicator_changes_its_direction_downward;
 
-      OscillatorLogic(iFirstBar,iPrvs,adDSlow,iLevel,100-iLevel,Component[3],Component[4],indLogic);
+      OscillatorLogic(firstBar,previous,adDSlow,iLevel,100-iLevel,Component[3],Component[4],indLogic);
      }
   }
 //+------------------------------------------------------------------+

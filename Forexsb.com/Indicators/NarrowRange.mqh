@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -53,47 +53,49 @@ void NarrowRange::Calculate(DataSet &dataSet)
 {
     Data = GetPointer(dataSet);
 
-    int iPrvs = CheckParam[0].Checked ? 1 : 0;
+    int previous = CheckParam[0].Checked ? 1 : 0;
 
     // Calculation
-    int iStepBack = (ListParam[0].Text == "There is a NR4 formation" ? 3 : 6);
-    int iFirstBar = iStepBack + iPrvs;
+    int stepBack = (ListParam[0].Text == "There is a NR4 formation" ? 3 : 6);
+    int firstBar = stepBack + previous;
     double adNr[];    ArrayResize(adNr, Data.Bars);    ArrayInitialize(adNr,0);
     double adRange[]; ArrayResize(adRange, Data.Bars); ArrayInitialize(adRange,0);
 
-    for (int iBar = 0; iBar < Data.Bars; iBar++)
+    for (int bar = 0; bar < Data.Bars; bar++)
     {
-        adRange[iBar] = Data.High[iBar] - Data.Low[iBar];
-        adNr[iBar] = 0;
+        adRange[bar] = Data.High[bar] - Data.Low[bar];
+        adNr[bar] = 0;
     }
 
     // Calculation of the logic
-    for (int iBar = iFirstBar; iBar < Data.Bars; iBar++)
+    for (int bar = firstBar; bar < Data.Bars; bar++)
     {
-        bool bNarrowRange = true;
-        for (int i = 1; i <= iStepBack; i++)
-            if (adRange[iBar - i - iPrvs] <= adRange[iBar - iPrvs])
-                bNarrowRange = false;
-        if (bNarrowRange) adNr[iBar] = 1;
+        bool isNarrowRange = true;
+        for (int i = 1; i <= stepBack; i++)
+        {   if (adRange[bar - i - previous] <= adRange[bar - previous])
+                isNarrowRange = false;
+		}
+        if (isNarrowRange)
+			adNr[bar] = 1;
     }
 
     // Saving the components
     ArrayResize(Component[0].Value, Data.Bars);
     Component[0].CompName = "Bar Range";
     Component[0].DataType = IndComponentType_IndicatorValue;
-    Component[0].FirstBar = iFirstBar;
+    Component[0].FirstBar = firstBar;
     for (int i = 0; i < Data.Bars; i++)
         Component[0].Value[i] = MathRound(adRange[i]/Data.Point);
 
     ArrayResize(Component[1].Value, Data.Bars);
     Component[1].CompName = "Allow long entry";
     Component[1].DataType = IndComponentType_AllowOpenLong;
-    Component[1].FirstBar = iFirstBar;
+    Component[1].FirstBar = firstBar;
     ArrayCopy(Component[1].Value, adNr);
 
     ArrayResize(Component[2].Value, Data.Bars);
     Component[2].CompName = "Allow short entry";
     Component[2].DataType = IndComponentType_AllowOpenShort;
-    Component[2].FirstBar = iFirstBar;
+    Component[2].FirstBar = firstBar;
     ArrayCopy(Component[2].Value, adNr);
 }

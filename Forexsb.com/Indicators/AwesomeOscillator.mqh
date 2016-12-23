@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -34,22 +34,23 @@
 class AwesomeOscillator : public Indicator
   {
 public:
-   AwesomeOscillator(SlotTypes slotType)
-     {
-      SlotType=slotType;
-
-      IndicatorName="Awesome Oscillator";
-
-      WarningMessage    = "";
-      IsAllowLTF        = true;
-      ExecTime          = ExecutionTime_DuringTheBar;
-      IsSeparateChart   = true;
-      IsDiscreteValues  = false;
-      IsDefaultGroupAll = false;
-     }
-
-   virtual void Calculate(DataSet &dataSet);
+                     AwesomeOscillator(SlotTypes slotType);
+   virtual void      Calculate(DataSet &dataSet);
   };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void AwesomeOscillator::AwesomeOscillator(SlotTypes slotType)
+  {
+   SlotType          = slotType;
+   IndicatorName     = "Awesome Oscillator";
+   WarningMessage    = "";
+   IsAllowLTF        = true;
+   ExecTime          = ExecutionTime_DuringTheBar;
+   IsSeparateChart   = true;
+   IsDiscreteValues  = false;
+   IsDefaultGroupAll = false;
+  }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -57,39 +58,37 @@ void AwesomeOscillator::Calculate(DataSet &dataSet)
   {
    Data=GetPointer(dataSet);
 
-// Reading the parameters
    MAMethod maMethod=(MAMethod) ListParam[1].Index;
    BasePrice basePrice=(BasePrice) ListParam[2].Index;
-   int nSlow = (int) NumParam[0].Value;
-   int nFast = (int) NumParam[1].Value;
+   int periodSlow = (int) NumParam[0].Value;
+   int periodFast = (int) NumParam[1].Value;
    double level=NumParam[3].Value;
-   int prev=CheckParam[0].Checked ? 1 : 0;
+   int previous=CheckParam[0].Checked ? 1 : 0;
 
-// Calculation
-   int iFirstBar=nSlow+2;
+   int firstBar=MathMax(periodSlow,periodFast)+previous+2;
 
-   double basePrc[]; Price(basePrice,basePrc);
-   double adMASlow[]; MovingAverage(nSlow,0,maMethod,basePrc,adMASlow);
-   double adMAFast[]; MovingAverage(nFast,0,maMethod,basePrc,adMAFast);
-   double adAO[]; ArrayResize(adAO,Data.Bars); ArrayInitialize(adAO, 0);
+   double price[]; Price(basePrice,price);
+   double maSlow[]; MovingAverage(periodSlow,0,maMethod,price,maSlow);
+   double maFast[]; MovingAverage(periodFast,0,maMethod,price,maFast);
+   double ao[]; ArrayResize(ao,Data.Bars); ArrayInitialize(ao,0);
 
-   for(int bar=nSlow-1; bar<Data.Bars; bar++)
-      adAO[bar]=adMAFast[bar]-adMASlow[bar];
+   for(int bar=periodSlow-1; bar<Data.Bars; bar++)
+     {
+      ao[bar]=maFast[bar]-maSlow[bar];
+     }
 
-// Saving the components
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "AO";
    Component[0].DataType = IndComponentType_IndicatorValue;
-   Component[0].FirstBar = iFirstBar;
-   ArrayCopy(Component[0].Value,adAO);
+   Component[0].FirstBar = firstBar;
+   ArrayCopy(Component[0].Value,ao);
 
    ArrayResize(Component[1].Value,Data.Bars);
-   Component[1].FirstBar=iFirstBar;
+   Component[1].FirstBar=firstBar;
 
    ArrayResize(Component[2].Value,Data.Bars);
-   Component[1].FirstBar=iFirstBar;
+   Component[1].FirstBar=firstBar;
 
-// Sets the Component's type
    if(SlotType==SlotTypes_OpenFilter)
      {
       Component[1].DataType = IndComponentType_AllowOpenLong;
@@ -105,26 +104,25 @@ void AwesomeOscillator::Calculate(DataSet &dataSet)
       Component[2].CompName = "Close out short position";
      }
 
-// Calculation of the logic
    IndicatorLogic indicatorLogic=IndicatorLogic_It_does_not_act_as_a_filter;
 
-   if(ListParam[0].Text=="AO rises") 
+   if(ListParam[0].Text=="AO rises")
       indicatorLogic=IndicatorLogic_The_indicator_rises;
-   else if(ListParam[0].Text=="AO falls") 
+   else if(ListParam[0].Text=="AO falls")
       indicatorLogic=IndicatorLogic_The_indicator_falls;
-   else if(ListParam[0].Text=="AO is higher than the Level line") 
+   else if(ListParam[0].Text=="AO is higher than the Level line")
       indicatorLogic=IndicatorLogic_The_indicator_is_higher_than_the_level_line;
-   else if(ListParam[0].Text=="AO is lower than the Level line") 
+   else if(ListParam[0].Text=="AO is lower than the Level line")
       indicatorLogic=IndicatorLogic_The_indicator_is_lower_than_the_level_line;
-   else if(ListParam[0].Text=="AO crosses the Level line upward") 
+   else if(ListParam[0].Text=="AO crosses the Level line upward")
       indicatorLogic=IndicatorLogic_The_indicator_crosses_the_level_line_upward;
-   else if(ListParam[0].Text=="AO crosses the Level line downward") 
+   else if(ListParam[0].Text=="AO crosses the Level line downward")
       indicatorLogic=IndicatorLogic_The_indicator_crosses_the_level_line_downward;
-   else if(ListParam[0].Text=="AO changes its direction upward") 
+   else if(ListParam[0].Text=="AO changes its direction upward")
       indicatorLogic=IndicatorLogic_The_indicator_changes_its_direction_upward;
-   else if(ListParam[0].Text=="AO changes its direction downward") 
+   else if(ListParam[0].Text=="AO changes its direction downward")
       indicatorLogic=IndicatorLogic_The_indicator_changes_its_direction_downward;
 
-   OscillatorLogic(iFirstBar,prev,adAO,level,-level,Component[1],Component[2],indicatorLogic);
+   OscillatorLogic(firstBar,previous,ao,level,-level,Component[1],Component[2],indicatorLogic);
   }
 //+------------------------------------------------------------------+

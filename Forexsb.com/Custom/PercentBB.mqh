@@ -34,22 +34,23 @@
 class PercentBB : public Indicator
   {
 public:
-   PercentBB(SlotTypes slotType)
-     {
-      SlotType=slotType;
-
-      IndicatorName="Percent BB";
-
-      WarningMessage    = "";
-      IsAllowLTF        = true;
-      ExecTime          = ExecutionTime_DuringTheBar;
-      IsSeparateChart   = true;
-      IsDiscreteValues  = false;
-      IsDefaultGroupAll = false;
-     }
-
-   virtual void Calculate(DataSet &dataSet);
+                     PercentBB(SlotTypes slotType);
+   virtual void      Calculate(DataSet &dataSet);
   };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void PercentBB::PercentBB(SlotTypes slotType)
+  {
+   SlotType          = slotType;
+   IndicatorName     = "Percent BB";
+   WarningMessage    = "";
+   IsAllowLTF        = true;
+   ExecTime          = ExecutionTime_DuringTheBar;
+   IsSeparateChart   = true;
+   IsDiscreteValues  = false;
+   IsDefaultGroupAll = false;
+  }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -60,32 +61,32 @@ void PercentBB::Calculate(DataSet &dataSet)
 // Reading the parameters
    MAMethod  maMethod  = (MAMethod )ListParam[1].Index;
    BasePrice basePrice = (BasePrice)ListParam[2].Index;
-   int       iPeriod   = (int)NumParam  [0].Value;
-   double    dMpl      = NumParam[1].Value;
-   int       iLevel    = (int)NumParam[2].Value;
-   int       iPrvs     = CheckParam[0].Checked ? 1 : 0;
+   int       period    =(int)NumParam[0].Value;
+   double    multiplier= NumParam[1].Value;
+   int       level=(int)NumParam[2].Value;
+   int       previous=CheckParam[0].Checked ? 1 : 0;
 
 // Calculation
    double adPrice[]; Price(basePrice,adPrice);
-   double adMA[];    MovingAverage(iPeriod,0,maMethod,adPrice,adMA);
+   double adMA[];    MovingAverage(period,0,maMethod,adPrice,adMA);
    double adPrcBB[]; ArrayResize(adPrcBB,Data.Bars);  ArrayInitialize(adPrcBB,0);
 
-   int iFirstBar=iPeriod+iPrvs+2;
+   int firstBar=period+previous+2;
 
    double dSum;
    double dStdDev;
    double dDelta;
-   for(int iBar=iPeriod; iBar<Data.Bars; iBar++)
+   for(int iBar=period; iBar<Data.Bars; iBar++)
      {
       dSum=0;
-      for(int i=0; i<iPeriod; i++)
+      for(int i=0; i<period; i++)
         {
          dDelta = (adPrice[iBar - i] - adMA[iBar]);
          dSum  += dDelta * dDelta;
         }
-      dStdDev=MathSqrt(dSum/iPeriod);
-      double adUpBand = adMA[iBar] + dMpl * dStdDev;
-      double adDnBand = adMA[iBar] - dMpl * dStdDev;
+      dStdDev=MathSqrt(dSum/period);
+      double adUpBand = adMA[iBar] + multiplier * dStdDev;
+      double adDnBand = adMA[iBar] - multiplier * dStdDev;
       adPrcBB[iBar]=(adPrice[iBar]-adDnBand)/(adUpBand-adDnBand)*100;
      }
 
@@ -94,14 +95,14 @@ void PercentBB::Calculate(DataSet &dataSet)
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName   = "%BB";
    Component[0].DataType   = IndComponentType_IndicatorValue;
-   Component[0].FirstBar   = iFirstBar;
+   Component[0].FirstBar   = firstBar;
    ArrayCopy(Component[0].Value,adPrcBB);
 
    ArrayResize(Component[1].Value,Data.Bars);
-   Component[1].FirstBar=iFirstBar;
+   Component[1].FirstBar=firstBar;
 
    ArrayResize(Component[2].Value,Data.Bars);
-   Component[2].FirstBar=iFirstBar;
+   Component[2].FirstBar=firstBar;
 
 // Sets the Component's type
    if(SlotType==SlotTypes_OpenFilter)
@@ -139,6 +140,6 @@ void PercentBB::Calculate(DataSet &dataSet)
    else if(ListParam[0].Text=="The %BB changes its direction downward")
       indLogic=IndicatorLogic_The_indicator_changes_its_direction_downward;
 
-   OscillatorLogic(iFirstBar,iPrvs,adPrcBB,iLevel,100-iLevel,Component[1],Component[2],indLogic);
+   OscillatorLogic(firstBar,previous,adPrcBB,level,100-level,Component[1],Component[2],indLogic);
   }
 //+------------------------------------------------------------------+

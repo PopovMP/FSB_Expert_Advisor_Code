@@ -34,22 +34,23 @@
 class MovingAverageOfOscillator : public Indicator
   {
 public:
-   MovingAverageOfOscillator(SlotTypes slotType)
-     {
-      SlotType=slotType;
-
-      IndicatorName="Moving Average of Oscillator";
-
-      WarningMessage    = "";
-      IsAllowLTF        = true;
-      ExecTime          = ExecutionTime_DuringTheBar;
-      IsSeparateChart   = true;
-      IsDiscreteValues  = false;
-      IsDefaultGroupAll = false;
-     }
-
-   virtual void Calculate(DataSet &dataSet);
+                     MovingAverageOfOscillator(SlotTypes slotType);
+   virtual void      Calculate(DataSet &dataSet);
   };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void MovingAverageOfOscillator::MovingAverageOfOscillator(SlotTypes slotType)
+  {
+   SlotType          = slotType;
+   IndicatorName     = "Moving Average of Oscillator";
+   WarningMessage    = "";
+   IsAllowLTF        = true;
+   ExecTime          = ExecutionTime_DuringTheBar;
+   IsSeparateChart   = true;
+   IsDiscreteValues  = false;
+   IsDefaultGroupAll = false;
+  }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -57,18 +58,16 @@ void MovingAverageOfOscillator::Calculate(DataSet &dataSet)
   {
    Data=GetPointer(dataSet);
 
-// Reading the parameters
    MAMethod  maMethod  = (MAMethod )ListParam[1].Index;
    MAMethod  slMethod  = (MAMethod )ListParam[3].Index;
    BasePrice basePrice = (BasePrice)ListParam[2].Index;
    int       nSlow     = (int)NumParam[0].Value;
    int       nFast     = (int)NumParam[1].Value;
    int       nSignal   = (int)NumParam[2].Value;
-   double    dLevel    = NumParam[3].Value;
-   int       iPrvs     = CheckParam[0].Checked ? 1 : 0;
+   double    level=NumParam[3].Value;
+   int       previous=CheckParam[0].Checked ? 1 : 0;
 
-// Calculation
-   int iFirstBar=MathMax(MathMax(nFast,nSlow),nSignal)+iPrvs+2;
+   int firstBar=MathMax(MathMax(nFast,nSlow),nSignal)+previous+2;
 
    double basePrc[];
    Price(basePrice,basePrc);
@@ -79,33 +78,34 @@ void MovingAverageOfOscillator::Calculate(DataSet &dataSet)
    ArrayResize(adMACD,Data.Bars);
    ArrayInitialize(adMACD,0);
 
-   for(int iBar=0; iBar<Data.Bars; iBar++)
-      adMACD[iBar]=adMAFast[iBar]-adMASlow[iBar];
-
+   for(int bar=0; bar<Data.Bars; bar++)
+     {
+      adMACD[bar]=adMAFast[bar]-adMASlow[bar];
+     }
+ 
    double maSignalLine[];
    MovingAverage(nSignal,0,slMethod,adMACD,maSignalLine);
 
-// adHistogram reprezents the MACD oscillator
    double adHistogram[];
    ArrayResize(adHistogram,Data.Bars);
    ArrayInitialize(adHistogram,0);
 
-   for(int iBar=0; iBar<Data.Bars; iBar++)
-      adHistogram[iBar]=adMACD[iBar]-maSignalLine[iBar];
-
-// Saving the components
+   for(int bar=0; bar<Data.Bars; bar++)
+     {
+      adHistogram[bar]=adMACD[bar]-maSignalLine[bar];
+     }
 
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName   = "OsMA";
    Component[0].DataType   = IndComponentType_IndicatorValue;
-   Component[0].FirstBar   = iFirstBar;
+   Component[0].FirstBar   = firstBar;
    ArrayCopy(Component[0].Value,adHistogram);
 
    ArrayResize(Component[1].Value,Data.Bars);
-   Component[1].FirstBar=iFirstBar;
+   Component[1].FirstBar=firstBar;
 
    ArrayResize(Component[2].Value,Data.Bars);
-   Component[2].FirstBar=iFirstBar;
+   Component[2].FirstBar=firstBar;
 
 // Sets the Component's type
    if(SlotType==SlotTypes_OpenFilter)
@@ -143,6 +143,6 @@ void MovingAverageOfOscillator::Calculate(DataSet &dataSet)
    else if(ListParam[0].Text=="The OsMA changes its direction downward")
       indLogic=IndicatorLogic_The_indicator_changes_its_direction_downward;
 
-   OscillatorLogic(iFirstBar,iPrvs,adHistogram,dLevel,-dLevel,Component[1],Component[2],indLogic);
+   OscillatorLogic(firstBar,previous,adHistogram,level,-level,Component[1],Component[2],indLogic);
   }
 //+------------------------------------------------------------------+

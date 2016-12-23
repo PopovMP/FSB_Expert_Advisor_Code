@@ -25,58 +25,62 @@
 #property link      "http://forexsb.com"
 #property version   "3.00"
 #property strict
-
 //## Import Start
 
 class ListParameter
-{
+  {
 public:
-    // Constructors
-    ListParameter()
-    {
-        Caption = "";
-        Text    = "";
-        Index   = -1;
-        Enabled = false;
-    }
+   // Constructors
+   ListParameter()
+     {
+      Caption = "";
+      Text    = "";
+      Index   = -1;
+      Enabled = false;
+     }
 
-    // Properties
-    string Caption;
-    string Text;
-    int    Index;
-    bool   Enabled;
-};
-
+   // Properties
+   string            Caption;
+   string            Text;
+   int               Index;
+   bool              Enabled;
+  };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
 class NumericParameter
-{
+  {
 public:
-    // Constructor
-    NumericParameter()
-    {
-        Caption = "";
-        Value   = 0;
-        Enabled = false;
-    }
+   // Constructor
+   NumericParameter()
+     {
+      Caption = "";
+      Value   = 0;
+      Enabled = false;
+     }
 
-    // Properties
-    string Caption;
-    double Value;
-    bool   Enabled;
-};
-
+   // Properties
+   string            Caption;
+   double            Value;
+   bool              Enabled;
+  };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
 class CheckParameter
-{
+  {
 public:
-    // Constructor
-    CheckParameter()
-    {
-        Caption = "";
-        Checked = false;
-        Enabled = false;
-    }
+   // Constructor
+   CheckParameter()
+     {
+      Caption = "";
+      Checked = false;
+      Enabled = false;
+     }
 
-    // Properties
-    string Caption;
-    bool   Checked;
-    bool   Enabled;
-};
+   // Properties
+   string            Caption;
+   bool              Checked;
+   bool              Enabled;
+  };
+//+------------------------------------------------------------------+

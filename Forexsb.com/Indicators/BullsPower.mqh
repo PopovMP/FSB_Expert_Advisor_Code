@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -34,22 +34,23 @@
 class BullsPower : public Indicator
   {
 public:
-   BullsPower(SlotTypes slotType)
-     {
-      SlotType=slotType;
-
-      IndicatorName="Bulls Power";
-
-      WarningMessage    = "";
-      IsAllowLTF        = true;
-      ExecTime          = ExecutionTime_DuringTheBar;
-      IsSeparateChart   = true;
-      IsDiscreteValues  = false;
-      IsDefaultGroupAll = false;
-     }
-
-   virtual void Calculate(DataSet &dataSet);
+                     BullsPower(SlotTypes slotType);
+   virtual void      Calculate(DataSet &dataSet);
   };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void BullsPower::BullsPower(SlotTypes slotType)
+  {
+   SlotType          = slotType;
+   IndicatorName     = "Bulls Power";
+   WarningMessage    = "";
+   IsAllowLTF        = true;
+   ExecTime          = ExecutionTime_DuringTheBar;
+   IsSeparateChart   = true;
+   IsDiscreteValues  = false;
+   IsDefaultGroupAll = false;
+  }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -57,27 +58,25 @@ void BullsPower::Calculate(DataSet &dataSet)
   {
    Data=GetPointer(dataSet);
 
-// Reading the parameters
    MAMethod maMethod=(MAMethod) ListParam[1].Index;
-   int iPeriod=(int) NumParam[0].Value;
-   double dLevel=NumParam[1].Value;
-   int prev=CheckParam[0].Checked ? 1 : 0;
+   int period=(int) NumParam[0].Value;
+   double level=NumParam[1].Value;
+   int previous=CheckParam[0].Checked ? 1 : 0;
 
-// Calculation
-   int firstBar=iPeriod+2;
-   double adMA[]; MovingAverage(iPeriod,0,maMethod,Data.Close,adMA);
-   double adBulls[]; ArrayResize(adBulls,Data.Bars); ArrayInitialize(adBulls,0);
+   int firstBar=period+previous+2;
+   double ma[]; MovingAverage(period,0,maMethod,Data.Close,ma);
+   double bulls[]; ArrayResize(bulls,Data.Bars); ArrayInitialize(bulls,0);
 
-   for(int bar=iPeriod; bar<Data.Bars; bar++)
-      adBulls[bar]=Data.High[bar]-adMA[bar];
-
-// Saving the components
+   for(int bar=period; bar<Data.Bars; bar++)
+     {
+      bulls[bar]=Data.High[bar]-ma[bar];
+     }
 
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "Bulls Power";
    Component[0].DataType = IndComponentType_IndicatorValue;
    Component[0].FirstBar = firstBar;
-   ArrayCopy(Component[0].Value,adBulls);
+   ArrayCopy(Component[0].Value,bulls);
 
    ArrayResize(Component[1].Value,Data.Bars);
    Component[1].FirstBar=firstBar;
@@ -85,7 +84,6 @@ void BullsPower::Calculate(DataSet &dataSet)
    ArrayResize(Component[2].Value,Data.Bars);
    Component[2].FirstBar=firstBar;
 
-// Sets the Component's type
    if(SlotType==SlotTypes_OpenFilter)
      {
       Component[1].DataType = IndComponentType_AllowOpenLong;
@@ -101,26 +99,25 @@ void BullsPower::Calculate(DataSet &dataSet)
       Component[2].CompName = "Close out short position";
      }
 
-// Calculation of the logic
    IndicatorLogic indLogic=IndicatorLogic_It_does_not_act_as_a_filter;
 
-   if(ListParam[0].Text=="Bulls Power rises") 
+   if(ListParam[0].Text=="Bulls Power rises")
       indLogic=IndicatorLogic_The_indicator_rises;
-   else if(ListParam[0].Text=="Bulls Power falls") 
+   else if(ListParam[0].Text=="Bulls Power falls")
       indLogic=IndicatorLogic_The_indicator_falls;
-   else if(ListParam[0].Text=="Bulls Power is higher than the Level line") 
+   else if(ListParam[0].Text=="Bulls Power is higher than the Level line")
       indLogic=IndicatorLogic_The_indicator_is_higher_than_the_level_line;
-   else if(ListParam[0].Text=="Bulls Power is lower than the Level line") 
+   else if(ListParam[0].Text=="Bulls Power is lower than the Level line")
       indLogic=IndicatorLogic_The_indicator_is_lower_than_the_level_line;
-   else if(ListParam[0].Text=="Bulls Power crosses the Level line upward") 
+   else if(ListParam[0].Text=="Bulls Power crosses the Level line upward")
       indLogic=IndicatorLogic_The_indicator_crosses_the_level_line_upward;
-   else if(ListParam[0].Text=="Bulls Power crosses the Level line downward") 
+   else if(ListParam[0].Text=="Bulls Power crosses the Level line downward")
       indLogic=IndicatorLogic_The_indicator_crosses_the_level_line_downward;
-   else if(ListParam[0].Text=="Bulls Power changes its direction upward") 
+   else if(ListParam[0].Text=="Bulls Power changes its direction upward")
       indLogic=IndicatorLogic_The_indicator_changes_its_direction_upward;
-   else if(ListParam[0].Text=="Bulls Power changes its direction downward") 
+   else if(ListParam[0].Text=="Bulls Power changes its direction downward")
       indLogic=IndicatorLogic_The_indicator_changes_its_direction_downward;
 
-   OscillatorLogic(firstBar,prev,adBulls,dLevel,-dLevel,Component[1],Component[2],indLogic);
+   OscillatorLogic(firstBar,previous,bulls,level,-level,Component[1],Component[2],indLogic);
   }
 //+------------------------------------------------------------------+

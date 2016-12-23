@@ -31,74 +31,82 @@
 //## Import Start
 
 #define OP_FLAT          -1
-
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
 class Position
-{
+  {
 public:
-    // Constructors
-    Position(void);
+   // Constructors
+                     Position(void);
 
-    // Properties
-    int PosType;
-    PosDirection Direction;
-    double Lots;
-    datetime OpenTime;
-    double OpenPrice;
-    double StopLossPrice;
-    double TakeProfitPrice;
-    double Profit;
-    double Commission;
-    long   Ticket;
-    string PosComment;
+   // Properties
+   int               PosType;
+   PosDirection      Direction;
+   double            Lots;
+   datetime          OpenTime;
+   double            OpenPrice;
+   double            StopLossPrice;
+   double            TakeProfitPrice;
+   double            Profit;
+   double            Commission;
+   long              Ticket;
+   string            PosComment;
 
-    // Methods
-    string ToString();
+   // Methods
+   string            ToString();
 
-    void SetPositionInfo(string &positionInfo[]);
-};
-
+   void              SetPositionInfo(string &positionInfo[]);
+  };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
 void Position::Position(void)
-{
-}
-
+  {
+  }
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
 string Position::ToString()
-{
-    if (PosType == OP_FLAT)
-        return ("Position: Flat");
+  {
+   if(PosType==OP_FLAT)
+      return ("Position: Flat");
 
-    string text =
-            "Position: "  +
-            "Time="       + TimeToString(OpenTime, TIME_SECONDS)     + ", " +
-            "Type="       + (PosType == OP_BUY ? "Long" : "Short")   + ", " +
-            "Lots="       + DoubleToString(Lots, 2)                  + ", " +
-            "Price="      + DoubleToString(OpenPrice, _Digits)       + ", " +
-            "StopLoss="   + DoubleToString(StopLossPrice, _Digits)   + ", " +
-            "TakeProfit=" + DoubleToString(TakeProfitPrice, _Digits) + ", " +
-            "Commission=" + DoubleToString(Commission, 2)            + ", " +
-            "Profit="     + DoubleToString(Profit, 2);
+   string text =  "Position: "  +
+                  "Time="       + TimeToString(OpenTime,TIME_SECONDS)     +", "+
+                  "Type="       + (PosType==OP_BUY ? "Long" : "Short")    +", "+
+                  "Lots="       + DoubleToString(Lots,2)                  +", "+
+                  "Price="      + DoubleToString(OpenPrice,_Digits)       +", "+
+                  "StopLoss="   + DoubleToString(StopLossPrice,_Digits)   +", "+
+                  "TakeProfit=" + DoubleToString(TakeProfitPrice,_Digits) +", "+
+                  "Commission=" + DoubleToString(Commission,2)            +", "+
+                  "Profit="     + DoubleToString(Profit,2);
 
-    if (PosComment != "")
-        text += ", \"" + PosComment + "\"";
+   if(PosComment!="")
+      text+=", \""+PosComment+"\"";
 
-    return (text);
-}
-
+   return (text);
+  }
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
 void Position::SetPositionInfo(string &positionInfo[])
-{
-    if (PosType == OP_FLAT)
-    {
-        positionInfo[0] = "Position: Flat";
-        positionInfo[1] = ".";
-    }
-    else
-    {
-        positionInfo[0] = StringFormat("Position: %s %.2f at %s, Profit %.2f",
-                                  (PosType == OP_BUY) ? "Long" : "Short",
-                                  Lots,
-                                  DoubleToString(OpenPrice, _Digits),
-                                  Profit);
-        positionInfo[1] = StringFormat("Stop Loss: %s, Take Profit: %s",
-                                  DoubleToString(StopLossPrice,   _Digits),
-                                  DoubleToString(TakeProfitPrice, _Digits));
-    }
-}
+  {
+   if(PosType==OP_FLAT)
+     {
+      positionInfo[0] = "Position: Flat";
+      positionInfo[1] = ".";
+     }
+   else
+     {
+      positionInfo[0]=StringFormat("Position: %s %.2f at %s, Profit %.2f",
+                                   (PosType==OP_BUY) ? "Long" : "Short",
+                                   Lots,
+                                   DoubleToString(OpenPrice,_Digits),
+                                   Profit);
+      positionInfo[1]=StringFormat("Stop Loss: %s, Take Profit: %s",
+                                   DoubleToString(StopLossPrice,_Digits),
+                                   DoubleToString(TakeProfitPrice,_Digits));
+     }
+  }
+//+------------------------------------------------------------------+

@@ -28,62 +28,66 @@
 
 #include <Forexsb.com/Enumerations.mqh>
 #include <Forexsb.com/Helpers.mqh>
-
 //## Import Start
 
 class DataSet
-{
+  {
 public:
-    // Constructor
-     DataSet(string chart);
+   // Constructor
+                     DataSet(string chart);
 
-    // Properties
-    string     Chart;
-    string     Symbol;
-    DataPeriod Period;
+   // Properties
+   string            Chart;
+   string            Symbol;
+   DataPeriod        Period;
 
-    int        LotSize;
-    double     Spread;
-    int        Digits;
-    double     Point;
-    double     Pip;
-    bool       IsFiveDigits;
-    int        StopLevel;
-    double     TickValue;
-    double     MinLot;
-    double     MaxLot;
-    double     LotStep;
-    double     MarginRequired;
+   int               LotSize;
+   double            Spread;
+   int               Digits;
+   double            Point;
+   double            Pip;
+   bool              IsFiveDigits;
+   int               StopLevel;
+   double            TickValue;
+   double            MinLot;
+   double            MaxLot;
+   double            LotStep;
+   double            MarginRequired;
 
-    int        Bars;
+   int               Bars;
 
-    datetime   ServerTime;
-    double     Bid;
-    double     Ask;
+   datetime          ServerTime;
+   double            Bid;
+   double            Ask;
 
-    datetime   Time[];
-    double     Open[];
-    double     High[];
-    double     Low[];
-    double     Close[];
-    long       Volume[];
+   datetime          Time[];
+   double            Open[];
+   double            High[];
+   double            Low[];
+   double            Close[];
+   long              Volume[];
 
-    // Methods
-    void SetPrecision(void);
-};
-
-DataSet::DataSet(string chart)
-{
-    Chart = chart;
-    string parts[];
-    StringSplit(chart, ',', parts);
-    Symbol = parts[0];
-    Period = StringToDataPeriod(parts[1]);
-}
-
+   // Methods
+   void              SetPrecision(void);
+  };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void DataSet::DataSet(string chart)
+  {
+   Chart=chart;
+   string parts[];
+   StringSplit(chart,',',parts);
+   Symbol = parts[0];
+   Period = StringToDataPeriod(parts[1]);
+  }
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
 void DataSet::SetPrecision(void)
-{
-    IsFiveDigits = (Digits == 3 || Digits == 5);
-    Point = 1/MathPow(10, Digits);
-    Pip = IsFiveDigits ? 10*Point : Point;
-}
+  {
+   IsFiveDigits=(Digits==3 || Digits==5);
+   Point=1/MathPow(10,Digits);
+   Pip=IsFiveDigits ? (10*Point) : Point;
+  }
+//+------------------------------------------------------------------+

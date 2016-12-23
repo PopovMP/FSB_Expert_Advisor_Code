@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -62,7 +62,7 @@ void PreviousBarOpening::Calculate(DataSet &dataSet)
    ArrayResize(adPrevBarOpening,Data.Bars);
    ArrayInitialize(adPrevBarOpening,0);
 
-   const int firstBar=1;
+   const int firstBar=2;
 
    for(int bar=firstBar; bar<Data.Bars; bar++)
       adPrevBarOpening[bar]=Data.Open[bar-1];

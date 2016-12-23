@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -58,16 +58,16 @@ void ROCMAOscillator::Calculate(DataSet &dataSet)
    Data=GetPointer(dataSet);
 
 // Reading the parameters
-   MAMethod maSignalMAMethod=(MAMethod) ListParam[2].Index;
+   MAMethod maMethod=(MAMethod) ListParam[2].Index;
    int period1 = (int) NumParam[0].Value;
    int period2 = (int) NumParam[1].Value;
-   int prvs=CheckParam[0].Checked ? 1 : 0;
+   int previous=CheckParam[0].Checked ? 1 : 0;
 
 // Calculation
-   int firstBar=period1+period2+2;
-   double adOscillator[];
-   ArrayResize(adOscillator,Data.Bars);
-   ArrayInitialize(adOscillator,0);
+   int firstBar=MathMax(period1, period2) + previous + 2;
+   double oscillator[];
+   ArrayResize(oscillator,Data.Bars);
+   ArrayInitialize(oscillator,0);
 
 // ----------------------------------------------------
    RateofChange *roc1=new RateofChange(SlotType);
@@ -77,17 +77,17 @@ void ROCMAOscillator::Calculate(DataSet &dataSet)
    roc1.CheckParam[0].Checked=CheckParam[0].Checked;
    roc1.Calculate(dataSet);
 
-   double adIndicator1[];
-   ArrayResize(adIndicator1,Data.Bars);
-   ArrayCopy(adIndicator1,roc1.Component[0].Value);
+   double indicator1[];
+   ArrayResize(indicator1,Data.Bars);
+   ArrayCopy(indicator1,roc1.Component[0].Value);
    delete roc1;
 
-   double adIndicator2[];
-   MovingAverage(period2,0,maSignalMAMethod,adIndicator1,adIndicator2);
+   double indicator2[];
+   MovingAverage(period2,0,maMethod,indicator1,indicator2);
 // -----------------------------------------------------
 
    for(int bar=firstBar; bar<Data.Bars; bar++)
-      adOscillator[bar]=adIndicator1[bar]-adIndicator2[bar];
+      oscillator[bar]=indicator1[bar]-indicator2[bar];
 
 // Saving the components
 
@@ -95,7 +95,7 @@ void ROCMAOscillator::Calculate(DataSet &dataSet)
    Component[0].CompName = "Oscillator";
    Component[0].DataType = IndComponentType_IndicatorValue;
    Component[0].FirstBar = firstBar;
-   ArrayCopy(Component[0].Value,adOscillator);
+   ArrayCopy(Component[0].Value,oscillator);
 
    ArrayResize(Component[1].Value,Data.Bars);
    Component[1].FirstBar=firstBar;
@@ -139,6 +139,6 @@ void ROCMAOscillator::Calculate(DataSet &dataSet)
    else if(ListParam[0].Text=="ROC MA Oscillator changes its direction downward")
       indLogic=IndicatorLogic_The_indicator_changes_its_direction_downward;
 
-   OscillatorLogic(firstBar,prvs,adOscillator,0,0,Component[1],Component[2],indLogic);
+   OscillatorLogic(firstBar,previous,oscillator,0,0,Component[1],Component[2],indLogic);
   }
 //+------------------------------------------------------------------+

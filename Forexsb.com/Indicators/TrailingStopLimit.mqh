@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -34,10 +34,8 @@ class TrailingStopLimit : public Indicator
 public:
     TrailingStopLimit(SlotTypes slotType)
     {
-        SlotType = slotType;
-        
+        SlotType          = slotType;
         IndicatorName     = "Trailing Stop Limit";
-
         IsAllowLTF        = true;
         ExecTime          = ExecutionTime_DuringTheBar;
         IsSeparateChart   = false;
@@ -58,5 +56,5 @@ void TrailingStopLimit::Calculate(DataSet &dataSet)
     Component[0].CompName = "Trailing Stop for a transferred position";
     Component[0].DataType = IndComponentType_Other;
     Component[0].ShowInDynInfo = false;
-    Component[0].FirstBar = 1;
+    Component[0].FirstBar = 2;
 }

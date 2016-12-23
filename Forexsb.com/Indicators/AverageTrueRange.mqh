@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -34,22 +34,23 @@
 class AverageTrueRange : public Indicator
   {
 public:
-    AverageTrueRange(SlotTypes slotType)
-     {
-      SlotType=slotType;
-
-      IndicatorName="Average True Range";
-
-      WarningMessage    = "";
-      IsAllowLTF        = true;
-      ExecTime          = ExecutionTime_DuringTheBar;
-      IsSeparateChart   = true;
-      IsDiscreteValues  = false;
-      IsDefaultGroupAll = false;
-     }
-
-   virtual void Calculate(DataSet &dataSet);
+                     AverageTrueRange(SlotTypes slotType);
+   virtual void      Calculate(DataSet &dataSet);
   };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void AverageTrueRange::AverageTrueRange(SlotTypes slotType)
+  {
+   SlotType          = slotType;
+   IndicatorName     = "Average True Range";
+   WarningMessage    = "";
+   IsAllowLTF        = true;
+   ExecTime          = ExecutionTime_DuringTheBar;
+   IsSeparateChart   = true;
+   IsDiscreteValues  = false;
+   IsDefaultGroupAll = false;
+  }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -57,23 +58,22 @@ void AverageTrueRange::Calculate(DataSet &dataSet)
   {
    Data=GetPointer(dataSet);
 
-// Reading the parameters
    MAMethod maMethod=(MAMethod) ListParam[1].Index;
    int period=(int) NumParam[0].Value;
    double level=Data.Point*NumParam[1].Value;
-   int prev=CheckParam[0].Checked ? 1 : 0;
+   int previous=CheckParam[0].Checked ? 1 : 0;
 
-// Calculation
-   int firstBar=period+2;
+   int firstBar=period+previous+2;
 
    double atr1[]; ArrayResize(atr1,Data.Bars); ArrayInitialize(atr1,0);
 
    for(int bar=1; bar<Data.Bars; bar++)
+     {
       atr1[bar]=MathMax(Data.High[bar],Data.Close[bar-1])-MathMin(Data.Low[bar],Data.Close[bar-1]);
+     }
 
    double atr[]; MovingAverage(period,0,maMethod,atr1,atr);
 
-// Saving the components
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "Average True Range";
    Component[0].DataType = IndComponentType_IndicatorValue;
@@ -86,7 +86,6 @@ void AverageTrueRange::Calculate(DataSet &dataSet)
    ArrayResize(Component[2].Value,Data.Bars);
    Component[2].FirstBar=firstBar;
 
-// Sets the Component's type
    if(SlotType==SlotTypes_OpenFilter)
      {
       Component[1].DataType = IndComponentType_AllowOpenLong;
@@ -102,7 +101,6 @@ void AverageTrueRange::Calculate(DataSet &dataSet)
       Component[2].CompName = "Close out short position";
      }
 
-// Calculation of the logic
    IndicatorLogic indLogic=IndicatorLogic_It_does_not_act_as_a_filter;
 
    if(ListParam[0].Text=="ATR rises")
@@ -122,8 +120,7 @@ void AverageTrueRange::Calculate(DataSet &dataSet)
    else if(ListParam[0].Text=="ATR changes its direction downward")
       indLogic=IndicatorLogic_The_indicator_changes_its_direction_downward;
 
-// ATR rises equal signals in both directions!
-   NoDirectionOscillatorLogic(firstBar,prev,atr,level,Component[1],indLogic);
+   NoDirectionOscillatorLogic(firstBar,previous,atr,level,Component[1],indLogic);
    ArrayCopy(Component[2].Value,Component[1].Value);
   }
 //+------------------------------------------------------------------+

@@ -34,22 +34,23 @@
 class ADX : public Indicator
   {
 public:
-   ADX(SlotTypes slotType)
-     {
-      SlotType=slotType;
-
-      IndicatorName="ADX";
-
-      WarningMessage    = "";
-      IsAllowLTF        = true;
-      ExecTime          = ExecutionTime_DuringTheBar;
-      IsSeparateChart   = true;
-      IsDiscreteValues  = false;
-      IsDefaultGroupAll = false;
-     }
-
-   virtual void Calculate(DataSet &dataSet);
+                     ADX(SlotTypes slotType);
+   virtual void      Calculate(DataSet &dataSet);
   };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void ADX::ADX(SlotTypes slotType)
+  {
+   SlotType          = slotType;
+   IndicatorName     = "ADX";
+   WarningMessage    = "";
+   IsAllowLTF        = true;
+   ExecTime          = ExecutionTime_DuringTheBar;
+   IsSeparateChart   = true;
+   IsDiscreteValues  = false;
+   IsDefaultGroupAll = false;
+  }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -57,14 +58,12 @@ void ADX::Calculate(DataSet &dataSet)
   {
    Data=GetPointer(dataSet);
 
-// Reading the parameters
-   MAMethod maMethod =(MAMethod) ListParam[1].Index;
+   MAMethod maMethod = (MAMethod) ListParam[1].Index;
    int      period   = (int) NumParam[0].Value;
    double   level    = NumParam[1].Value;
    int      previous = CheckParam[0].Checked ? 1 : 0;
 
-// Calculation
-   int firstBar=2*period+2;
+   int firstBar=period+previous+2;
 
    double positive[]; ArrayResize(positive,Data.Bars);  ArrayInitialize(positive,0);
    double negative[]; ArrayResize(negative,Data.Bars);  ArrayInitialize(negative,0);
@@ -86,22 +85,21 @@ void ADX::Calculate(DataSet &dataSet)
          negative[bar]=100*deltaLow/trueRange;
      }
 
-   double averagePositive[];
-   MovingAverage(period,0,maMethod,positive,averagePositive);
-   double averageNegative[];
-   MovingAverage(period,0,maMethod,negative,averageNegative);
-
+   double averagePositive[]; MovingAverage(period,0,maMethod,positive,averagePositive);
+   double averageNegative[]; MovingAverage(period,0,maMethod,negative,averageNegative);
    double directionalIndex[]; ArrayResize(directionalIndex,Data.Bars); ArrayInitialize(directionalIndex,0);
 
    for(int bar=0; bar<Data.Bars; bar++)
+     {
       if(MathAbs(averagePositive[bar]-averageNegative[bar])>Epsilon())
-         directionalIndex[bar]=100*MathAbs((averagePositive[bar]-averageNegative[bar])/
-                                           (averagePositive[bar]+averageNegative[bar]));
+        {
+         double posNegRange=(averagePositive[bar]-averageNegative[bar])/(averagePositive[bar]+averageNegative[bar]);
+         directionalIndex[bar]=100*MathAbs(posNegRange);
+        }
+     }
 
-   double averageDirectionalIndex[];
-   MovingAverage(period,0,maMethod,directionalIndex,averageDirectionalIndex);
+   double averageDirectionalIndex[]; MovingAverage(period,0,maMethod,directionalIndex,averageDirectionalIndex);
 
-// Saving the components
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "ADX";
    Component[0].DataType = IndComponentType_IndicatorValue;
@@ -123,7 +121,6 @@ void ADX::Calculate(DataSet &dataSet)
    ArrayResize(Component[3].Value,Data.Bars);
    ArrayResize(Component[4].Value,Data.Bars);
 
-// Sets the Component's type
    if(SlotType==SlotTypes_OpenFilter)
      {
       Component[3].DataType = IndComponentType_AllowOpenLong;
@@ -139,7 +136,6 @@ void ADX::Calculate(DataSet &dataSet)
       Component[4].CompName = "Close out short position";
      }
 
-// Calculation of the logic
    IndicatorLogic logicRule=IndicatorLogic_It_does_not_act_as_a_filter;
 
    if(ListParam[0].Text=="ADX rises")
@@ -159,7 +155,6 @@ void ADX::Calculate(DataSet &dataSet)
    else if(ListParam[0].Text=="ADX changes its direction downward")
       logicRule=IndicatorLogic_The_indicator_changes_its_direction_downward;
 
-// ADX rises equal signals in both directions!
    NoDirectionOscillatorLogic(firstBar,previous,averageDirectionalIndex,level,Component[3],logicRule);
    ArrayCopy(Component[4].Value,Component[3].Value);
   }

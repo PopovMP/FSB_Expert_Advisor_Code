@@ -34,22 +34,23 @@
 class EntryTime : public Indicator
   {
 public:
-    EntryTime(SlotTypes slotType)
-     {
-      SlotType=slotType;
-
-      IndicatorName="Entry Time";
-
-      WarningMessage    = "";
-      IsAllowLTF        = true;
-      ExecTime          = ExecutionTime_DuringTheBar;
-      IsSeparateChart   = false;
-      IsDiscreteValues  = false;
-      IsDefaultGroupAll = true;
-     }
-
-   virtual void Calculate(DataSet &dataSet);
+                     EntryTime(SlotTypes slotType);
+   virtual void      Calculate(DataSet &dataSet);
   };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void EntryTime::EntryTime(SlotTypes slotType)
+  {
+   SlotType          = slotType;
+   IndicatorName     = "Entry Time";
+   WarningMessage    = "";
+   IsAllowLTF        = true;
+   ExecTime          = ExecutionTime_DuringTheBar;
+   IsSeparateChart   = false;
+   IsDiscreteValues  = false;
+   IsDefaultGroupAll = true;
+  }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -57,20 +58,17 @@ void EntryTime::Calculate(DataSet &dataSet)
   {
    Data=GetPointer(dataSet);
 
-// Reading the parameters
    int fromHour  = (int) NumParam[0].Value;
    int fromMin   = (int) NumParam[1].Value;
    int untilHour = (int) NumParam[2].Value;
    int untilMin  = (int) NumParam[3].Value;
 
-// Calculation
-   const int firstBar=1;
+   const int firstBar=2;
    double adBars[]; ArrayResize(adBars,Data.Bars);ArrayInitialize(adBars,0);
 
    int fromTime  = fromHour*3600+fromMin*60;
    int untilTime = untilHour*3600+untilMin*60;
 
-// Calculation of the logic
    for(int bar=firstBar; bar<Data.Bars; bar++)
      {
       MqlDateTime mqlTime; TimeToStruct(Data.Time[bar],mqlTime);
@@ -83,7 +81,6 @@ void EntryTime::Calculate(DataSet &dataSet)
       else adBars[bar]=1;
      }
 
-// Saving the components
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "Is long entry allowed";
    Component[0].DataType = IndComponentType_AllowOpenLong;

@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -34,22 +34,23 @@
 class MoneyFlowIndex : public Indicator
   {
 public:
-    MoneyFlowIndex(SlotTypes slotType)
-     {
-      SlotType=slotType;
-
-      IndicatorName="Money Flow Index";
-
-      WarningMessage    = "";
-      IsAllowLTF        = true;
-      ExecTime          = ExecutionTime_DuringTheBar;
-      IsSeparateChart   = true;
-      IsDiscreteValues  = false;
-      IsDefaultGroupAll = false;
-     }
-
-   virtual void Calculate(DataSet &dataSet);
+                     MoneyFlowIndex(SlotTypes slotType);
+   virtual void      Calculate(DataSet &dataSet);
   };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void MoneyFlowIndex::MoneyFlowIndex(SlotTypes slotType)
+  {
+   SlotType          = slotType;
+   IndicatorName     = "Money Flow Index";
+   WarningMessage    = "";
+   IsAllowLTF        = true;
+   ExecTime          = ExecutionTime_DuringTheBar;
+   IsSeparateChart   = true;
+   IsDiscreteValues  = false;
+   IsDefaultGroupAll = false;
+  }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -57,61 +58,55 @@ void MoneyFlowIndex::Calculate(DataSet &dataSet)
   {
    Data=GetPointer(dataSet);
 
-// Reading the parameters
-   int iPeriod=(int) NumParam[0].Value;
-   double dLevel=NumParam[1].Value;
-   int iPrvs=CheckParam[0].Checked ? 1 : 0;
+   int period=(int) NumParam[0].Value;
+   double level=NumParam[1].Value;
+   int previous=CheckParam[0].Checked ? 1 : 0;
 
-   int iFirstBar=iPeriod+iPrvs;
+   int firstBar=period+previous+2;
 
-// Calculating Money Flow
    double adMf[]; ArrayResize(adMf,Data.Bars);ArrayInitialize(adMf,0);
-   for(int iBar=1; iBar<Data.Bars; iBar++)
+   for(int bar=1; bar<Data.Bars; bar++)
      {
-      double dAvg=(Data.High[iBar]+Data.Low[iBar]+Data.Close[iBar])/3;
-      double dAvg1=(Data.High[iBar-1]+Data.Low[iBar-1]+Data.Close[iBar-1])/3;
+      double dAvg=(Data.High[bar]+Data.Low[bar]+Data.Close[bar])/3;
+      double dAvg1=(Data.High[bar-1]+Data.Low[bar-1]+Data.Close[bar-1])/3;
       if(dAvg>dAvg1)
-         adMf[iBar]=adMf[iBar-1]+dAvg*Data.Volume[iBar];
+         adMf[bar]=adMf[bar-1]+dAvg*Data.Volume[bar];
       else if(dAvg<dAvg1)
-         adMf[iBar]=adMf[iBar-1]-dAvg*Data.Volume[iBar];
+         adMf[bar]=adMf[bar-1]-dAvg*Data.Volume[bar];
       else
-         adMf[iBar]=adMf[iBar-1];
+         adMf[bar]=adMf[bar-1];
      }
 
-// Calculating Money Flow Index
    double adMfi[]; ArrayResize(adMfi,Data.Bars);ArrayInitialize(adMfi,0);
-   for(int iBar=iPeriod+1; iBar<Data.Bars; iBar++)
+   for(int bar=period+1; bar<Data.Bars; bar++)
      {
       double dPmf = 0;
       double dNmf = 0;
-      for(int index=0; index<iPeriod; index++)
+      for(int index=0; index<period; index++)
         {
-         if(adMf[iBar-index]>adMf[iBar-index-1])
-            dPmf+=adMf[iBar-index]-adMf[iBar-index-1];
-         if(adMf[iBar-index]<adMf[iBar-index-1])
-            dNmf+=adMf[iBar-index-1]-adMf[iBar-index];
+         if(adMf[bar-index]>adMf[bar-index-1])
+            dPmf+=adMf[bar-index]-adMf[bar-index-1];
+         if(adMf[bar-index]<adMf[bar-index-1])
+            dNmf+=adMf[bar-index-1]-adMf[bar-index];
         }
       if(MathAbs(dNmf)<Epsilon())
-         adMfi[iBar]=100.0;
+         adMfi[bar]=100.0;
       else
-         adMfi[iBar]=100.0 -(100.0/(1.0+(dPmf/dNmf)));
+         adMfi[bar]=100.0 -(100.0/(1.0+(dPmf/dNmf)));
      }
-
-// Saving the components
 
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "Money Flow Index";
    Component[0].DataType = IndComponentType_IndicatorValue;
-   Component[0].FirstBar = iFirstBar;
+   Component[0].FirstBar = firstBar;
    ArrayCopy(Component[0].Value,adMfi);
 
    ArrayResize(Component[1].Value,Data.Bars);
-   Component[1].FirstBar=iFirstBar;
+   Component[1].FirstBar=firstBar;
 
    ArrayResize(Component[2].Value,Data.Bars);
-   Component[2].FirstBar=iFirstBar;
+   Component[2].FirstBar=firstBar;
 
-// Sets the Component's type
    if(SlotType==SlotTypes_OpenFilter)
      {
       Component[1].DataType = IndComponentType_AllowOpenLong;
@@ -127,26 +122,25 @@ void MoneyFlowIndex::Calculate(DataSet &dataSet)
       Component[2].CompName = "Close out short position";
      }
 
-// Calculation of the logic
    IndicatorLogic indLogic=IndicatorLogic_It_does_not_act_as_a_filter;
 
-   if(ListParam[0].Text=="MFI rises") 
+   if(ListParam[0].Text=="MFI rises")
       indLogic=IndicatorLogic_The_indicator_rises;
-   else if(ListParam[0].Text=="MFI falls") 
+   else if(ListParam[0].Text=="MFI falls")
       indLogic=IndicatorLogic_The_indicator_falls;
-   else if(ListParam[0].Text=="MFI is higher than the Level line") 
+   else if(ListParam[0].Text=="MFI is higher than the Level line")
       indLogic=IndicatorLogic_The_indicator_is_higher_than_the_level_line;
-   else if(ListParam[0].Text=="MFI is lower than the Level line") 
+   else if(ListParam[0].Text=="MFI is lower than the Level line")
       indLogic=IndicatorLogic_The_indicator_is_lower_than_the_level_line;
-   else if(ListParam[0].Text=="MFI crosses the Level line upward") 
+   else if(ListParam[0].Text=="MFI crosses the Level line upward")
       indLogic=IndicatorLogic_The_indicator_crosses_the_level_line_upward;
-   else if(ListParam[0].Text=="MFI crosses the Level line downward") 
+   else if(ListParam[0].Text=="MFI crosses the Level line downward")
       indLogic=IndicatorLogic_The_indicator_crosses_the_level_line_downward;
-   else if(ListParam[0].Text=="MFI changes its direction upward") 
+   else if(ListParam[0].Text=="MFI changes its direction upward")
       indLogic=IndicatorLogic_The_indicator_changes_its_direction_upward;
-   else if(ListParam[0].Text=="MFI changes its direction downward") 
+   else if(ListParam[0].Text=="MFI changes its direction downward")
       indLogic=IndicatorLogic_The_indicator_changes_its_direction_downward;
 
-   OscillatorLogic(iFirstBar,iPrvs,adMfi,dLevel,100-dLevel,Component[1],Component[2],indLogic);
+   OscillatorLogic(firstBar,previous,adMfi,level,100-level,Component[1],Component[2],indLogic);
   }
 //+------------------------------------------------------------------+

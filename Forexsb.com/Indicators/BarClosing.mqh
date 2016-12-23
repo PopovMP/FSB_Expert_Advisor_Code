@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -34,22 +34,23 @@
 class BarClosing : public Indicator
   {
 public:
-    BarClosing(SlotTypes slotType)
-     {
-      SlotType=slotType;
-
-      IndicatorName="Bar Closing";
-
-      WarningMessage    = "";
-      IsAllowLTF        = true;
-      ExecTime          = ExecutionTime_AtBarClosing;
-      IsSeparateChart   = false;
-      IsDiscreteValues  = false;
-      IsDefaultGroupAll = false;
-     }
-
-   virtual void Calculate(DataSet &dataSet);
+                     BarClosing(SlotTypes slotType);
+   virtual void      Calculate(DataSet &dataSet);
   };
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void BarClosing::BarClosing(SlotTypes slotType)
+  {
+   SlotType          = slotType;
+   IndicatorName     = "Bar Closing";
+   WarningMessage    = "";
+   IsAllowLTF        = true;
+   ExecTime          = ExecutionTime_AtBarClosing;
+   IsSeparateChart   = false;
+   IsDiscreteValues  = false;
+   IsDefaultGroupAll = false;
+  }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -57,11 +58,10 @@ void BarClosing::Calculate(DataSet &dataSet)
   {
    Data=GetPointer(dataSet);
 
-// Saving the components
-   ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "Close Price";
    Component[0].DataType = (SlotType == SlotTypes_Open) ? IndComponentType_OpenPrice : IndComponentType_ClosePrice;
    Component[0].FirstBar = 2;
+   ArrayResize(Component[0].Value,Data.Bars);
    ArrayCopy(Component[0].Value,Data.Close);
   }
 //+------------------------------------------------------------------+

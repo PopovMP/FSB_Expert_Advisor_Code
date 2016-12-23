@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.00"
+#property version   "2.1"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -63,14 +63,14 @@ void RateofChange::Calculate(DataSet &dataSet)
    int period = (int) NumParam[0].Value;
    int smooth = (int) NumParam[1].Value;
    double level=NumParam[2].Value;
-   int prvs=CheckParam[0].Checked ? 1 : 0;
+   int previous=CheckParam[0].Checked ? 1 : 0;
 
-   int iFirstBar=prvs+period+smooth+2;
-   double adBasePrice[]; Price(basePrice,adBasePrice);
+   int firstBar=previous+period+smooth+2;
+   double price[]; Price(basePrice,price);
    double adRoc[]; ArrayResize(adRoc,Data.Bars); ArrayInitialize(adRoc,0);
 
    for(int bar=period; bar<Data.Bars; bar++)
-      adRoc[bar]=adBasePrice[bar]/adBasePrice[bar-period];
+      adRoc[bar]=price[bar]/price[bar-period];
 
    if(smooth>0)
       MovingAverage(smooth,0,method,adRoc,adRoc);
@@ -79,14 +79,14 @@ void RateofChange::Calculate(DataSet &dataSet)
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "ROC";
    Component[0].DataType = IndComponentType_IndicatorValue;
-   Component[0].FirstBar = iFirstBar;
+   Component[0].FirstBar = firstBar;
    ArrayCopy(Component[0].Value,adRoc);
 
    ArrayResize(Component[1].Value,Data.Bars);
-   Component[1].FirstBar=iFirstBar;
+   Component[1].FirstBar=firstBar;
 
    ArrayResize(Component[2].Value,Data.Bars);
-   Component[2].FirstBar=iFirstBar;
+   Component[2].FirstBar=firstBar;
 
 // Sets the Component's type
    if(SlotType==SlotTypes_OpenFilter)
@@ -124,6 +124,6 @@ void RateofChange::Calculate(DataSet &dataSet)
    else if(ListParam[0].Text=="ROC changes its direction downward")
       indLogic=IndicatorLogic_The_indicator_changes_its_direction_downward;
 
-   OscillatorLogic(iFirstBar,prvs,adRoc,level,2-level,Component[1],Component[2],indLogic);
+   OscillatorLogic(firstBar,previous,adRoc,level,2-level,Component[1],Component[2],indLogic);
   }
 //+------------------------------------------------------------------+
