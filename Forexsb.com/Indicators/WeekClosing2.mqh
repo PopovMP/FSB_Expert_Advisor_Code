@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.1"
+#property version   "2.3"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -60,7 +60,10 @@ void WeekClosing2::Calculate(DataSet &dataSet)
    int fridayClosingHour=(int) NumParam[0].Value;
    int fridayClosingMin =(int) NumParam[1].Value;
 
-   double closePrice[]; ArrayResize(closePrice,Data.Bars); ArrayInitialize(closePrice,0);
+// Calculation
+   double closePrice[];
+   ArrayResize(closePrice,Data.Bars);
+   ArrayInitialize(closePrice,0);
 
    for(int bar=0; bar<Data.Bars-1; bar++)
      {
@@ -70,22 +73,27 @@ void WeekClosing2::Calculate(DataSet &dataSet)
          closePrice[bar]=Data.Close[bar];
      }
 
-   double allowOpenLong[];  ArrayResize(allowOpenLong, Data.Bars); ArrayInitialize(allowOpenLong, 1);
-   double allowOpenShort[]; ArrayResize(allowOpenShort,Data.Bars); ArrayInitialize(allowOpenShort,1);
+   double allowOpenLong[];
+   ArrayResize(allowOpenLong,Data.Bars);
+   ArrayInitialize(allowOpenLong,1);
+   double allowOpenShort[];
+   ArrayResize(allowOpenShort,Data.Bars);
+   ArrayInitialize(allowOpenShort,1);
 
-   datetime time=Data.Time[Data.Bars-1];
-   MqlDateTime mqlTime; TimeToStruct(time,mqlTime);
-   if(mqlTime.day_of_week==5)
+   datetime serverTime = Data.ServerTime;
+   MqlDateTime mqlServerTime; TimeToStruct(serverTime,mqlServerTime);
+
+   if(mqlServerTime.day_of_week==5)
      {
-      datetime dayOpen=(time/86400)*86400;
-      datetime fridayTime=dayOpen+fridayClosingHour*60*60+fridayClosingMin*60;
-      if(time>=fridayTime)
+      datetime fridayTime=(serverTime/86400)*86400+fridayClosingHour*60*60+fridayClosingMin*60;
+      if(serverTime>=fridayTime)
         {
          closePrice[Data.Bars-1]=Data.Close[Data.Bars-1];
          allowOpenLong[Data.Bars-1]=0;
          allowOpenShort[Data.Bars-1]=0;
         }
      }
+
    Component[0].CompName      = "Week Closing";
    Component[0].DataType      = IndComponentType_ClosePrice;
    Component[0].ShowInDynInfo = false;
