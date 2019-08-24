@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "44.0"
+#property version   "49.0"
 #property strict
 
 #include <Forexsb.com\ActionTrade5.mqh>
@@ -70,10 +70,9 @@ static input string Order_Comment=""; // Custom order comment
 // If set to 0, the expert calculates them automatically.
 int Min_Data_Bars=0;
 
-// Separate SL and TP orders
 // It hase to be set to true for STP brokers that cannot set SL and TP together with the position (with OrderSend()).
 // When Separate_SL_TP = true, the expert first opens the position and after that sets StopLoss and TakeProfit.
-bool Separate_SL_TP=false;
+bool Separate_SL_TP=false; // Separate SL and TP orders
 
 // TrailingStop_Moving_Step determines the step of changing the Trailing Stop.
 // 0 <= TrailingStop_Moving_Step <= 2000

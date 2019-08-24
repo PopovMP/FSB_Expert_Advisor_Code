@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "2.1"
+#property version   "2.2"
 #property strict
 
 #include <Forexsb.com/Indicator.mqh>
@@ -67,25 +67,28 @@ void RateofChange::Calculate(DataSet &dataSet)
 
    int firstBar=previous+period+smooth+2;
    double price[]; Price(basePrice,price);
-   double adRoc[]; ArrayResize(adRoc,Data.Bars); ArrayInitialize(adRoc,0);
+   double roc[]; ArrayResize(roc,Data.Bars); ArrayInitialize(roc,0);
 
    for(int bar=period; bar<Data.Bars; bar++)
-      adRoc[bar]=price[bar]/price[bar-period];
+     {
+      roc[bar]=price[bar]/price[bar-period];
+     }
 
-   if(smooth>0)
-      MovingAverage(smooth,0,method,adRoc,adRoc);
+   double rocSmoothed[]; MovingAverage(smooth,0,method,roc,rocSmoothed);
 
 // Saving the components
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "ROC";
    Component[0].DataType = IndComponentType_IndicatorValue;
    Component[0].FirstBar = firstBar;
-   ArrayCopy(Component[0].Value,adRoc);
+   ArrayCopy(Component[0].Value,rocSmoothed);
 
    ArrayResize(Component[1].Value,Data.Bars);
+   ArrayInitialize(Component[1].Value,0);
    Component[1].FirstBar=firstBar;
 
    ArrayResize(Component[2].Value,Data.Bars);
+   ArrayInitialize(Component[2].Value,0);
    Component[2].FirstBar=firstBar;
 
 // Sets the Component's type
@@ -124,6 +127,6 @@ void RateofChange::Calculate(DataSet &dataSet)
    else if(ListParam[0].Text=="ROC changes its direction downward")
       indLogic=IndicatorLogic_The_indicator_changes_its_direction_downward;
 
-   OscillatorLogic(firstBar,previous,adRoc,level,2-level,Component[1],Component[2],indLogic);
+   OscillatorLogic(firstBar,previous,rocSmoothed,level,2-level,Component[1],Component[2],indLogic);
   }
 //+------------------------------------------------------------------+

@@ -57,6 +57,7 @@ void WilliamsPercentRange::WilliamsPercentRange(SlotTypes slotType)
 void WilliamsPercentRange::Calculate(DataSet &dataSet)
   {
    Data=GetPointer(dataSet);
+   double sigma=Sigma();
 
    MAMethod method=(MAMethod) ListParam[1].Index;
    int period=(int) NumParam[0].Value;
@@ -76,7 +77,15 @@ void WilliamsPercentRange::Calculate(DataSet &dataSet)
          if(Data.High[bar - index]> max) max = Data.High[bar - index];
          if(Data.Low[bar - index] < min) min = Data.Low[bar - index];
         }
-      adR[bar]=-100*(max-Data.Close[bar])/(max-min);
+
+      if(MathAbs(max-min)>sigma)
+        {
+         adR[bar]=-100*(max-Data.Close[bar])/(max-min);
+        }
+      else
+        {
+         adR[bar]=-50;
+        }
      }
 
    double adRSmoothed[];

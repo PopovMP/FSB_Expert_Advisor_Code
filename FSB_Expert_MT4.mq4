@@ -23,14 +23,14 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "44.0"
+#property version   "49.0"
 #property strict
 
 #include <Forexsb.com\ActionTrade4.mqh>
 
 // -----------------------    External variables   ----------------------- //
 
-static input string StrategyProperties__="------------"; // ------ Strategy Properties ------
+static input string StrategyProperties__ = "------------"; // ------ Strategy Properties ------
 
 static input double Entry_Amount    = 77701; // Amount for a new position #TRADEUNIT#
 static input double Maximum_Amount  = 77702; // Maximum position amount [lot]
@@ -39,33 +39,33 @@ static input double Reducing_Amount = 77704; // Amount to close on reduction #TR
 input int Stop_Loss   = 77705; // Stop Loss [point]
 input int Take_Profit = 77706; // Take Profit [point]
 input int Break_Even  = 77707; // Break Even [point]
-static input double Martingale_Multiplier=77708; // Martingale Multiplier
+static input double Martingale_Multiplier = 77708; // Martingale Multiplier
 
 //##INDICATORS_INPUT_PARAMS
 
-static input string ExpertSettings__="------------"; // ------ Expert Settings ------
+static input string ExpertSettings__ = "------------"; // ------ Expert Settings ------
 
 // A unique number of the expert's orders.
-static input int Expert_Magic=20011023; // Expert Magic Number
+static input int Expert_Magic = 20011023; // Expert Magic Number
 
 // If account equity drops below this value, the expert will close out all positions and stop automatic trade.
 // The value must be set in account currency. Example:
 // Protection_Min_Account = 700 will close positions if the equity drops below 700 USD (EUR if you account is in EUR).
-static input int Protection_Min_Account=0; // Stop trading at min account
+static input int Protection_Min_Account = 0; // Stop trading at min account
 
 // The expert checks the open positions at every tick and if found no SL or SL lower (higher for short) than selected,
 // It sets SL to the defined value. The value is in points. Example:
 // Protection_Max_StopLoss = 200 means 200 pips for 4 digit broker and 20 pips for 5 digit broker.
-static input int Protection_Max_StopLoss=0; // Ensure maximum Stop Loss [point]
+static input int Protection_Max_StopLoss = 0; // Ensure maximum Stop Loss [point]
 
 // How many seconds before the expected bar closing to rise a Bar Closing event.
-static input int Bar_Close_Advance=15; // Bar closing advance [sec]
+static input int Bar_Close_Advance = 15; // Bar closing advance [sec]
 
 // Expert writes a log file when Write_Log_File = true.
-static input bool Write_Log_File=false; // Write a log file
+static input bool Write_Log_File = false; // Write a log file
 
 // Custom comment. It can be used for setting a binnary option epxiration perod
-static input string Order_Comment=""; // Custom order comment
+static input string Order_Comment = ""; // Custom order comment
 
 // ----------------------------    Options   ---------------------------- //
 
@@ -76,24 +76,24 @@ int Min_Data_Bars=0;
 // Separate SL and TP orders
 // It has to be set to true for STP brokers that cannot set SL and TP together with the position (with OrderSend()).
 // When Separate_SL_TP = true, the expert first opens the position and after that sets StopLoss and TakeProfit.
-bool Separate_SL_TP=false; 
+bool Separate_SL_TP = false; // Separate SL and TP orders 
 
 // TrailingStop_Moving_Step determines the step of changing the Trailing Stop.
 // 0 <= TrailingStop_Moving_Step <= 2000
 // If TrailingStop_Moving_Step = 0, the Trailing Stop trails at every new extreme price in the position's direction.
 // If TrailingStop_Moving_Step > 0, the Trailing Stop moves at steps equal to the number of pips chosen.
 // This prevents sending multiple order modifications.
-int TrailingStop_Moving_Step=10;
+int TrailingStop_Moving_Step = 10;
 
 // FIFO (First In First Out) forces the expert to close positions starting from
 // the oldest one. This rule complies with the new NFA regulations.
 // If you want to close the positions from the newest one (FILO), change the variable to "false".
 // This doesn't change the normal work of Forex Strategy Builder.
-bool FIFO_order=true;
+bool FIFO_order = true;
 
 // When the log file reaches the preset number of lines,
 // the expert starts a new log file.
-int Max_Log_Lines_in_File=2000;
+int Max_Log_Lines_in_File = 2000;
 
 // Used to detect a chart change
 string __symbol = "";

@@ -23,7 +23,7 @@
 
 #property copyright "Copyright (C) 2016 Forex Software Ltd."
 #property link      "http://forexsb.com"
-#property version   "1.00"
+#property version   "1.10"
 #property strict
 
 #include <Forexsb.com\DataMarket.mqh>
@@ -577,29 +577,38 @@ void StrategyTrader::AnalyzeEntryLogicConditions(string group,double buyPrice,do
                previous=0;
 
             double indicatorValue=component.GetLastValue(previous);
-            switch(component.PosPriceDependence)
+
+            if (indicatorValue > epsilon)
               {
-               case PositionPriceDependence_PriceBuyHigher:
-                  canOpenLong=canOpenLong && buyPrice>indicatorValue+epsilon;
-                  break;
-               case PositionPriceDependence_PriceBuyLower:
-                  canOpenLong=canOpenLong && buyPrice<indicatorValue-epsilon;
-                  break;
-               case PositionPriceDependence_PriceSellHigher:
-                  canOpenShort=canOpenShort && sellPrice>indicatorValue+epsilon;
-                  break;
-               case PositionPriceDependence_PriceSellLower:
-                  canOpenShort=canOpenShort && sellPrice<indicatorValue-epsilon;
-                  break;
-               case PositionPriceDependence_BuyHigherSellLower:
-                  canOpenLong  = canOpenLong  && buyPrice  > indicatorValue + epsilon;
-                  canOpenShort = canOpenShort && sellPrice < indicatorValue - epsilon;
-                  break;
-               case PositionPriceDependence_BuyLowerSelHigher: // Deprecated
-               case PositionPriceDependence_BuyLowerSellHigher:
-                  canOpenLong  = canOpenLong  && buyPrice  < indicatorValue - epsilon;
-                  canOpenShort = canOpenShort && sellPrice > indicatorValue + epsilon;
-                  break;
+                switch(component.PosPriceDependence)
+                  {
+                   case PositionPriceDependence_PriceBuyHigher:
+                      canOpenLong=canOpenLong && buyPrice>indicatorValue+epsilon;
+                      break;
+                   case PositionPriceDependence_PriceBuyLower:
+                      canOpenLong=canOpenLong && buyPrice<indicatorValue-epsilon;
+                      break;
+                   case PositionPriceDependence_PriceSellHigher:
+                      canOpenShort=canOpenShort && sellPrice>indicatorValue+epsilon;
+                      break;
+                   case PositionPriceDependence_PriceSellLower:
+                      canOpenShort=canOpenShort && sellPrice<indicatorValue-epsilon;
+                      break;
+                   case PositionPriceDependence_BuyHigherSellLower:
+                      canOpenLong  = canOpenLong  && buyPrice  > indicatorValue + epsilon;
+                      canOpenShort = canOpenShort && sellPrice < indicatorValue - epsilon;
+                      break;
+                   case PositionPriceDependence_BuyLowerSelHigher: // Deprecated
+                   case PositionPriceDependence_BuyLowerSellHigher:
+                      canOpenLong  = canOpenLong  && buyPrice  < indicatorValue - epsilon;
+                      canOpenShort = canOpenShort && sellPrice > indicatorValue + epsilon;
+                      break;
+                  }
+               }
+            else
+              {
+                canOpenLong  = false;
+                canOpenShort = false;
               }
            }
          component=NULL;

@@ -253,8 +253,8 @@ void Indicator::RepeatSignal(int repeat)
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-Indicator::NormalizeComponentValue(const double &componentValue[],const datetime &strategyTime[],
-                                   int ltfShift,bool isCloseFilterShift,double &output[])
+void Indicator::NormalizeComponentValue(const double &componentValue[],const datetime &strategyTime[],
+                                        int ltfShift,bool isCloseFilterShift,double &output[])
   {
    int strategyBars=ArraySize(strategyTime);
    ArrayResize(output,strategyBars); ArrayInitialize(output,0);

@@ -86,7 +86,7 @@ private:
    bool              IsTradeContextFree(void);
    void              ActivateProtectionMinAccount(void);
    void              CloseExpert(void);
-   bool              IsFillingTypeAllowed(int fillingType);
+   ENUM_ORDER_TYPE_FILLING GetOrderFillingType(void);
 
    // Trading methods
    double            GetTakeProfitPrice(int type,int takeProfit);
@@ -142,7 +142,7 @@ void ActionTrade::ActionTrade(void)
    position = new Position();
    logger   = new Logger();
    strategyTrader   = new StrategyTrader(GetPointer(this));
-   orderFillingType = IsFillingTypeAllowed(ORDER_FILLING_FOK) ? ORDER_FILLING_FOK : ORDER_FILLING_IOC;
+   orderFillingType = GetOrderFillingType();
   }
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -1353,9 +1353,11 @@ bool ActionTrade::ManageOrderSend(int type,double lots,int stopLoss,int takeProf
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-   bool ActionTrade::IsFillingTypeAllowed(int fillingType)
-     {
-      int filling=(int)SymbolInfoInteger(_Symbol,SYMBOL_FILLING_MODE);
-      return (filling&fillingType==fillingType);
-     }
+	ENUM_ORDER_TYPE_FILLING ActionTrade::GetOrderFillingType()
+	 {
+	  const int oftIndex=(int) SymbolInfoInteger(_Symbol,SYMBOL_FILLING_MODE);
+	  const ENUM_ORDER_TYPE_FILLING fillType=(ENUM_ORDER_TYPE_FILLING)(oftIndex>0 ? oftIndex-1 : oftIndex);
+
+      return (fillType);
+	 }
 //+------------------------------------------------------------------+

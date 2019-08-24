@@ -92,12 +92,12 @@ void OscillatorofMACD::Calculate(DataSet &dataSet)
    double indicator1[];  ArrayResize(indicator1,Data.Bars);
    double indicator2[];  ArrayResize(indicator2,Data.Bars);
 
-   if(ListParam[0].Index==0)
+   if(ListParam[4].Index==0)
      {
       ArrayCopy(indicator1, macd1.Component[0].Value);
       ArrayCopy(indicator2, macd2.Component[0].Value);
      }
-   else if(ListParam[0].Index==1)
+   else if(ListParam[4].Index==1)
      {
       ArrayCopy(indicator1, macd1.Component[1].Value);
       ArrayCopy(indicator2, macd2.Component[1].Value);

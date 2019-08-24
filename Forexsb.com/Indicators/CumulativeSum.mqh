@@ -64,7 +64,7 @@ void CumulativeSum::Calculate(DataSet &dataSet)
    int smoothing=(int) NumParam[1].Value;
    int previous=CheckParam[0].Checked ? 1 : 0;
 
-   int firstBar=period+previous+2;
+   int firstBar=period+smoothing+previous+2;
 
    double price[]; Price(basePrice,price);
    double cumulativeSum[]; ArrayResize(cumulativeSum,Data.Bars); ArrayInitialize(cumulativeSum,0);
@@ -75,18 +75,19 @@ void CumulativeSum::Calculate(DataSet &dataSet)
      {
       cumulativeSum[period-1]+=price[bar];
      }
+
    for(int bar=period; bar<Data.Bars; bar++)
      {
       cumulativeSum[bar]=cumulativeSum[bar-1]-price[bar-period]+price[bar];
      }
 
-   double adCumulativeSum[]; MovingAverage(smoothing,0,maMethod,cumulativeSum,adCumulativeSum);
+   double cumulativeSumSmoothed[]; MovingAverage(smoothing,0,maMethod,cumulativeSum,cumulativeSumSmoothed);
 
    ArrayResize(Component[0].Value,Data.Bars);
    Component[0].CompName = "Cumulative Sum";
    Component[0].DataType = IndComponentType_IndicatorValue;
    Component[0].FirstBar = firstBar;
-   ArrayCopy(Component[0].Value,adCumulativeSum);
+   ArrayCopy(Component[0].Value,cumulativeSumSmoothed);
 
    ArrayResize(Component[1].Value,Data.Bars);
    Component[1].FirstBar=firstBar;
@@ -120,6 +121,6 @@ void CumulativeSum::Calculate(DataSet &dataSet)
    if(ListParam[0].Text=="Cumulative Sum changes its direction downward")
       indLogic=IndicatorLogic_The_indicator_changes_its_direction_downward;
 
-   OscillatorLogic(firstBar,previous,adCumulativeSum,0,0,Component[1],Component[2],indLogic);
+   OscillatorLogic(firstBar,previous,cumulativeSumSmoothed,0,0,Component[1],Component[2],indLogic);
   }
 //+------------------------------------------------------------------+
