@@ -46,7 +46,7 @@
 //|                                                                  |
 //+------------------------------------------------------------------+
 class ActionTrade
-  {
+{
 private:
    double            epsilon;
 
@@ -106,7 +106,7 @@ private:
    bool              ReverseCurrentPosition(int type,double lots,int stopLoss,int takeProfit);
    bool              CloseOrder(int orderTicket,double lots);
    bool              SelectOrder(int orderTicket);
-   bool              SendOrder(int type,double lots,int stopLoss,int takeProfit);
+   int               SendOrder(int type, double lots, int stopLoss, int takeProfit);
    bool              ModifyOrder(int orderTicket,double stopLossPrice,double takeProfitPrice);
 
 public:
@@ -141,56 +141,56 @@ public:
                                      TrailingStopMode trlMode,int trlStop,int brkEven);
    bool              ModifyPosition(double stopLossPrice,double takeProfitPrice);
    bool              CloseCurrentPosition(void);
-  };
+};
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
 void ActionTrade::ActionTrade(void)
-  {
-   epsilon  = 0.000001;
-   position = new Position();
-   logger   = new Logger();
-   strategyTrader=new StrategyTrader(GetPointer(this));
-  }
+{
+   epsilon        = 0.000001;
+   position       = new Position();
+   logger         = new Logger();
+   strategyTrader = new StrategyTrader( GetPointer(this) );
+}
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
 void ActionTrade::~ActionTrade(void)
-  {
-   if(CheckPointer(position)==POINTER_DYNAMIC)
-      delete position;
-   if(CheckPointer(logger)==POINTER_DYNAMIC)
-      delete logger;
-   if(CheckPointer(strategyTrader)==POINTER_DYNAMIC)
-      delete strategyTrader;
-  }
+{
+    if ( CheckPointer(position) == POINTER_DYNAMIC )
+        delete position;
+    if ( CheckPointer(logger) == POINTER_DYNAMIC )
+        delete logger;
+    if ( CheckPointer(strategyTrader) == POINTER_DYNAMIC )
+        delete strategyTrader;
+}
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
 int ActionTrade::OnInit()
-  {
-   dataMarket     = new DataMarket();
-   barHighTime    = 0;
-   barLowTime     = 0;
-   barHighPrice = 0;
-   barLowPrice  = 1000000;
+{
+    dataMarket   = new DataMarket();
+    barHighTime  = 0;
+    barLowTime   = 0;
+    barHighPrice = 0;
+    barLowPrice  = 1000000;
 
-   string message=StringFormat("%s loaded.",MQLInfoString(MQL_PROGRAM_NAME));
+   string message = StringFormat("%s loaded.", MQLInfoString(MQL_PROGRAM_NAME) );
    Comment(message);
    Print(message);
 
-   if(WriteLogFile)
+   if (WriteLogFile)
      {
       logger.CreateLogFile(logger.GetLogFileName(_Symbol, _Period, ExpertMagic));
       logger.WriteLogLine(message);
       logger.WriteLogLine("Entry Amount: "    + DoubleToString(EntryAmount, 2)   + ", " +
-                          "Maximum Amount: "+DoubleToString(MaximumAmount,2)+", "+
-                          "Adding Amount: "+DoubleToString(AddingAmount,2)+", "+
-                          "Reducing Amount: "+DoubleToString(ReducingAmount,2));
-      logger.WriteLogLine("Protection Min Account: "+IntegerToString(ProtectionMinAccount)+", "+
-                          "Protection Max StopLoss: "+IntegerToString(ProtectionMaxStopLoss));
-      logger.WriteLogLine("Expert Magic: "+IntegerToString(ExpertMagic)+", "+
-                          "Bar Close Advance: "+IntegerToString(BarCloseAdvance));
+                          "Maximum Amount: "  + DoubleToString(MaximumAmount, 2) + ", " +
+                          "Adding Amount: "   + DoubleToString(AddingAmount, 2)  + ", " +
+                          "Reducing Amount: " + DoubleToString(ReducingAmount,2) );
+      logger.WriteLogLine("Protection Min Account: "  + IntegerToString(ProtectionMinAccount) + ", " +
+                          "Protection Max StopLoss: " + IntegerToString(ProtectionMaxStopLoss) );
+      logger.WriteLogLine("Expert Magic: " + IntegerToString(ExpertMagic) + ", " +
+                          "Bar Close Advance: " + IntegerToString(BarCloseAdvance) );
       logger.FlushLogFile();
      }
 
@@ -219,7 +219,7 @@ int ActionTrade::OnInit()
    StrategyManager *strategyManager=new StrategyManager();
 
 // Strategy initialization
-   strategy=strategyManager.GetStrategy();
+   strategy = strategyManager.GetStrategy();
    strategy.SetSymbol(_Symbol);
    strategy.SetPeriod((DataPeriod) _Period);
    strategy.SetIsTester(MQLInfoInteger(MQL_TESTER));
@@ -243,10 +243,10 @@ int ActionTrade::OnInit()
    string charts[];
    strategy.GetRequiredCharts(charts);
 
-   string chartsNote="Loading data: ";
+   string chartsNote = "Loading data: ";
    for(int i=0; i<ArraySize(charts); i++)
       chartsNote+=charts[i]+", ";
-   chartsNote+="Minumum bars: "+IntegerToString(strategy.MinBarsRequired)+"...";
+   chartsNote+="Minimum bars: "+IntegerToString(strategy.MinBarsRequired)+"...";
    Comment(chartsNote);
    Print(chartsNote);
 
@@ -715,118 +715,123 @@ int ActionTrade::SetAggregatePosition(Position *pos)
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-bool ActionTrade::ManageOrderSend(int type,double lots,int stopLoss,int takeProfit,
-                                  TrailingStopMode trlMode,int trlStop,int brkEven)
-  {
-   trailingMode = trlMode;
-   trailingStop = trlStop;
-   breakEven    = brkEven;
+bool ActionTrade::ManageOrderSend(int type, double lots, int stopLoss, int takeProfit,
+                                  TrailingStopMode trlMode, int trlStop, int brkEven)
+{
+    trailingMode = trlMode;
+    trailingStop = trlStop;
+    breakEven    = brkEven;
 
-   bool orderResponse=false;
-   int positions=SetAggregatePosition(position);
+    bool orderResponse=false;
+    int positions=SetAggregatePosition(position);
 
-   if(positions<0)
-      return (false);
+    if (positions < 0)
+        return (false);
 
-   if(positions==0)
-     {   // Open a new position.
+    if(positions==0)
+    {   // Open a new position.
       orderResponse=OpenNewPosition(type,lots,stopLoss,takeProfit);
-     }
-   else if(positions>0)
-     {   // There is an open position.
-      if((position.PosType==OP_BUY && type==OP_BUY) || 
-         (position.PosType==OP_SELL && type==OP_SELL))
-        {
-         orderResponse=AddToCurrentPosition(type,lots,stopLoss,takeProfit);
-        }
-      else if((position.PosType==OP_BUY && type==OP_SELL) || 
-         (position.PosType==OP_SELL && type==OP_BUY))
-           {
-            if(MathAbs(position.Lots-lots)<epsilon)
-               orderResponse=CloseCurrentPosition();
-            else if(position.Lots>lots)
-               orderResponse=ReduceCurrentPosition(lots,stopLoss,takeProfit);
-            else if(position.Lots<lots)
-               orderResponse=ReverseCurrentPosition(type,lots,stopLoss,takeProfit);
-           }
-        }
+    }
+    else if(positions>0)
+    {   // There is an open position.
+      if((position.PosType==OP_BUY  && type==OP_BUY ) || 
+         (position.PosType==OP_SELL && type==OP_SELL) )
+      {
+         orderResponse = AddToCurrentPosition(type,lots,stopLoss,takeProfit);
+      }
+      else if((position.PosType==OP_BUY  && type==OP_SELL) || 
+              (position.PosType==OP_SELL && type==OP_BUY) )
+      {
+          if( MathAbs(position.Lots-lots) < epsilon )
+             orderResponse = CloseCurrentPosition();
+          else if(position.Lots > lots)
+             orderResponse = ReduceCurrentPosition(lots, stopLoss, takeProfit);
+          else if(position.Lots < lots)
+             orderResponse = ReverseCurrentPosition(type, lots, stopLoss, takeProfit);
+      }
+    }
 
-      return (orderResponse);
-     }
+    return (orderResponse);
+}
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-   bool ActionTrade::OpenNewPosition(int type,double lots,int stopLoss,int takeProfit)
-     {
-      bool orderResponse=false;
+bool ActionTrade::OpenNewPosition(int type,double lots,int stopLoss,int takeProfit)
+{
+    bool orderResponse=false;
 
-      if(type!=OP_BUY && type!=OP_SELL)
-        {   // Error. Wrong order type!
-         Print("Wrong 'Open new position' request - Wrong order type!");
-         return (false);
-        }
+    if (type!=OP_BUY && type!=OP_SELL)
+    {   // Error. Wrong order type!
+        Print("Wrong 'Open new position' request - Wrong order type!");
+        return (false);
+    }
 
-      double orderLots=NormalizeEntrySize(lots);
+    double orderLots=NormalizeEntrySize(lots);
 
-      if(AccountFreeMarginCheck(_Symbol,type,orderLots)>0)
+    if ( AccountFreeMarginCheck(_Symbol,type,orderLots) > 0 )
+    {
+        if (SeparateSLTP)
         {
-         if(SeparateSLTP)
-           {
-            if(WriteLogFile)
-               logger.WriteLogLine("OpenNewPosition => SendOrder");
+            if (WriteLogFile)
+                logger.WriteLogLine("OpenNewPosition => SendOrder");
 
-            orderResponse=SendOrder(type,orderLots,0,0);
+            int orderTicket = SendOrder(type,orderLots,0,0);
+            orderResponse   = orderTicket > 0;
 
-            if(orderResponse)
-              {
-               if(WriteLogFile)
-                  logger.WriteLogLine("OpenNewPosition => ModifyPosition");
-               double stopLossPrice=GetStopLossPrice(type,stopLoss);
-               double takeProfitPrice=GetTakeProfitPrice(type,takeProfit);
+            if (orderResponse)
+            {
+               if (WriteLogFile)
+                   logger.WriteLogLine("OpenNewPosition => ModifyPosition");
 
-               orderResponse=ModifyOrder(orderResponse,stopLossPrice,takeProfitPrice);
-              }
-           }
-         else
-           {
-            orderResponse=SendOrder(type,orderLots,stopLoss,takeProfit);
+               double stopLossPrice   = GetStopLossPrice(type, stopLoss);
+               double takeProfitPrice = GetTakeProfitPrice(type, takeProfit);
 
-            if(WriteLogFile)
-               logger.WriteLogLine("OpenNewPosition: SendOrder Response = "+
-                                   (orderResponse ? "Ok" : "Failed"));
-
-            if(!orderResponse && lastError==130)
-              {   // Invalid Stops. We'll check for forbidden direct set of SL and TP
-               if(WriteLogFile)
-                  logger.WriteLogLine("OpenNewPosition: SendOrder");
-
-               orderResponse=SendOrder(type,lots,0,0);
-
-               if(orderResponse)
-                 {
-                  if(WriteLogFile)
-                     logger.WriteLogLine("OpenNewPosition: ModifyPosition");
-                  double stopLossPrice=GetStopLossPrice(type,stopLoss);
-                  double takeProfitPrice=GetTakeProfitPrice(type,takeProfit);
-
-                  orderResponse=ModifyOrder(orderResponse,stopLossPrice,takeProfitPrice);
-
-                  if(orderResponse)
-                    {
-                     SeparateSLTP=true;
-                     Print(AccountCompany()," marked with separate stops setting.");
-                    }
-                 }
-              }
-           }
+               orderResponse = ModifyOrder(orderTicket, stopLossPrice, takeProfitPrice);
+            }
         }
+        else
+        {
+            int orderTicket = SendOrder(type,orderLots,stopLoss,takeProfit);
+            orderResponse   = orderTicket > 0;
 
-      SetAggregatePosition(position);
-      if(WriteLogFile)
-         logger.WriteLogLine(position.ToString());
+            if (WriteLogFile)
+                logger.WriteLogLine("OpenNewPosition: SendOrder Response = " +
+                                    (orderResponse ? "Ok" : "Failed") );
 
-      return (orderResponse);
-     }
+            if (!orderResponse && lastError == 130)
+            {   // Invalid Stops. We'll check for forbidden direct set of SL and TP
+                if (WriteLogFile)
+                    logger.WriteLogLine("OpenNewPosition: SendOrder");
+
+                orderResponse = SendOrder(type, lots, 0, 0);
+
+                if (orderResponse)
+                {
+                    if (WriteLogFile)
+                        logger.WriteLogLine("OpenNewPosition: ModifyPosition");
+
+                   double stopLossPrice   = GetStopLossPrice(type,stopLoss);
+                   double takeProfitPrice = GetTakeProfitPrice(type,takeProfit);
+
+                   orderResponse = ModifyOrder(orderTicket, stopLossPrice, takeProfitPrice);
+
+                   if (orderResponse)
+                   {
+                       SeparateSLTP=true;
+                       Print(AccountCompany()," marked with separate stops setting.");
+                   }
+                }
+            }
+        }
+    }
+
+    SetAggregatePosition(position);
+
+    if (WriteLogFile)
+        logger.WriteLogLine(position.ToString());
+
+    return (orderResponse);
+}
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -993,65 +998,62 @@ bool ActionTrade::ManageOrderSend(int type,double lots,int stopLoss,int takeProf
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-   bool ActionTrade::SendOrder(int type,double lots,int stopLoss,int takeProfit)
-     {
-      bool orderResponse = false;
-      int  response      = -1;
+int ActionTrade::SendOrder(int type, double lots, int stopLoss, int takeProfit)
+{
+    int orderTicket = -1;
 
-      for(int attempt=0; attempt<TRADE_RETRY_COUNT; attempt++)
+    for (int attempt=0; attempt<TRADE_RETRY_COUNT; attempt++)
+    {
+        if ( IsTradeContextFree() )
         {
-         if(IsTradeContextFree())
-           {
             double orderLots       = NormalizeEntrySize(lots);
             double orderPrice      = type == OP_BUY
-                                    ? MarketInfo(_Symbol,MODE_ASK)
-                                    : MarketInfo(_Symbol,MODE_BID);
+                                        ? MarketInfo(_Symbol,MODE_ASK)
+                                        : MarketInfo(_Symbol,MODE_BID);
             double stopLossPrice   = GetStopLossPrice(type, stopLoss);
             double takeProfitPrice = GetTakeProfitPrice(type, takeProfit);
             color  colorDeal       = type == OP_BUY ? Lime : Red;
-            string comment         = (OrderComment == "")
-                                    ? "Magic="+IntegerToString(ExpertMagic)
-                                    : OrderComment;
+            string comment         = OrderComment == ""
+                                        ? "Magic="+IntegerToString(ExpertMagic)
+                                        : OrderComment;
 
-            response=OrderSend(_Symbol,type,orderLots,orderPrice,100,
-                               stopLossPrice,takeProfitPrice,comment,
-                               ExpertMagic,0,colorDeal);
+            orderTicket = OrderSend(_Symbol, type, orderLots, orderPrice, 100,
+                                    stopLossPrice, takeProfitPrice, comment,
+                                    ExpertMagic, 0, colorDeal);
 
-            lastError=GetLastError();
+            lastError = GetLastError();
 
-            if(WriteLogFile)
-               logger.WriteLogLine(
-                                   "SendOrder: "+_Symbol+
-                                   ", Type="+(type==OP_BUY ? "Buy" : "Sell")+
-                                   ", Lots="+DoubleToString(orderLots,2)+
-                                   ", Price="+DoubleToString(orderPrice,_Digits)+
-                                   ", StopLoss="+DoubleToString(stopLossPrice,_Digits)+
-                                   ", TakeProfit="+DoubleToString(takeProfitPrice,_Digits)+
-                                   ", Magic="+IntegerToString(ExpertMagic)+
-                                   ", Response="+IntegerToString(response)+
-                                   ", LastError="+IntegerToString(lastError));
-           }
+            if (WriteLogFile)
+                logger.WriteLogLine(
+                   "SendOrder: "   + _Symbol                                 +
+                   ", Type="       + (type==OP_BUY ? "Buy" : "Sell")         +
+                   ", Lots="       + DoubleToString(orderLots,2)             +
+                   ", Price="      + DoubleToString(orderPrice,_Digits)      +
+                   ", StopLoss="   + DoubleToString(stopLossPrice,_Digits)   +
+                   ", TakeProfit=" + DoubleToString(takeProfitPrice,_Digits) +
+                   ", Magic="      + IntegerToString(ExpertMagic)            +
+                   ", Ticket="     + IntegerToString(orderTicket)            +
+                   ", LastError="  + IntegerToString(lastError) );
+        }
 
-         orderResponse=response>0;
-
-         if(orderResponse)
+        if (orderTicket > 0)
             break;
 
-         if(lastError!=135 && lastError!=136 && 
+        if (lastError!=135 && lastError!=136 && 
             lastError!=137 && lastError!=138)
             break;
 
-         Print("Error with SendOrder: ",GetErrorDescription(lastError));
+        Print("Error with SendOrder: ", GetErrorDescription(lastError));
 
-         Sleep(TRADE_RETRY_WAIT);
-        }
+        Sleep(TRADE_RETRY_WAIT);
+    }
 
-      return (orderResponse);
-     }
+    return (orderTicket);
+}
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-   bool ActionTrade::CloseOrder(int orderTicket,double orderLots)
+   bool ActionTrade::CloseOrder(int orderTicket, double orderLots)
      {
       if(!OrderSelect(orderTicket,SELECT_BY_TICKET))
         {
@@ -1639,99 +1641,106 @@ bool ActionTrade::ManageOrderSend(int type,double lots,int stopLoss,int takeProf
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-   void ActionTrade::DetectPositionClosing()
-     {
-      double oldStopLoss   = position.StopLossPrice;
-      double oldTakeProfit = position.TakeProfitPrice;
-      double oldProfit     = position.Profit;
-      int    oldType       = position.PosType;
-      double oldLots       = position.Lots;
+void ActionTrade::DetectPositionClosing()
+{
+    const double oldStopLoss   = position.StopLossPrice;
+    const double oldTakeProfit = position.TakeProfitPrice;
+    const double oldProfit     = position.Profit;
+    const int    oldType       = position.PosType;
+    const double oldLots       = position.Lots;
 
-      SetAggregatePosition(position);
+    SetAggregatePosition(position);
 
-      if(oldType==OP_FLAT || position.PosType!=OP_FLAT)
-         return;
+    if (oldType == OP_FLAT || position.PosType != OP_FLAT)
+        return;
 
-      double closePrice     = (oldType == OP_BUY) ? dataMarket.Bid : dataMarket.Ask;
-      string stopMessage    = "Position was closed";
-      string closePriceText = DoubleToString(closePrice, _Digits);
+    const double closePrice     = (oldType == OP_BUY) ? dataMarket.Bid : dataMarket.Ask;
+    const string closePriceText = DoubleToString(closePrice, _Digits);
 
-      if(MathAbs(oldStopLoss-closePrice)<2*pipsValue)
-         stopMessage="Activated StopLoss="+closePriceText;
-      else if(MathAbs(oldTakeProfit-closePrice)<2*pipsValue)
-         stopMessage="Activated TakeProfit="+closePriceText;
+    consecutiveLosses = oldProfit < 0
+        ? consecutiveLosses + 1
+        : 0;
 
-      consecutiveLosses=(oldProfit<0) ? consecutiveLosses+1 : 0;
+    string stopMessage = "Position was closed";
 
-      string message=stopMessage+
-                     ", ClosePrice="+closePriceText+
-                     ", ClosedLots= "+DoubleToString(oldLots,2)+
-                     ", Profit="+DoubleToString(oldProfit,2)+
-                     ", ConsecutiveLosses="+IntegerToString(consecutiveLosses);
+    if ( MathAbs(oldStopLoss - closePrice) < 2 * pipsValue )
+        stopMessage = "Activated StopLoss=" + closePriceText;
+    else if ( MathAbs(oldTakeProfit - closePrice) < 2 * pipsValue )
+        stopMessage = "Activated TakeProfit=" + closePriceText;
 
-      if(WriteLogFile)
-         logger.WriteNewLogLine(message);
-      Print(message);
-     }
+    string message = stopMessage +
+                 ", ClosePrice="        + closePriceText +
+                 ", ClosedLots= "       + DoubleToString(oldLots, 2) +
+                 ", Profit="            + DoubleToString(oldProfit, 2)+
+                 ", ConsecutiveLosses=" + IntegerToString(consecutiveLosses);
+
+    if (WriteLogFile)
+        logger.WriteNewLogLine(message);
+    Print(message);
+}
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-   bool ActionTrade::IsTradeContextFree()
-     {
-      if(IsTradeAllowed())
-         return (true);
+bool ActionTrade::IsTradeContextFree()
+{
+    if(IsTradeAllowed())
+        return (true);
 
-      uint startWait=GetTickCount();
-      Print("Trade context is busy! Waiting...");
+    const uint startWait = GetTickCount();
+    Print("Trade context is busy! Waiting...");
 
-      while(true)
-        {
-         if(IsStopped())
+    while(true)
+    {
+        if ( IsStopped() )
             return (false);
 
-         uint diff=GetTickCount()-startWait;
-         if(diff>30*1000)
-           {
+        const uint diff = GetTickCount() - startWait;
+
+        if (diff > 30 * 1000)
+        {
             Print("The waiting limit exceeded!");
             return (false);
-           }
-
-         if(IsTradeAllowed())
-           {
-            RefreshRates();
-            return (true);
-           }
-         Sleep(100);
         }
 
-      return (true);
-     }
+        if ( IsTradeAllowed() )
+        {
+            RefreshRates();
+            return (true);
+        }
+
+        Sleep(100);
+    }
+
+    return (true);
+}
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-   void ActionTrade::ActivateProtectionMinAccount()
-     {
-      CloseCurrentPosition();
+void ActionTrade::ActivateProtectionMinAccount()
+{
+    CloseCurrentPosition();
 
-      string account = DoubleToString(AccountEquity(), 2);
-      string message = "\n" + "The account equity (" + account +
-                      ") dropped below the minimum allowed ("+
-                      IntegerToString(ProtectionMinAccount)+").";
-      Comment(message);
-      Print(message);
+    const string account = DoubleToString(AccountEquity(), 2);
+    const string message = "\n" +
+        "The account equity (" + account +
+        ") dropped below the minimum allowed (" +
+        IntegerToString(ProtectionMinAccount) + ").";
 
-      if(WriteLogFile)
-         logger.WriteLogLine(message);
+    Comment(message);
+    Print(message);
 
-      Sleep(20*1000);
-      CloseExpert();
-     }
+    if (WriteLogFile)
+        logger.WriteLogLine(message);
+
+    Sleep( 20 * 1000 );
+    CloseExpert();
+}
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-   void ActionTrade::CloseExpert(void)
-     {
-      ExpertRemove();
-      OnDeinit(0);
-     }
+void ActionTrade::CloseExpert(void)
+{
+    ExpertRemove();
+    OnDeinit(0);
+}
 //+------------------------------------------------------------------+

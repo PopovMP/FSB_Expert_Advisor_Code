@@ -1,7 +1,7 @@
 //+--------------------------------------------------------------------+
-//| Copyright:  (C) 2016 Forex Software Ltd.                           |
-//| Website:    http://forexsb.com/                                    |
-//| Support:    http://forexsb.com/forum/                              |
+//| Copyright:  (C) 2020 Forex Software Ltd.                           |
+//| Website:    https://forexsb.com/                                   |
+//| Support:    https://forexsb.com/forum/                             |
 //| License:    Proprietary under the following circumstances:         |
 //|                                                                    |
 //| This code is a part of Forex Strategy Builder. It is free for      |
@@ -21,9 +21,9 @@
 //| product, even if advised of the possibility of such damages.       |
 //+--------------------------------------------------------------------+
 
-#property copyright "Copyright (C) 2016 Forex Software Ltd."
-#property link      "http://forexsb.com"
-#property version   "49.0"
+#property copyright "Copyright (C) 2020 Forex Software Ltd."
+#property link      "https://forexsb.com"
+#property version   "50.0"
 #property strict
 
 #include <Forexsb.com\ActionTrade4.mqh>
@@ -64,12 +64,12 @@ static input int Bar_Close_Advance = 15; // Bar closing advance [sec]
 // Expert writes a log file when Write_Log_File = true.
 static input bool Write_Log_File = false; // Write a log file
 
-// Custom comment. It can be used for setting a binnary option epxiration perod
+// Custom comment. It can be used for setting a binary option expiration period.
 static input string Order_Comment = ""; // Custom order comment
 
 // ----------------------------    Options   ---------------------------- //
 
-// Data bars for calculating the indicator values with the necessary precission.
+// Data bars for calculating the indicator values with the necessary precision.
 // If set to 0, the expert calculates them automatically.
 int Min_Data_Bars=0;
 
